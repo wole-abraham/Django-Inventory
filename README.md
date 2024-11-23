@@ -25,10 +25,11 @@ This project is an Equipment Request Management System built using Django. It al
   
 ## Installation
 
-### 1. Clone the repository:
 
 ```bash
 git clone https://github.com/wole-abraham/Django-Inventory.git
+pip3 install django
+pip3 install pillow
 cd Django-Inventory
 cd survery_system
 -- You can create a admin account using
