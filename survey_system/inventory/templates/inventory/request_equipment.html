@@ -1,0 +1,111 @@
+{% extends 'base/base_dashboard.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Request Equipment</h1>
+
+    <!-- Instructional Text -->
+    <p class="text-muted text-center">Select the equipment type to filter available options.</p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Request Equipment</div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'request_equipment' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Equipment Type Dropdown -->
+                        <div class="mb-3">
+                            <label for="equipment-type" class="form-label">Equipment Type</label>
+                            <select id="equipment-type" class="form-select">
+                                <option value="">Select Type</option>
+                                <option value="GNSS">GNSS</option>
+                                <option value="Total Station">Total Station</option>
+                                <option value="Level Instrument">Level Instrument</option>
+                                <option value="Drone">Drone</option>
+                            </select>
+                        </div>
+
+                        <!-- Equipment Dropdown -->
+                        <div class="mb-3">
+                            <label for="equipment-dropdown" class="form-label">Available Equipment</label>
+                            <select id="equipment-dropdown" class="form-select" name="equipment_id">
+                                <option value="">Select Equipment</option>
+                            </select>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Request Equipment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script for Dynamic Dropdown -->
+<script>
+    document.getElementById('equipment-type').addEventListener('change', function() {
+        const type = this.value;
+        const dropdown = document.getElementById('equipment-dropdown');
+
+        // Clear the dropdown and add a default option
+        dropdown.innerHTML = '<option value="">Select Equipment</option>';
+
+        if (!type) {
+            // If no type is selected, return early
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "Please select a type first";
+            dropdown.appendChild(option);
+            return;
+        }
+
+        // Fetch available equipment based on the selected type
+        fetch(`/inventory/filter-equipment?equipment_type=${type}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching equipment: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.length === 0) {
+                    // If no equipment is available, show a message
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "No equipment available for this type";
+                    dropdown.appendChild(option);
+                } else {
+                    // Populate the dropdown with the retrieved equipment
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        dropdown.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Error fetching equipment, try again later";
+                dropdown.appendChild(option);
+            });
+    });
+
+    // Form submission validation
+    document.querySelector('form').addEventListener('submit', function(event) {
+        const equipmentDropdown = document.getElementById('equipment-dropdown');
+        if (!equipmentDropdown.value) {
+            event.preventDefault(); // Prevent form submission
+            alert('Please select a valid equipment before submitting the request.');
+        }
+    });
+</script>
+
+{% endblock %}

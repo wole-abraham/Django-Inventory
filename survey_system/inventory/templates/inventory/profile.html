@@ -1,0 +1,45 @@
+{% extends 'base/base_dashboard.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Your Equipment</h1>
+
+    {% if user_equipment %}
+        <div class="row">
+            {% for equipment in user_equipment %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    {% if equipment.image %}
+                        <img src="{{ equipment.image.url }}" class="card-img-top equipment-img" alt="{{ equipment.name }}">
+                    {% else %}
+                        <img src="https://via.placeholder.com/150" class="card-img-top equipment-img" alt="No Image">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ equipment.name }}</h5>
+                        <p class="card-text">Type: {{ equipment.equipment_type }}</p>
+
+                        <!-- Status -->
+                        <p class="card-text">
+                            <span class="badge" style="background-color: 
+                                {% if equipment.status == 'In Store' %} #28a745; {% endif %}
+                                {% if equipment.status == 'In Field' %} #ffc107; {% endif %}">
+                                {{ equipment.status }}
+                            </span>
+                        </p>
+
+                        <!-- Return button -->
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="equipment_id" value="{{ equipment.id }}">
+                            <button type="submit" class="btn btn-danger">Return Equipment</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You have no equipment currently requested.</p>
+    {% endif %}
+</div>
+{% endblock %}
