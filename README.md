@@ -23,7 +23,8 @@ This project is an Equipment Request Management System built using Django. It al
 - Django 3.2+
 - Bootstrap 5 (for styling)
   
-## Installation
+## Data
+
 
 
 ```bash
@@ -36,6 +37,11 @@ cd survery_system
 python3 manage.py createsuperuser / follow the prompt
 python3 manage.py runserver
 
+```
+## Navigation
+127.0.0.1:8000/create-user  -- to create an account
+login with the username(case sensitive ) and password
 
 
-INSTALLATION
+3
+
