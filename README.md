@@ -43,5 +43,6 @@ python3 manage.py runserver
 login with the username(case sensitive ) and password
 
 
-3
+![image](https://github.com/user-attachments/assets/fff12d83-6919-4bbe-b445-6bec9283422d)
 
+![image](https://github.com/user-attachments/assets/07433cac-7a1a-43cd-a836-354f488388d4)
