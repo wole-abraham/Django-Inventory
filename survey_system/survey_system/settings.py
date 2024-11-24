@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-wd!remc4qtgkw8xs8-r_+5l)23x5d^@%3nrwz*89m(gbr^^yqf
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['woleabrahamthedev.pythonanywhere.com']
 
 
 # Application definition
@@ -117,7 +117,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = ''
 STATICFILESDIR = BASE_DIR / 'static'
 
 # Default primary key field type
@@ -128,6 +129,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # settings.py
 LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to a dashboard after login
 LOGOUT_REDIRECT_URL = '/login/'
+
 LOGIN_URL = '/login/'
 # Media files
 MEDIA_URL = '/media/'

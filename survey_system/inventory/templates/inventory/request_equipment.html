@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <form method="POST" action="{% url 'request_equipment' %}">
                         {% csrf_token %}
-                        
+
                         <!-- Equipment Type Dropdown -->
                         <div class="mb-3">
                             <label for="equipment-type" class="form-label">Equipment Type</label>
@@ -30,7 +30,7 @@
                         <!-- Equipment Dropdown -->
                         <div class="mb-3">
                             <label for="equipment-dropdown" class="form-label">Available Equipment</label>
-                            <select id="equipment-dropdown" class="form-select" name="equipment_id">
+                            <select id="equipment-dropdown" class="form-select" name="equipment_id" required>
                                 <option value="">Select Equipment</option>
                             </select>
                         </div>
@@ -101,7 +101,7 @@
     // Form submission validation
     document.querySelector('form').addEventListener('submit', function(event) {
         const equipmentDropdown = document.getElementById('equipment-dropdown');
-        if (!equipmentDropdown.value) {
+        if (!equipmentDropdown.value || equipmentDropdown.value === "") {
             event.preventDefault(); // Prevent form submission
             alert('Please select a valid equipment before submitting the request.');
         }

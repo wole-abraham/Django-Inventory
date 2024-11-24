@@ -28,7 +28,10 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('create-user/', views.create_user, name='create_user'),
-    path('inventory/', include('inventory.urls'))
+    path('inventory/', include('inventory.urls')),
+    path('api/equipment/in-store/', views.equipment_in_store, name='equipment_in_store'),
+    path('api/equipment/in-field/', views.equipment_in_field, name='equipment_in_field'),
+
 ]
 
 if settings.DEBUG:

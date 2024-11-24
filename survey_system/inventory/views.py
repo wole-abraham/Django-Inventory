@@ -18,22 +18,28 @@ def filter_equipment(request):
     return JsonResponse(data, safe=False)
 
 
+@login_required
 def request_equipment(request):
     if request.method == 'POST':
         equipment_id = request.POST.get('equipment_id')
-        equipment = get_object_or_404(Equipment, id=equipment_id, status='In Store')
-        surveyor = SurveyorEngineer.objects.get(user=request.user)
+        if not equipment_id:
+            return redirect('request_equipment')  # Redirect back to the form
 
+        try:
+            equipment = Equipment.objects.get(id=equipment_id, status='In Store')
+        except Equipment.DoesNotExist:
+            return redirect('request_equipment')
+
+        # Update equipment status
+        surveyor = SurveyorEngineer.objects.get(user=request.user)
         equipment.status = 'In Field'
         equipment.requested_by = request.user
         equipment.save()
         surveyor.requested_equipment.add(equipment)
-        messages.success(request, 'Equipment requested successfully!')
         return redirect('dashboard')
-    
+
     available_equipment = Equipment.objects.filter(status='In Store')
     return render(request, 'inventory/request_equipment.html', {'available_equipment': available_equipment})
-
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -54,15 +60,15 @@ def return_equipment(request):
     if request.method == 'POST':
         equipment_id = request.POST.get('equipment_id')
         equipment = get_object_or_404(Equipment, id=equipment_id, status='In Field', requested_by=request.user)
-        
+
         # Update equipment status and requested_by field
         equipment.status = 'In Store'
         equipment.requested_by = None
         equipment.save()
-        
+
         messages.success(request, f'{equipment.name} has been returned successfully.')
         return redirect('dashboard')
-    
+
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
@@ -109,3 +115,30 @@ def create_user(request):
         form = CustomUserCreationForm()
 
     return render(request, 'registration/create_user.html', {'form': form})
+
+def equipment_in_store(request):
+    """API endpoint for equipment in store."""
+    equipment = Equipment.objects.filter(status='In Store')
+    data = [
+        {
+            'id': eq.id,
+            'name': eq.name,
+            'equipment_type': eq.equipment_type,
+        }
+        for eq in equipment
+    ]
+    return JsonResponse(data, safe=False)
+
+def equipment_in_field(request):
+    """API endpoint for equipment in the field."""
+    equipment = Equipment.objects.filter(status='In Field')
+    data = [
+        {
+            'id': eq.id,
+            'name': eq.name,
+            'equipment_type': eq.equipment_type,
+            'requested_by': eq.requested_by.username if eq.requested_by else None,
+        }
+        for eq in equipment
+    ]
+    return JsonResponse(data, safe=False)
