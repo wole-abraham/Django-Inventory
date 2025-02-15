@@ -146,5 +146,7 @@ def equipment_in_field(request):
     return JsonResponse(data, safe=False)
 
 def equipment(request):
-    data = EquipmentsInSurvey.objects.all()
+    user = request.user
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
+    
     return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})

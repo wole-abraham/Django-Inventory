@@ -1,7 +1,7 @@
 {% extends 'base/base_dashboard.html' %}
 {% block content %}
 
-<h2>Record for Melheim</h2>
+<h2>Record for {{ request.user }}</h2>
 <table>
     <thead>
         <tr>
@@ -17,6 +17,7 @@
             <th>Project</th>
             <th>Section</th>
             <th>Date Receiving (Department)</th>
+            <th>Status</th>
         </tr>
     </thead>
     <tbody>
@@ -34,6 +35,11 @@
             <td>{{info.project}}</td>
             <td>{{info.section}}</td>
             <td>{{info.date_receiving_from_department}}</td>
+            <td><select name="" id="">
+                <option value="">In Stock</option>
+                <option value=""></option>
+                <option value=""></option>
+            </select></td>
             
         </tr>
         {% endfor %}

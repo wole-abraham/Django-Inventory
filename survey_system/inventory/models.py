@@ -38,7 +38,9 @@ class SurveyorEngineer(models.Model):
 
     def __str__(self):
         return self.user.username
-    
+
+
+
 class EquipmentsInSurvey(models.Model):
     name = models.CharField(max_length=100)
     date_of_receiving_from_supplier = models.DateField()
@@ -52,6 +54,9 @@ class EquipmentsInSurvey(models.Model):
     project = models.CharField(max_length=20)
     section = models.CharField(max_length=100)
     date_receiving_from_department = models.DateField()
+    status = models.CharField(choices=[('In Store', 'In Store')], max_length=100, default='In Store')
+
+
  
 
     
