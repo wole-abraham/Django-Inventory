@@ -1,0 +1,43 @@
+{% extends 'base/base_dashboard.html' %}
+{% block content %}
+
+<h2>Record for Melheim</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date of Receiving (Supplier)</th>
+            <th>Supplier</th>
+            <th>Base Serial</th>
+            <th>Roover Serial</th>
+            <th>Data Logger Serial</th>
+            <th>Radio Serial</th>
+            <th>Chief Surveyor</th>
+            <th>Surveyor Responsible</th>
+            <th>Project</th>
+            <th>Section</th>
+            <th>Date Receiving (Department)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for info in data %}
+        <tr>
+            <td>{{info.name}}</td>
+            <td>{{info.date_of_receiving_from_supplier}}</td>
+            <td>{{info.supplier}}</td>
+            <td>{{info.base_serial}}</td>
+            <td>{{info.roover_serial}}</td>
+            <td>{{info.data_logger_serial}}</td>
+            <td>{{info.radio_serial}}</td>
+            <td>{{info.chief_surveyor}}</td>
+            <td>{{info.surveyor_responsible}}</td>
+            <td>{{info.project}}</td>
+            <td>{{info.section}}</td>
+            <td>{{info.date_receiving_from_department}}</td>
+            
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<button onclick="addRow()">Add More</button>
+{% endblock %}

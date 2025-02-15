@@ -10,6 +10,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from .models import EquipmentsInSurvey
+from .forms import Survey
 
 def filter_equipment(request):
     equipment_type = request.GET.get('equipment_type')
@@ -142,3 +144,7 @@ def equipment_in_field(request):
         for eq in equipment
     ]
     return JsonResponse(data, safe=False)
+
+def equipment(request):
+    data = EquipmentsInSurvey.objects.all()
+    return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})

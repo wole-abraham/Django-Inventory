@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Equipment, SurveyorEngineer
+from .models import Equipment, SurveyorEngineer, EquipmentsInSurvey
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
@@ -15,3 +15,7 @@ class EquipmentAdmin(admin.ModelAdmin):
 class SurveyorEngineerAdmin(admin.ModelAdmin):
     list_display = ('user',)  # Show user details
     search_fields = ('user__username', 'first_name', 'last_name')  # Enable search by user, first and last name
+@admin.register(EquipmentsInSurvey)
+class EquipmentInSurveyAdmin(admin.ModelAdmin):
+    list_display = ('name',)  # Show user details
+    
