@@ -54,7 +54,7 @@ class EquipmentsInSurvey(models.Model):
     project = models.CharField(max_length=20)
     section = models.CharField(max_length=100)
     date_receiving_from_department = models.DateField()
-    status = models.CharField(choices=[('In Store', 'In Store')], max_length=100, default='In Store')
+    status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field')], max_length=100, default='In Store')
 
 
  

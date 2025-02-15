@@ -1,111 +1,54 @@
 {% extends 'base/base_dashboard.html' %}
-
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4">Request Equipment</h1>
 
-    <!-- Instructional Text -->
-    <p class="text-muted text-center">Select the equipment type to filter available options.</p>
+<h2>Record for {{ request.user }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date of Receiving (Supplier)</th>
+            <th>Supplier</th>
+            <th>Base Serial</th>
+            <th>Roover Serial</th>
+            <th>Data Logger Serial</th>
+            <th>Radio Serial</th>
+            <th>Chief Surveyor</th>
+            <th>Surveyor Responsible</th>
+            <th>Project</th>
+            <th>Section</th>
+            <th>Date Receiving (Department)</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for info in data %}
+        <form action="{% url 'request_equipment' %}" method="post">
+            {% csrf_token %}
+        <tr>
+            <td>{{info.name}}</td>
+            <td>{{info.date_of_receiving_from_supplier}}</td>
+            <td>{{info.supplier}}</td>
+            <td>{{info.base_serial}}</td>
+            <td>{{info.roover_serial}}</td>
+            <td>{{info.data_logger_serial}}</td>
+            <td>{{info.radio_serial}}</td>
+            <td>{{info.chief_surveyor}}</td>
+            <td>
+                <input type="text" name='surveyor_res' value="{{info.surveyor_responsible}}">
+                <input type="text" name='id' value="{{info.id}}" hidden>
+            </td>
+            <td>{{info.project}}</td>
+            <td>{{info.section}}</td>
+            <td>{{info.date_receiving_from_department}}</td>
 
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">Request Equipment</div>
-                <div class="card-body">
-                    <form method="POST" action="{% url 'request_equipment' %}">
-                        {% csrf_token %}
-
-                        <!-- Equipment Type Dropdown -->
-                        <div class="mb-3">
-                            <label for="equipment-type" class="form-label">Equipment Type</label>
-                            <select id="equipment-type" class="form-select">
-                                <option value="">Select Type</option>
-                                <option value="GNSS">GNSS</option>
-                                <option value="Total Station">Total Station</option>
-                                <option value="Level Instrument">Level Instrument</option>
-                                <option value="Drone">Drone</option>
-                            </select>
-                        </div>
-
-                        <!-- Equipment Dropdown -->
-                        <div class="mb-3">
-                            <label for="equipment-dropdown" class="form-label">Available Equipment</label>
-                            <select id="equipment-dropdown" class="form-select" name="equipment_id" required>
-                                <option value="">Select Equipment</option>
-                            </select>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success">Request Equipment</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Script for Dynamic Dropdown -->
-<script>
-    document.getElementById('equipment-type').addEventListener('change', function() {
-        const type = this.value;
-        const dropdown = document.getElementById('equipment-dropdown');
-
-        // Clear the dropdown and add a default option
-        dropdown.innerHTML = '<option value="">Select Equipment</option>';
-
-        if (!type) {
-            // If no type is selected, return early
-            const option = document.createElement('option');
-            option.value = "";
-            option.textContent = "Please select a type first";
-            dropdown.appendChild(option);
-            return;
-        }
-
-        // Fetch available equipment based on the selected type
-        fetch(`/inventory/filter-equipment?equipment_type=${type}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Error fetching equipment: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.length === 0) {
-                    // If no equipment is available, show a message
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "No equipment available for this type";
-                    dropdown.appendChild(option);
-                } else {
-                    // Populate the dropdown with the retrieved equipment
-                    data.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.id;
-                        option.textContent = item.name;
-                        dropdown.appendChild(option);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const option = document.createElement('option');
-                option.value = "";
-                option.textContent = "Error fetching equipment, try again later";
-                dropdown.appendChild(option);
-            });
-    });
-
-    // Form submission validation
-    document.querySelector('form').addEventListener('submit', function(event) {
-        const equipmentDropdown = document.getElementById('equipment-dropdown');
-        if (!equipmentDropdown.value || equipmentDropdown.value === "") {
-            event.preventDefault(); // Prevent form submission
-            alert('Please select a valid equipment before submitting the request.');
-        }
-    });
-</script>
-
+            <td>{{info.status}}</td>
+            <td><button type="submit">Release</button></td>
+            
+        </tr>
+    </form>
+        {% endfor %}
+    </tbody>
+</table>
+<button onclick="addRow()">Add More</button>
 {% endblock %}

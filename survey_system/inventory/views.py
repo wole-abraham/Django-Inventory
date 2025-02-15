@@ -23,25 +23,19 @@ def filter_equipment(request):
 @login_required
 def request_equipment(request):
     if request.method == 'POST':
-        equipment_id = request.POST.get('equipment_id')
-        if not equipment_id:
-            return redirect('request_equipment')  # Redirect back to the form
+        surveyor = request.POST.get('surveyor_res')
+        
+        equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
 
-        try:
-            equipment = Equipment.objects.get(id=equipment_id, status='In Store')
-        except Equipment.DoesNotExist:
-            return redirect('request_equipment')
-
-        # Update equipment status
-        surveyor = SurveyorEngineer.objects.get(user=request.user)
+        # Update equipment status and requested_by field
         equipment.status = 'In Field'
-        equipment.requested_by = request.user
+        equipment.surveyor_responsible = surveyor
         equipment.save()
-        surveyor.requested_equipment.add(equipment)
         return redirect('dashboard')
-
+    user = request.user
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Store')
     available_equipment = Equipment.objects.filter(status='In Store')
-    return render(request, 'inventory/request_equipment.html', {'available_equipment': available_equipment})
+    return render(request, 'inventory/request_equipment.html', {'available_equipment': available_equipment, 'data':data})
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -60,12 +54,12 @@ def dashboard_view(request):
 
 def return_equipment(request):
     if request.method == 'POST':
-        equipment_id = request.POST.get('equipment_id')
-        equipment = get_object_or_404(Equipment, id=equipment_id, status='In Field', requested_by=request.user)
+        surveyor = request.POST.get('surveyor_res')
+        equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
 
         # Update equipment status and requested_by field
         equipment.status = 'In Store'
-        equipment.requested_by = None
+        equipment.surveyor_responsible = surveyor
         equipment.save()
 
         messages.success(request, f'{equipment.name} has been returned successfully.')
@@ -93,18 +87,18 @@ def profile(request):
     user_equipment = Equipment.objects.filter(requested_by=request.user)
 
     if request.method == 'POST':
-        equipment_id = request.POST.get('equipment_id')
-        equipment = Equipment.objects.get(id=equipment_id, requested_by=request.user)
+        equipment_id = request.POST.get('id')
+        equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
 
         # Mark the equipment as returned by setting requested_by to None
-        equipment.status = 'In Store'  # Update the status to 'In Store'
-        equipment.requested_by = None  # Remove the user from the equipment
+         # Remove the user from the equipment
         equipment.save()
 
         messages.success(request, 'Equipment returned successfully!')
         return redirect('profile')
-
-    return render(request, 'inventory/profile.html', {'user_equipment': user_equipment})
+    user = request.user
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Field')
+    return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data})
 
 def create_user(request):
     if request.method == 'POST':
