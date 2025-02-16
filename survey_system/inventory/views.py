@@ -31,7 +31,7 @@ def request_equipment(request):
         equipment.status = 'In Field'
         equipment.surveyor_responsible = surveyor
         equipment.save()
-        return redirect('dashboard')
+        return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Store')
     available_equipment = Equipment.objects.filter(status='In Store')
@@ -55,6 +55,7 @@ def dashboard_view(request):
 def return_equipment(request):
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
+        print(request.POST.get('id'))
         equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
 
         # Update equipment status and requested_by field
@@ -63,7 +64,7 @@ def return_equipment(request):
         equipment.save()
 
         messages.success(request, f'{equipment.name} has been returned successfully.')
-        return redirect('dashboard')
+        return redirect('request_equipment')
 
 def login_view(request):
     if request.method == 'POST':

@@ -6,7 +6,7 @@ django.setup()
 
 
 from django.contrib.auth.models import User
-userme = User.objects.filter(username='M.a').first()
+userme = User.objects.filter(username='Mark').first()
 
 
 
@@ -14,7 +14,7 @@ from inventory.models import EquipmentsInSurvey
 lin = []
 with open('data.csv', 'r') as file:
      for word in file:
-        pn, name, dateofr, supplier_name, base, roover, data, radio, chief, userr, passs,  pro, section, dateofrec = file.readline().strip().split(',')
+        pn, name, dateofr, supplier_name, base, roover, data, radio, chief, userr, passs,  pro, section, dateofrec = word.strip().split(',')
         date_str = dateofr
         date_str_2 = dateofrec
         format1, format2 = [datetime.strptime(date_str, "%d/%m/%Y").strftime("%Y-%m-%d"), datetime.strptime(date_str_2, "%d/%m/%Y").strftime("%Y-%m-%d")]
@@ -26,7 +26,7 @@ with open('data.csv', 'r') as file:
                                            data_logger_serial=data, 
                                            radio_serial = radio,
                                            chief_surveyor = userme,
-                                            surveyor_responsible= 'wole',
+                                        
                                              project = pro,
                                               section = section,
                                                date_receiving_from_department = format2

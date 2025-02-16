@@ -1,33 +1,3 @@
-1,GNSS,14/11/2024,Hi-Target,VAXF13842504,VAXE13841816,XE16707361,HAWJ15539936,Melhem,For Logging in,For Logging in,Coastal road,section1-B,17/12/2024
-2,GNSS,14/11/2024,Hi-Target,VAXF13842501,VAXE13841889,XC16706039,HAXF15539976,Melhem,For Logging in,For Logging in,Coastal road,section1-C,17/12/2024
-3,GNSS,14/11/2024,Hi-Target,VAXF13842417,VAXE13841888,WJ16700128,HAXF15539801,Melhem,For Logging in,For Logging in,Coastal road,section1-C,17/12/2024
-4,GNSS,14/11/2024,Hi-Target,VAWJ13830530,VAXE13841851,XE16707078,HAWJ15537488,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-5,GNSS,14/11/2024,Hi-Target,VAXE13841885,VAXE13841880,XE16707002,HAXF15539782,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-6,GNSS,14/11/2024,Hi-Target,VAXE13841879,VAWJ13830576,XE16707337,HAXF15539810,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-7,GNSS,25/11/2024,Hi-Target,VAXJ13847363,VAXJ13847281,XG16710360,HAXJ15541236,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-8,GNSS,25/11/2024,Hi-Target,VAXJ13847393,VAXH13845202,XG16710932,HAXJ15541139,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-9,GNSS,25/11/2024,Hi-Target,VAXJ13847329,VAXH13845104,XG16710354,HAXJ15541081,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-10,GNSS,25/11/2024,Hi-Target,VAXH13845161,VAXH13845205,XG16711022,HAXJ15541173,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-11,GNSS,25/11/2024,Hi-Target,VAXH13845144,VAXH13845179,XG16710362,HAXJ15541054,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-12,GNSS,25/11/2024,Hi-Target,VAXJ13847290,VAXH13845117,XG16710644,HAXJ15541076,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-13,GNSS,25/11/2024,Hi-Target,VAXH13845145,VAXH13847350,XG16710694,HAXK15541649,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-14,GNSS,25/11/2024,Hi-Target,VAXJ13847298,VAXH13845133,XG16710372,HAXJ15541043,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-15,GNSS,25/11/2024,Hi-Target,VAXH13845166,VAXJ13847332,XG16710591,HAXJ15541120,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-16,GNSS,25/11/2024,Hi-Target,VAXH13845256,VAXJ13847361,XF16708213,HAXJ15541174,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-17,GNSS,25/11/2024,Hi-Target,VAXJ13847392,VAXJ13847273,XG16710580,HAXJ15541176,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-18,GNSS,25/11/2024,Hi-Target,VAXJ13847221,VAXJ13847374,XG16710304,HAXJ15541025,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-19,GNSS,25/11/2024,Hi-Target,VAXH13845073,VAXJ13847226,XF16708328,HAXJ15540961,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-20,GNSS,25/11/2024,Hi-Target,VAXJ13847340,VAXH13845004,XG16710692,HAXJ15541251,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-21,GNSS,25/11/2024,Hi-Target,VAXJ13847223,VAXH13845124,XG16710515,HAXJ15541091,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-22,GNSS,25/11/2024,Hi-Target,VAXJ13847377,VAXJ13847401,XG16710427,HAXJ15541231,Johnny Abou Assly,For Logging in,For Logging in,Coastal road,section1-A,14/12/2024
-23,GNSS,25/11/2024,Hi-Target,VAXH13845128,VAXJ13847387,XG16710771,HAXJ15541165,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-24,GNSS,25/11/2024,Hi-Target,VAXH13845167,VAXH13845126,XF16708588,HAXJ15541110,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-25,GNSS,25/11/2024,Hi-Target,VAXJ13847246,VAXJ13847400,XF16708286,HAXJ15541169,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-26,GNSS,25/11/2024,Hi-Target,VAXH13845183,VAXJ13847404,XF16708065,HAXJ15541233,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-27,GNSS,25/11/2024,Hi-Target,VAXH13845172,VAXJ13847384,XF16708313,HAXJ15541235,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-28,GNSS,25/11/2024,Hi-Target,VAXH13845105,VAXJ13847411,XG16710939,HAXJ15541131,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-29,GNSS,25/11/2024,Hi-Target,VAXJ13847362,VAXJ13847410,XF16708251,HAXJ15541077,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
-30,GNSS,25/11/2024,Hi-Target,VAXJ13847286,VAXH13845195,XF16708258,HAXJ15541216,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
 31,GNSS,25/11/2024,Hi-Target,VAXJ13847417,VAXJ13847351,XG16710835,HAXJ15540967,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
 32,GNSS,25/11/2024,Hi-Target,VAXJ13847257,VAXH13845112,XG16710492,HAXJ15541108,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
 33,GNSS,25/11/2024,Hi-Target,VAXJ13847379,VAXJ13847397,XG16710385,HAXJ15541193,Mikeal Swaya,For Logging in,For Logging in,Coastal road,section 2,20/12/2024
