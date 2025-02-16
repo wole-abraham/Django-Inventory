@@ -20,10 +20,11 @@ from django.contrib.auth.views import LoginView, LogoutView
 from inventory import views
 from django.conf import settings
 from django.conf.urls.static import static
+from inventory.views import request_equipment
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.dashboard_view, name='/'),
+    path('', views.request_equipment, name='/'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
