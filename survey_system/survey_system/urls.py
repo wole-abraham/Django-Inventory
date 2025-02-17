@@ -20,18 +20,32 @@ from django.contrib.auth.views import LoginView, LogoutView
 from inventory import views
 from django.conf import settings
 from django.conf.urls.static import static
-from inventory.views import request_equipment
+from inventory.views import request_equipment, store, store_all, store_field, return_equip
+from django.shortcuts import redirect
+
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'  # Ensure this template exists
+
+    def get_success_url(self):
+        """Redirect superusers to 'store' and others to 'dashboard'"""
+        if self.request.user.is_superuser:
+            return '/store/'  # You can also use reverse('store') if named in urls.py
+        return '/inventory/request-equipment/'  # Change this to the correct dashboard URL
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.request_equipment, name='/'),
-    path('login/', LoginView.as_view(), name='login'),
+    path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('create-user/', views.create_user, name='create_user'),
     path('inventory/', include('inventory.urls')),
     path('api/equipment/in-store/', views.equipment_in_store, name='equipment_in_store'),
     path('api/equipment/in-field/', views.equipment_in_field, name='equipment_in_field'),
+    path('store/', store, name='store'),
+    path('store_all/', store_all, name='store_all'),
+    path('store_field/', store_field, name='store_field'),
+    path('return/<int:id>', return_equip, name='return_equip')
 
 ]
 

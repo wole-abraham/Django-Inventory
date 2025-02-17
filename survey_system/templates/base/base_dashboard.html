@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -45,7 +45,12 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
     <!-- Navbar Brand -->
-    <a class="navbar-brand" href="#">Dashboard</a>
+     {% if is_admin %}
+    <a class="navbar-brand" href="{% url 'store' %}">Store Manager</a>
+    {% else %}
+    <a class="navbar-brand" href="#">Store</a>
+    {% endif %}
+    
     
     <!-- Navbar Toggle (for mobile view) -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,19 +60,34 @@
     <!-- Navbar Links -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated or is_admin %}
           <li class="nav-item">
             <span class="nav-link">Hello, {{ user.username }}</span>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'request_equipment' %}">My Store</a>
-          </li>
+
+         
           <!-- <li class="nav-item">
             <a class="nav-link" href="{% url 'equipment' %}">In Store</a>
           </li> -->
+          {% if is_admin %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'store' %}">Store</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'store_all' %}">All Equipments</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'store_field' %}">In Field</a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'request_equipment' %}">My Store</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'profile' %}">In Field</a>
           </li>
+
+          {% endif%}
           <li class="nav-item">
             <!-- Logout Form -->
             <form method="POST" action="{% url 'logout' %}">
@@ -86,30 +106,13 @@
 </nav>
 
 <!-- Page content -->
-<div class="container mt-5">
+<div class="container">
     {% block content %}
     {% endblock %}
 </div>
 
 <!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  function addRow() {
-      let table = document.getElementById("record-table");
-      let row = document.createElement("tr");
-      let columns = ["name", "date_of_receiving_from_supplier", "supplier", "base_serial", "roover_serial", "data_logger_serial", "radio_serial", "chief_surveyor", "surveyor_responsible", "project", "section", "date_receiving_from_department"];
-      
-      columns.forEach(col => {
-          let cell = document.createElement("td");
-          let input = document.createElement("input");
-          input.type = "text";
-          input.name = col;
-          cell.appendChild(input);
-          row.appendChild(cell);
-      });
-      
-      table.appendChild(row);
-  }
 </script>
 </body>
 </html>

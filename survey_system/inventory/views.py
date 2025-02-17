@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey
+
 from .forms import Survey
 
 def filter_equipment(request):
@@ -26,20 +27,22 @@ def request_equipment(request):
         surveyor = request.POST.get('surveyor_res')
         section = request.POST.get('section')
         project = request.POST.get('project')
+        date = request.POST.get('date_receiving')
         
         equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
 
         # Update equipment status and requested_by field
         equipment.status = 'In Field'
         equipment.section = section
+        equipment.date_receiving_from_department = date
         equipment.project = project
         equipment.surveyor_responsible = surveyor
+        
         equipment.save()
         return redirect('profile')
     user = request.user
-    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Store')
-    available_equipment = Equipment.objects.filter(status='In Store')
-    return render(request, 'inventory/request_equipment.html', {'available_equipment': available_equipment, 'data':data})
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
+    return render(request, 'inventory/request_equipment.html', {'data':data})
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -56,6 +59,31 @@ def dashboard_view(request):
     })
 
 
+def store(request):
+    if request.method == 'POST':
+        chief_id = request.POST.get('id')
+        equipment = request.POST.get('equipment_id')
+        user = User.objects.filter(id=chief_id).first()
+        equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
+        equipment.chief_surveyor = user
+        equipment.status = "With Chief Surveyor"
+        equipment.save() 
+        redirect('store')
+    users = User.objects.filter(is_superuser=False)
+    data = EquipmentsInSurvey.objects.filter(status="In Store")
+    all = EquipmentsInSurvey.objects.all()
+    return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all})
+
+def store_all(request):
+    data = EquipmentsInSurvey.objects.all()
+    return render(request, 'inventory/store_all.html', {'data': data})
+
+def store_field(request):
+    data = EquipmentsInSurvey.objects.filter(status__in=['In Field', 'With Chief Surveyor'])
+    return render(request, 'inventory/store_field.html', {'data': data})
+
+
+
 def return_equipment(request):
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
@@ -70,6 +98,14 @@ def return_equipment(request):
 
         messages.success(request, f'{equipment.name} has been returned successfully.')
         return redirect('request_equipment')
+    
+def return_equip(request, id):
+    eq = EquipmentsInSurvey.objects.filter(id=id).first()
+    eq.status = 'In Store'
+    eq.chief_surveyor = None
+    eq.save()
+    return redirect('request_equipment')
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -79,7 +115,11 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, 'You have been logged in successfully!')
-            return redirect('dashboard')  # Redirect to the dashboard after login
+            print(f"{user.is_superuser}")
+            if user.is_superuser:
+                return redirect('store')
+            else:
+                return redirect('')  # Redirect to the dashboard after login
         else:
             messages.error(request, 'Invalid username or password')
     else:

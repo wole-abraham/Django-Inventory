@@ -1,7 +1,6 @@
 {% extends 'base/base_dashboard.html' %}
 {% block content %}
-
-<h2>Equipments for {{ request.user }}</h2>
+<h2>Equipments in Store</h2>
 <table>
     <thead>
         <tr>
@@ -13,17 +12,13 @@
             <th>Data Logger Serial</th>
             <th>Radio Serial</th>
             <th>Chief Surveyor</th>
-            <th>Surveyor Responsible</th>
-            <th>Project</th>
-            <th>Section</th>
-            <th>Date Receiving (Department)</th>
             <th>Status</th>
             <th>Action</th>
         </tr>
     </thead>
     <tbody>
         {% for info in data %}
-        <form action="{% url 'return_equipment' %}" method="post">
+        <form action="{% url 'store' %}" method="post">
             {% csrf_token %}
         <tr>
             <td>{{info.name}}</td>
@@ -33,17 +28,16 @@
             <td>{{info.roover_serial}}</td>
             <td>{{info.data_logger_serial}}</td>
             <td>{{info.radio_serial}}</td>
-            <td>{{info.chief_surveyor}}</td>
             <td>
-                {{info.surveyor_responsible}}
-                <input type="text" name='id' value="{{info.id}}" hidden>
-            </td>
-            <td>{{info.project}}</td>
-            <td>{{info.section}}</td>
-            <td>{{info.date_receiving_from_department}}</td>
-
+                <select name="id" id="">
+                {% for users in user %}
+                <option value="{{ users.id }}">{{ users.username}}</option>
+                {% endfor %}
+            </select>
+            <input type="text" value="{{info.id}}" name="equipment_id" hidden>
+        </td>
             <td>{{info.status}}</td>
-            <td><button type="submit">Return</button></td>
+            <td><button type="submit">Release</button></td>
             
         </tr>
     </form>

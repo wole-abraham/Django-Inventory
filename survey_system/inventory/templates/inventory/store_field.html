@@ -1,7 +1,7 @@
 {% extends 'base/base_dashboard.html' %}
 {% block content %}
 
-<h2>Equipments for {{ request.user }}</h2>
+<h2>Equipments Not in Store</h2>
 <table>
     <thead>
         <tr>
@@ -18,7 +18,7 @@
             <th>Section</th>
             <th>Date Receiving (Department)</th>
             <th>Status</th>
-            <th>Action</th>
+            <!-- <th>Action</th> -->
         </tr>
     </thead>
     <tbody>
@@ -43,7 +43,7 @@
             <td>{{info.date_receiving_from_department}}</td>
 
             <td>{{info.status}}</td>
-            <td><button type="submit">Return</button></td>
+            <!-- <td><button type="submit">Return</button></td> -->
             
         </tr>
     </form>

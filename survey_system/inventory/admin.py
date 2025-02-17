@@ -17,5 +17,5 @@ class SurveyorEngineerAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'first_name', 'last_name')  # Enable search by user, first and last name
 @admin.register(EquipmentsInSurvey)
 class EquipmentInSurveyAdmin(admin.ModelAdmin):
-    list_display = ('name',)  # Show user details
+    list_display = ('name', 'base_serial',)  # Show user details
     

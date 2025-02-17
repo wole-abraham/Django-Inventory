@@ -18,7 +18,8 @@
             <th>Section</th>
             <th>Date Receiving (Department)</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Release</th>
+            <th>Return</th>
         </tr>
     </thead>
     <tbody>
@@ -59,15 +60,18 @@
                 <input type="text" name='id3' value="{{info.id}}" hidden>
 
             </td>
-            <td>{{info.date_receiving_from_department}}</td>
+            <td>
+                <input type="date" name="date_receiving" id="">
+            </td>
 
             <td>{{info.status}}</td>
             <td><button type="submit">Release</button></td>
+            <td><a href="{% url 'return_equip' info.id %}"><button type="button">Return</button></a></td>
             
         </tr>
     </form>
         {% endfor %}
     </tbody>
 </table>
-<button onclick="addRow()">Add More</button>
+<!-- <button onclick="addRow()">Add More</button> -->
 {% endblock %}
