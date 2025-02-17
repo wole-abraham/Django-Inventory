@@ -55,12 +55,16 @@ def dashboard_view(request):
 def return_equipment(request):
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
+        section = request.POST.get('seection')
+        project = request.POST.get('project')
         print(request.POST.get('id'))
         equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
 
         # Update equipment status and requested_by field
         equipment.status = 'In Store'
         equipment.surveyor_responsible = surveyor
+        equipment.section = section
+        equipment.project = project
         equipment.save()
 
         messages.success(request, f'{equipment.name} has been returned successfully.')
