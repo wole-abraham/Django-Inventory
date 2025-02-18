@@ -1,77 +1,90 @@
 {% extends 'base/base_dashboard.html' %}
+
 {% block content %}
-
-<h2>Record for {{ request.user }}</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Date of Receiving (Supplier)</th>
-            <th>Supplier</th>
-            <th>Base Serial</th>
-            <th>Roover Serial</th>
-            <th>Data Logger Serial</th>
-            <th>Radio Serial</th>
-            <th>Chief Surveyor</th>
-            <th>Surveyor Responsible</th>
-            <th>Project</th>
-            <th>Section</th>
-            <th>Date Receiving (Department)</th>
-            <th>Status</th>
-            <th>Release</th>
-            <th>Return</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for info in data %}
-        <form action="{% url 'request_equipment' %}" method="post">
-            {% csrf_token %}
-        <tr>
-            <td>{{info.name}}</td>
-            <td>{{info.date_of_receiving_from_supplier}}</td>
-            <td>{{info.supplier}}</td>
-            <td>{{info.base_serial}}</td>
-            <td>{{info.roover_serial}}</td>
-            <td>{{info.data_logger_serial}}</td>
-            <td>{{info.radio_serial}}</td>
-            <td>{{info.chief_surveyor}}</td>
-            <td>
-                <input type="text" name='surveyor_res' value="{{info.surveyor_responsible}}">
-                <input type="text" name='id' value="{{info.id}}" hidden>
-            </td>
-            <td>
-                
-                <select name="project" id="">
-                    <option value="Coastal Road">Coastal Road</option>
-                    <option value="Sokoto">Sokoto</option>
-
-                </select>
-                <input type="text" name='id2' value="{{info.id}}" hidden>
-
-            </td>
-            <td>
-               <select name="section" id="">
-                <option value="Section 1">Section 1</option>
-                <option value="Section 9">Section 9</option>
-                <option value="Section 1-A">Section 1-A</option>
-                <option value="Section 1-B">Section 1-B</option>
-                <option value="Section 1-C">Section 1-C</option>
-               </select>
-                <input type="text" name='id3' value="{{info.id}}" hidden>
-
-            </td>
-            <td>
-                <input type="date" name="date_receiving" id="">
-            </td>
-
-            <td>{{info.status}}</td>
-            <td><button type="submit">Release</button></td>
-            <td><a href="{% url 'return_equip' info.id %}"><button type="button">Return</button></a></td>
-            
-        </tr>
-    </form>
-        {% endfor %}
-    </tbody>
-</table>
-<!-- <button onclick="addRow()">Add More</button> -->
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Record for {{ request.user }}</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date of Receiving (Supplier)</th>
+                            <th>Supplier</th>
+                            <th>Base Serial</th>
+                            <th>Roover Serial</th>
+                            <th>Data Logger Serial</th>
+                            <th>Radio Serial</th>
+                            <th>Chief Surveyor</th>
+                            <th>Surveyor Responsible</th>
+                            <th>Project</th>
+                            <th>Section</th>
+                            <th>Date Receiving (Department)</th>
+                            <th>Status</th>
+                            <th>Release</th>
+                            <th>Return</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for info in data %}
+                        <tr>
+                            <td>{{ info.name }}</td>
+                            <td>{{ info.date_of_receiving_from_supplier }}</td>
+                            <td>{{ info.supplier }}</td>
+                            <td>{{ info.base_serial }}</td>
+                            <td>{{ info.roover_serial }}</td>
+                            <td>{{ info.data_logger_serial }}</td>
+                            <td>{{ info.radio_serial }}</td>
+                            <td>{{ info.chief_surveyor }}</td>
+                            <td>
+                                <form action="{% url 'request_equipment' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="text" class="form-control" name="surveyor_res" value="{{ info.surveyor_responsible }}">
+                                    <input type="hidden" name="id" value="{{ info.id }}">
+                            </td>
+                            <td>
+                                <select name="project">
+                                    <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
+                                    <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="section">
+                                    <option value="Section 1" {% if info.section == "Section 1" %}selected{% endif %}>Section 1</option>
+                                    <option value="Section 9" {% if info.section == "Section 9" %}selected{% endif %}>Section 9</option>
+                                    <option value="Section 1-A" {% if info.section == "Section 1-A" %}selected{% endif %}>Section 1-A</option>
+                                    <option value="Section 1-B" {% if info.section == "Section 1-B" %}selected{% endif %}>Section 1-B</option>
+                                    <option value="Section 1-C" {% if info.section == "Section 1-C" %}selected{% endif %}>Section 1-C</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="date" class="form-control" name="date_receiving">
+                            </td>
+                            <td>
+                                <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
+                                    {{ info.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-paper-plane"></i> Release
+                                </button>
+                                </form> <!-- Close form after submit button -->
+                            </td>
+                            <td>
+                                <a href="{% url 'return_equip' info.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa fa-undo"></i> Return to Store
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

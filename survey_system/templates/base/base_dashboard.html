@@ -40,18 +40,14 @@
 
 </style>
 <body>
-
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container-fluid">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container">
     <!-- Navbar Brand -->
-     {% if is_admin %}
-    <a class="navbar-brand" href="{% url 'store' %}">Store Manager</a>
-    {% else %}
-    <a class="navbar-brand" href="#">Store</a>
-    {% endif %}
-    
-    
+    <a class="navbar-brand fw-bold" href="{% if is_admin %}{% url 'store' %}{% else %}#{% endif %}">
+      {% if is_admin %} Store Manager {% else %} Store {% endif %}
+    </a>
+
     <!-- Navbar Toggle (for mobile view) -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -59,51 +55,48 @@
 
     <!-- Navbar Links -->
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto align-items-center">
         {% if user.is_authenticated or is_admin %}
           <li class="nav-item">
-            <span class="nav-link">Hello, {{ user.username }}</span>
+            <span class="nav-link text-light fw-semibold">Hello, {{ user.username }}</span>
           </li>
 
-         
-          <!-- <li class="nav-item">
-            <a class="nav-link" href="{% url 'equipment' %}">In Store</a>
-          </li> -->
           {% if is_admin %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'store' %}">Store</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'store_all' %}">All Equipments</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'store_field' %}">In Field</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'store' %}">Store</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'store_all' %}">All Equipment</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'store_field' %}">In Field</a>
+            </li>
           {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'request_equipment' %}">My Store</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'profile' %}">In Field</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'request_equipment' %}">My Store</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile' %}">In Field</a>
+            </li>
+          {% endif %}
 
-          {% endif%}
           <li class="nav-item">
             <!-- Logout Form -->
-            <form method="POST" action="{% url 'logout' %}">
+            <form method="POST" action="{% url 'logout' %}" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="nav-link btn btn-link">Logout</button>
+                <button type="submit" class="btn btn-link nav-link text-light">Logout</button>
             </form>
           </li>
         {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'login' %}">Login</a>
+            <a class="nav-link btn btn-light text-primary px-3 rounded-pill" href="{% url 'login' %}">Login</a>
           </li>
         {% endif %}
       </ul>
     </div>
   </div>
 </nav>
+
 
 <!-- Page content -->
 <div class="container">
