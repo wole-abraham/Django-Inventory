@@ -47,3 +47,32 @@ class AccessoryForm(forms.ModelForm):
                 'rows': 3
             })
         }
+
+class EquipmentEditForm(forms.ModelForm):
+    class Meta:
+        model = EquipmentsInSurvey
+        fields = [
+            'name', 'date_of_receiving_from_supplier', 'supplier', 
+            'base_serial', 'roover_serial', 'data_logger_serial', 
+            'radio_serial', 'project', 'section', 'date_receiving_from_department'
+        ]
+        widgets = {
+            'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
+            'date_receiving_from_department': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+class AccessoryEditForm(forms.ModelForm):
+    class Meta:
+        model = Accessory
+        fields = ['status', 'comment']
+        widgets = {
+            'status': forms.Select(attrs={
+                'class': 'form-select',
+                'placeholder': 'Select Status'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter any additional comments',
+                'rows': 3
+            })
+        }

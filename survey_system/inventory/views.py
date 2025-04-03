@@ -10,9 +10,11 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import EquipmentsInSurvey
+from .models import EquipmentsInSurvey, Accessory
 
 from .forms import Survey, AccessoryForm
+from .forms import EquipmentEditForm
+from .forms import AccessoryEditForm
 
 def filter_equipment(request):
     equipment_type = request.GET.get('equipment_type')
@@ -212,4 +214,41 @@ def accessory(request, id):
 def equipment_detail(request, id):
     equipment = EquipmentsInSurvey.objects.filter(id=id).first()
     return render(request, 'equipments/equipments_detail.html', {'equipment': equipment})
+
+@login_required
+def edit_equipment(request, id):
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    
+    if request.method == 'POST':
+        form = EquipmentEditForm(request.POST, instance=equipment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Equipment details updated successfully!')
+            return redirect('equipment_detail', id=equipment.id)
+    else:
+        form = EquipmentEditForm(instance=equipment)
+    
+    return render(request, 'equipments/edit_equipment.html', {
+        'form': form,
+        'equipment': equipment
+    })
+
+@login_required
+def edit_accessory(request, id):
+    accessory = get_object_or_404(Accessory, id=id)
+    
+    if request.method == 'POST':
+        form = AccessoryEditForm(request.POST, instance=accessory)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Accessory details updated successfully!')
+            return redirect('equipment_detail', id=accessory.equipment.id)
+    else:
+        form = AccessoryEditForm(instance=accessory)
+    
+    return render(request, 'equipments/edit_accessory.html', {
+        'form': form,
+        'accessory': accessory,
+        'equipment': accessory.equipment
+    })
 
