@@ -1,0 +1,149 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .status-returning {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+    
+    .btn-store {
+        background-color: #28a745;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-store:hover {
+        background-color: #218838;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="page-title">
+        <i class="fas fa-undo me-2"></i>Returning Equipment
+    </h1>
+    
+    {% if data %}
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Base Serial</th>
+                        <th>Rover Serial</th>
+                        <th>Data Logger Serial</th>
+                        <th>Radio Serial</th>
+                        <th>Chief Surveyor</th>
+                        <th>Surveyor Responsible</th>
+                        <th>Project</th>
+                        <th>Section</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipment in data %}
+                    <tr>
+                        <td>{{ equipment.name }}</td>
+                        <td>{{ equipment.base_serial }}</td>
+                        <td>{{ equipment.roover_serial }}</td>
+                        <td>{{ equipment.data_logger_serial }}</td>
+                        <td>{{ equipment.radio_serial }}</td>
+                        <td>{{ equipment.chief_surveyor.get_full_name }}</td>
+                        <td>{{ equipment.surveyor_responsible }}</td>
+                        <td>{{ equipment.project }}</td>
+                        <td>{{ equipment.section }}</td>
+                        <td>
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="id" value="{{ equipment.id }}">
+                                <button type="submit" class="btn btn-store">
+                                    <i class="fas fa-check me-2"></i>Mark as In Store
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <h3>No Returning Equipment</h3>
+        <p>There are currently no equipment items marked as returning.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

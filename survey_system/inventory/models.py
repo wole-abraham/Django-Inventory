@@ -14,6 +14,7 @@ class Equipment(models.Model):
 
     STATUS = [
         ('In Field', 'In Field'),
+        ('Returning', 'Returning'),
         ('In Store', 'In Store')
     ]
     name = models.CharField(max_length=100)
@@ -54,7 +55,7 @@ class EquipmentsInSurvey(models.Model):
     project = models.CharField(max_length=20)
     section = models.CharField(max_length=100)
     date_receiving_from_department = models.DateField()
-    status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor')], max_length=100, default='In Store')
+    status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning')], max_length=100, default='In Store')
 
     def __str__(self):
         return f'{self.base_serial}'

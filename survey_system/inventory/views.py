@@ -103,7 +103,7 @@ def return_equipment(request):
     
 def return_equip(request, id):
     eq = EquipmentsInSurvey.objects.filter(id=id).first()
-    eq.status = 'In Store'
+    eq.status = 'Returning'
     eq.chief_surveyor = None
     eq.save()
     return redirect('request_equipment')
@@ -251,4 +251,16 @@ def edit_accessory(request, id):
         'accessory': accessory,
         'equipment': accessory.equipment
     })
+
+def store_returning(request):
+    if request.method == 'POST':
+        equipment_id = request.POST.get('id')
+        equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
+        equipment.status = 'In Store'
+        equipment.save()
+        messages.success(request, f'{equipment.name} has been marked as In Store.')
+        return redirect('store_returning')
+    
+    data = EquipmentsInSurvey.objects.filter(status='Returning')
+    return render(request, 'inventory/store_returning.html', {'data': data})
 
