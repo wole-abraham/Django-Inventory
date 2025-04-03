@@ -12,7 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey
 
-from .forms import Survey
+from .forms import Survey, AccessoryForm
 
 def filter_equipment(request):
     equipment_type = request.GET.get('equipment_type')
@@ -190,3 +190,26 @@ def equipment(request):
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
     
     return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})
+
+@login_required
+def accessory(request, id):
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    
+    if request.method == 'POST':
+        form = AccessoryForm(request.POST, equipment=equipment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Accessory added successfully!')
+            return redirect('equipment_detail', id=equipment.id)
+    else:
+        form = AccessoryForm(equipment=equipment)
+    
+    return render(request, 'equipments/accessory.html', {
+        'form': form,
+        'equipment': equipment
+    })
+
+def equipment_detail(request, id):
+    equipment = EquipmentsInSurvey.objects.filter(id=id).first()
+    return render(request, 'equipments/equipments_detail.html', {'equipment': equipment})
+

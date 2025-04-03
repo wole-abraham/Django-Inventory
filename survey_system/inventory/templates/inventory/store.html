@@ -28,7 +28,7 @@
                         <tr>
                             <form action="{% url 'store' %}" method="post">
                                 {% csrf_token %}
-                                <td>{{ info.name }}</td>
+                                <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
                                 <td>{{ info.date_of_receiving_from_supplier }}</td>
                                 <td>{{ info.supplier }}</td>
                                 <td>{{ info.base_serial }}</td>

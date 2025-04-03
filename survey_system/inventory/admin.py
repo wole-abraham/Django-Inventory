@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Equipment, SurveyorEngineer, EquipmentsInSurvey
+from .models import Equipment, SurveyorEngineer, EquipmentsInSurvey, Accessory
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
@@ -19,3 +19,6 @@ class SurveyorEngineerAdmin(admin.ModelAdmin):
 class EquipmentInSurveyAdmin(admin.ModelAdmin):
     list_display = ('name', 'base_serial',)  # Show user details
     
+@admin.register(Accessory)
+class EquipmentInSurveyAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in Accessory._meta.fields]

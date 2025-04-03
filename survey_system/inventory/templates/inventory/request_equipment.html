@@ -1,14 +1,14 @@
 {% extends 'base/base_dashboard.html' %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
             <h2 class="mb-0">Record for {{ request.user }}</h2>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered align-middle">
+        <div class="card-body p-0">
+            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="table table-striped table-hover table-bordered align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
@@ -31,7 +31,7 @@
                     <tbody>
                         {% for info in data %}
                         <tr>
-                            <td>{{ info.name }}</td>
+                            <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td> 
                             <td>{{ info.date_of_receiving_from_supplier }}</td>
                             <td>{{ info.supplier }}</td>
                             <td>{{ info.base_serial }}</td>
@@ -40,19 +40,19 @@
                             <td>{{ info.radio_serial }}</td>
                             <td>{{ info.chief_surveyor }}</td>
                             <td>
-                                <form action="{% url 'request_equipment' %}" method="post">
+                                <form action="{% url 'request_equipment' %}" method="post" class="d-inline">
                                     {% csrf_token %}
-                                    <input type="text" class="form-control" name="surveyor_res" value="{{ info.surveyor_responsible }}">
+                                    <input type="text" class="form-control form-control-sm" name="surveyor_res" value="{{ info.surveyor_responsible }}">
                                     <input type="hidden" name="id" value="{{ info.id }}">
                             </td>
                             <td>
-                                <select name="project">
+                                <select name="project" class="form-select form-select-sm">
                                     <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
                                     <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
                                 </select>
                             </td>
                             <td>
-                                <select name="section">
+                                <select name="section" class="form-select form-select-sm">
                                     <option value="Section 1" {% if info.section == "Section 1" %}selected{% endif %}>Section 1</option>
                                     <option value="Section 9" {% if info.section == "Section 9" %}selected{% endif %}>Section 9</option>
                                     <option value="Section 1-A" {% if info.section == "Section 1-A" %}selected{% endif %}>Section 1-A</option>
@@ -61,7 +61,7 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="date" class="form-control" name="date_receiving">
+                                <input type="date" class="form-control form-control-sm" name="date_receiving">
                             </td>
                             <td>
                                 <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
@@ -72,7 +72,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-primary">
                                     <i class="fa fa-paper-plane"></i> Release
                                 </button>
-                                </form> <!-- Close form after submit button -->
+                                </form>
                             </td>
                             <td>
                                 <a href="{% url 'return_equip' info.id %}" class="btn btn-sm btn-outline-danger">
@@ -87,4 +87,30 @@
         </div>
     </div>
 </div>
+
+<style>
+    .table-responsive {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .table th {
+        position: sticky;
+        top: 0;
+        background: #343a40;
+        z-index: 1;
+    }
+    
+    .form-control-sm, .form-select-sm {
+        min-width: 120px;
+    }
+    
+    .table td {
+        white-space: nowrap;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+</style>
 {% endblock %}

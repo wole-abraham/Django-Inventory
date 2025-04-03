@@ -63,6 +63,29 @@ class EquipmentsInSurvey(models.Model):
  
 
     
+class Accessory(models.Model):
+    ACCESSORY_TYPES = (
+    ("tripod", "Tripod"),
+    ("levelling_staff", "Levelling Staff"),
+    ("tracking_rod", "Tracking Rod"),
+    ("reflector", "Reflector"),
+    ("gps_extension_bar", "GPS Extension Bar"),
+    ("bar_port", "Bar Port"),
+    ("powerbank", "Powerbank"),
+    ("tribach", "Tribach"),
+    ("external_radio_antenna", "External Radio Antenna"),
+)
 
+    STATUS_CHOICES = [
+        ('Good', 'Good'),
+        ('Needs Repair', 'Needs Repair'),
+        ('Spoiled', 'Spoiled'),
+    ]
 
+    name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
+    equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good')
+    comment = models.TextField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.name} ({self.equipment.name}) - {self.status}"
