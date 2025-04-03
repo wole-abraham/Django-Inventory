@@ -1,14 +1,14 @@
 {% extends 'base/base_dashboard.html' %} 
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
             <h2 class="mb-0">Equipments in Store</h2>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-bordered align-middle">
+        <div class="card-body p-0">
+            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="table table-striped table-hover table-bordered align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
@@ -62,4 +62,40 @@
         </div>
     </div>
 </div>
+
+<style>
+    .table-responsive {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .table th {
+        position: sticky;
+        top: 0;
+        background: #343a40;
+        z-index: 1;
+    }
+    
+    .table td {
+        white-space: nowrap;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5em 0.75em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-select {
+        min-width: 150px;
+    }
+</style>
 {% endblock %}
