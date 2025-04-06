@@ -43,7 +43,7 @@ def request_equipment(request):
         equipment.save()
         return redirect('profile')
     user = request.user
-    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Store')
     return render(request, 'inventory/request_equipment.html', {'data':data})
 
 @receiver(post_save, sender=User)
@@ -220,7 +220,7 @@ def edit_equipment(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
     
     if request.method == 'POST':
-        form = EquipmentEditForm(request.POST, instance=equipment)
+        form = EquipmentEditForm(request.POST, request.FILES, instance=equipment)
         if form.is_valid():
             form.save()
             messages.success(request, 'Equipment details updated successfully!')
@@ -238,7 +238,7 @@ def edit_accessory(request, id):
     accessory = get_object_or_404(Accessory, id=id)
     
     if request.method == 'POST':
-        form = AccessoryEditForm(request.POST, instance=accessory)
+        form = AccessoryEditForm(request.POST, request.FILES, instance=accessory)
         if form.is_valid():
             form.save()
             messages.success(request, 'Accessory details updated successfully!')

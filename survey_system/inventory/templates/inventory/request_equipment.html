@@ -30,6 +30,8 @@
                     </thead>
                     <tbody>
                         {% for info in data %}
+                        <form action="{% url 'request_equipment' %}" method="post" class="d-inline">
+                            {% csrf_token %}
                         <tr>
                             <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
                             <td>{{ info.date_of_receiving_from_supplier }}</td>
@@ -39,10 +41,10 @@
                             <td>{{ info.data_logger_serial }}</td>
                             <td>{{ info.radio_serial }}</td>
                             <td>{{ info.chief_surveyor }}</td>
+                            
                             <td>
-                                <form action="{% url 'request_equipment' %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="text" class="form-control form-control-sm" name="surveyor_res" value="{{ info.surveyor_responsible }}">
+                               
+                                    <input type="text" class="form-control form-control-sm" name="surveyor_res" value="{{ info.surveyor_responsible }}" required>
                                     <input type="hidden" name="id" value="{{ info.id }}">
                             </td>
                             <td>
@@ -61,7 +63,7 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="date" class="form-control form-control-sm" name="date_receiving">
+                                <input type="date" class="form-control form-control-sm" name="date_receiving" required>
                             </td>
                             <td>
                                 <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
@@ -72,7 +74,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-primary">
                                     <i class="fa fa-paper-plane"></i> Release
                                 </button>
-                                </form>
+                                
                             </td>
                             <td>
                                 <a href="{% url 'return_equip' info.id %}" class="btn btn-sm btn-outline-danger">
@@ -80,6 +82,7 @@
                                 </a>
                             </td>
                         </tr>
+                        </form>
                         {% endfor %}
                     </tbody>
                 </table>

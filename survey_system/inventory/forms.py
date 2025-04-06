@@ -64,7 +64,7 @@ class EquipmentEditForm(forms.ModelForm):
 class AccessoryEditForm(forms.ModelForm):
     class Meta:
         model = Accessory
-        fields = ['status', 'comment']
+        fields = ['status', 'comment', 'image']
         widgets = {
             'status': forms.Select(attrs={
                 'class': 'form-select',

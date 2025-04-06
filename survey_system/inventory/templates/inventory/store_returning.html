@@ -114,7 +114,7 @@
                 <tbody>
                     {% for equipment in data %}
                     <tr>
-                        <td>{{ equipment.name }}</td>
+                        <td><a href="{% url 'equipment_detail' equipment.id %}">{{ equipment.name }}</a></td>
                         <td>{{ equipment.base_serial }}</td>
                         <td>{{ equipment.roover_serial }}</td>
                         <td>{{ equipment.data_logger_serial }}</td>

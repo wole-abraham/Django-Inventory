@@ -87,6 +87,7 @@ class Accessory(models.Model):
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good')
     comment = models.TextField(null=True, blank=True)
+    image = models.ImageField(upload_to='accessory_images/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.equipment.name}) - {self.status}"

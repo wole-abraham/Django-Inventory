@@ -97,7 +97,7 @@
             </div>
         </div>
         
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
             <div class="form-group">
@@ -108,6 +108,10 @@
             <div class="form-group">
                 <label class="form-label">Comments</label>
                 {{ form.comment }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image: </label>
+                {{ form.image }}
             </div>
             
             <div class="d-flex justify-content-between mt-4">
