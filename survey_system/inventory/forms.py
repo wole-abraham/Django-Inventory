@@ -76,3 +76,38 @@ class AccessoryEditForm(forms.ModelForm):
                 'rows': 3
             })
         }
+
+class AccessoryReturnForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        equipment = kwargs.pop('equipment', None)
+        super(AccessoryReturnForm, self).__init__(*args, **kwargs)
+        
+        if equipment:
+            accessories = equipment.accessories.all()
+            for accessory in accessories:
+                # Add checkbox field
+                self.fields[f'accessory_{accessory.id}'] = forms.BooleanField(
+                    required=True,
+                    label=f"{accessory.get_name_display()} - Current Status: {accessory.status}",
+                    initial=True,
+                    widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+                )
+                
+                # Add status field
+                self.fields[f'accessory_{accessory.id}_status'] = forms.ChoiceField(
+                    choices=Accessory.STATUS_CHOICES,
+                    initial=accessory.status,
+                    widget=forms.Select(attrs={'class': 'form-select'}),
+                    label='Status'
+                )
+                
+                # Add comment field
+                self.fields[f'accessory_{accessory.id}_comment'] = forms.CharField(
+                    required=False,
+                    widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Add any comments about the accessory condition'}),
+                    initial=accessory.comment,
+                    label='Comments'
+                )
+                
+                # Store accessory ID for easy access in template
+                self.fields[f'accessory_{accessory.id}'].accessory_id = accessory.id

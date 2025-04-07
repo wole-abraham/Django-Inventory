@@ -20,7 +20,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from inventory import views
 from django.conf import settings
 from django.conf.urls.static import static
-from inventory.views import request_equipment, store, store_all, store_field, return_equip
+from inventory.views import request_equipment, store, store_all, store_field, return_equipment
 from django.shortcuts import redirect
 
 class CustomLoginView(LoginView):
@@ -45,7 +45,7 @@ urlpatterns = [
     path('store/', store, name='store'),
     path('store_all/', store_all, name='store_all'),
     path('store_field/', store_field, name='store_field'),
-    path('return/<int:id>', return_equip, name='return_equip'),
+    path('return/<int:id>', views.return_equipment, name='return_equip'),
     path('api/', include('api.urls'))
 
 

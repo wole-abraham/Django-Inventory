@@ -1,0 +1,289 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 0.75rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #545b62;
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .equipment-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .equipment-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .accessory-item {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .accessory-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .accessory-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .accessory-status {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    /* Enhanced checkbox styles */
+    .form-check {
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .form-check:hover {
+        background-color: #e9ecef;
+    }
+
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.2em;
+        border: 2px solid #6c757d;
+    }
+
+    .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .form-check-label {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-left: 0.5rem;
+    }
+
+    /* Equipment return checkbox specific styles */
+    .equipment-return-check {
+        background-color: #e3f2fd;
+        border: 1px solid #bbdefb;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .equipment-return-check:hover {
+        background-color: #bbdefb;
+    }
+
+    /* Accessory item styles */
+    .accessory-item {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .accessory-item:hover {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .accessory-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .accessory-name {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1.1rem;
+    }
+
+    .accessory-status {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-left: 1rem;
+    }
+
+    /* Status and comment field styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-select, .form-control {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1 class="page-title">
+            <i class="fas fa-undo me-2"></i>Return Equipment/Accessories
+        </h1>
+        
+        <div class="equipment-info">
+            <div class="equipment-name">
+                <i class="fas fa-tools me-2"></i>{{ equipment.name }}
+            </div>
+            <div class="equipment-details">
+                <span class="text-muted">Serial Number: {{ equipment.base_serial }}</span>
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="equipment-return-check">
+                <div class="form-check">
+                    <input type="checkbox" name="return_equipment" id="return_equipment" class="form-check-input">
+                    <label class="form-check-label" for="return_equipment">
+                        <i class="fas fa-undo me-2"></i>Return this equipment to store
+                    </label>
+                </div>
+            </div>
+            
+            <h3 class="mb-3">Accessories</h3>
+            <p class="text-muted mb-4">Please check the accessories you want to return and update their status if needed.</p>
+            
+            {% for accessory in equipment.accessories.all %}
+                <div class="accessory-item">
+                    <div class="accessory-header">
+                        <div class="accessory-name">
+                            <div class="form-check">
+                                <input type="checkbox" name="accessory_{{ accessory.id }}" class="form-check-input">
+                                <label class="form-check-label">
+                                    {{ accessory.get_name_display }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="accessory-status">
+                            Current Status: <span class="badge bg-secondary">{{ accessory.status }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="accessory_{{ accessory.id }}_status" class="form-select">
+                            {% for value, label in accessory.STATUS_CHOICES %}
+                                <option value="{{ value }}" {% if value == accessory.status %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Comments</label>
+                        <textarea name="accessory_{{ accessory.id }}_comment" class="form-control" rows="2" 
+                                placeholder="Add any comments about the accessory condition">{{ accessory.comment }}</textarea>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'equipment_detail' equipment.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check me-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any necessary JavaScript here
+</script>
+{% endblock %} 

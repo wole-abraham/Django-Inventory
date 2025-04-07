@@ -11,5 +11,6 @@ urlpatterns = [
     path('equipment/<int:id>/edit/', views.edit_equipment, name='edit_equipment'),
     path('accessory/<int:id>/', views.accessory, name='accessory'),
     path('accessory/<int:id>/edit/', views.edit_accessory, name='edit_accessory'),
-    path('store/returning/', views.store_returning, name='store_returning')
+    path('store/returning/', views.store_returning, name='store_returning'),
+    path('equipment/<int:id>/return/', views.return_equipment, name='return_equipment')
 ]

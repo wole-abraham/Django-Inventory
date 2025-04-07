@@ -15,6 +15,7 @@ from .models import EquipmentsInSurvey, Accessory
 from .forms import Survey, AccessoryForm
 from .forms import EquipmentEditForm
 from .forms import AccessoryEditForm
+from .forms import AccessoryReturnForm
 
 def filter_equipment(request):
     equipment_type = request.GET.get('equipment_type')
@@ -86,27 +87,44 @@ def store_field(request):
 
 
 
-def return_equipment(request):
-    if request.method == 'POST':
-        surveyor = request.POST.get('surveyor_res')
-       
-        print(request.POST.get('id'))
-        equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
-
-        # Update equipment status and requested_by field
-        equipment.status = 'In Store'
-        equipment.surveyor_responsible = surveyor
-        equipment.save()
-
-        messages.success(request, f'{equipment.name} has been returned successfully.')
-        return redirect('request_equipment')
+@login_required
+def return_equipment(request, id):
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
     
-def return_equip(request, id):
-    eq = EquipmentsInSurvey.objects.filter(id=id).first()
-    eq.status = 'Returning'
-    eq.chief_surveyor = None
-    eq.save()
-    return redirect('request_equipment')
+    if request.method == 'POST':
+        # Check if any accessories are being returned
+        accessories_being_returned = False
+        for accessory in equipment.accessories.all():
+            if f'accessory_{accessory.id}' in request.POST:
+                accessories_being_returned = True
+                break
+        
+        # Only update equipment status if explicitly requested
+        if 'return_equipment' in request.POST:
+            equipment.status = 'Returning'
+            equipment.chief_surveyor = None
+            equipment.save()
+        
+        # Update accessories
+        for accessory in equipment.accessories.all():
+            accessory_id = str(accessory.id)
+            if f'accessory_{accessory_id}' in request.POST:  # If accessory is checked for return
+                status = request.POST.get(f'accessory_{accessory_id}_status')
+                comment = request.POST.get(f'accessory_{accessory_id}_comment')
+                
+                accessory.status = status
+                accessory.comment = comment
+                accessory.save()
+        
+        if accessories_being_returned:
+            messages.success(request, 'Selected accessories have been updated successfully.')
+        if 'return_equipment' in request.POST:
+            messages.success(request, f'{equipment.name} has been marked for return.')
+        return redirect('equipment_detail', id=equipment.id)
+    
+    return render(request, 'equipments/return_equipment.html', {
+        'equipment': equipment
+    })
 
 
 def login_view(request):
