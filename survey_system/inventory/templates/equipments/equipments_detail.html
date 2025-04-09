@@ -106,6 +106,57 @@
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
     }
+
+    .equipment-detail {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .equipment-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .list-group-item {
+        border: none;
+        padding: 0.75rem 1.25rem;
+        background-color: transparent;
+    }
+    
+    .accessories-section {
+        margin-top: 2rem;
+    }
+    
+    .accessory-card {
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    
+    .accessory-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .accessory-image {
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .accessory-image-container {
+        text-align: center;
+        margin-top: 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -185,6 +236,11 @@
                                             <i class="fas fa-undo"></i> Return
                                         </a>
                                     </div>
+                                    {% if accessory.image %}
+                                        <div class="mt-3">
+                                            <img src="{{ accessory.image.url }}" alt="{{ accessory.get_name_display }}" class="img-fluid rounded" style="max-height: 200px;">
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -220,6 +276,11 @@
                                             {{ accessory.status }}
                                         </span>
                                     </p>
+                                    {% if accessory.image %}
+                                        <div class="mt-3">
+                                            <img src="{{ accessory.image.url }}" alt="{{ accessory.get_name_display }}" class="img-fluid rounded" style="max-height: 200px;">
+                                        </div>
+                                    {% endif %}
                                     {% if accessory.comment %}
                                         <p class="card-text"><small class="text-muted">{{ accessory.comment }}</small></p>
                                     {% endif %}
