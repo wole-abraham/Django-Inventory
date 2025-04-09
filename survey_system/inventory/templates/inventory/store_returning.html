@@ -183,12 +183,12 @@
                                 </td>
                                 {% if is_admin %}
                                 <td>
-                                    <form method="post" style="display: inline;">
+                                    <form action="{% url 'return_accessory' accessory.id %}" method="post" style="display: inline;">
                                         {% csrf_token %}
                                         <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
                                         <button type="submit" class="btn btn-store">
                                             <i class="fas fa-check me-2"></i>Received
-                                        </button>
+                                        </button>   
                                     </form>
                                 </td>
                                 {% endif %}

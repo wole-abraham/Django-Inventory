@@ -314,7 +314,13 @@ def store_returning(request):
             status='Returning',
             surveyor_responsible=request.user.username
         )
-        accessories_data = accessories_data = Accessory.objects.filter(equipment__in=data)
+        accessories_data = Accessory.objects.filter(equipment__in=data)
 
     return render(request, 'inventory/store_returning.html', {'data': data, 'accessories': accessories_data})
 
+
+def return_accessory(request, id):
+    accessory = get_object_or_404(Accessory, id=id)
+    accessory.return_status = 'Returned'
+    accessory.save()
+    return redirect('store_returning')
