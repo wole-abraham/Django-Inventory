@@ -3,12 +3,14 @@
 
 {% block extra_css %}
 <style>
-    .table-container {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        padding: 1.5rem;
-        margin-top: 2rem;
+    .dropdown-container {
+        margin-bottom: 2rem;
+    }
+    
+    .dropdown-menu {
+        max-height: 400px;
+        overflow-y: auto;
+        min-width: 800px;
     }
     
     .table {
@@ -16,14 +18,10 @@
     }
     
     .table th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
-        color: #495057;
-        font-weight: 600;
-    }
-    
-    .table td {
-        vertical-align: middle;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1;
     }
     
     .status-badge {
@@ -94,59 +92,112 @@
     </h1>
     
     {% if data %}
-    <div class="table-container">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Date of Receiving</th>
-                        <th>Base Serial</th>
-                        <th>Rover Serial</th>
-                        <th>Data Logger Serial</th>
-                        <th>Radio Serial</th>
-                        <th>Chief Surveyor who returned it</th>
-                        
-                        <th>Project</th>
-                        <th>Section</th>
-                        {% if is_admin %}
-                        <th>Action</th>
-                        {% else %}
-                        <th>Status</th>
-                        {% endif %}
+    <div class="dropdown-container">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-tools me-2"></i>Equipment List
+            </button>
+            <div class="dropdown-menu p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Date of Receiving</th>
+                                <th>Base Serial</th>
+                                <th>Rover Serial</th>
+                                <th>Data Logger Serial</th>
+                                <th>Radio Serial</th>
+                                <th>Chief Surveyor</th>
+                                <th>Project</th>
+                                <th>Section</th>
+                                {% if is_admin %}
+                                <th>Action</th>
+                                {% else %}
+                                <th>Status</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for equipment in data %}
+                            <tr>
+                                <td><a href="{% url 'equipment_detail' equipment.id %}">{{ equipment.name }}</a></td>
+                                <td>{{ equipment.date_receiving_from_department }}</td>
+                                <td>{{ equipment.base_serial }}</td>
+                                <td>{{ equipment.roover_serial }}</td>
+                                <td>{{ equipment.data_logger_serial }}</td>
+                                <td>{{ equipment.radio_serial }}</td>
+                                <td>{% if equipment.chief_surveyor %}{{ equipment.chief_surveyor.get_full_name }}{% else %}None{% endif %}</td>
+                                <td>{{ equipment.project }}</td>
+                                <td>{{ equipment.section }}</td>
+                                {% if is_admin %}
+                                <td>
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ equipment.id }}">
+                                        <button type="submit" class="btn btn-store">
+                                            <i class="fas fa-check me-2"></i>Received
+                                        </button>
+                                    </form>
+                                </td>
+                                {% else %}
+                                <td>{{ equipment.status }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for equipment in data %}
-                    <tr>
-                        <td><a href="{% url 'equipment_detail' equipment.id %}">{{ equipment.name }}</a></td>
-                        <td>{{ equipment.date_receiving_from_department }}</td>
-                        <td>{{ equipment.base_serial }}</td>
-                        <td>{{ equipment.roover_serial }}</td>
-                        <td>{{ equipment.data_logger_serial }}</td>
-                        <td>{{ equipment.radio_serial }}</td>
-                        <td>{% if equipment.chief_surveyor %}{{ equipment.chief_surveyor.get_full_name }}{% else %}None{% endif %}</td>
-                        
-                        <td>{{ equipment.project }}</td>
-                        <td>{{ equipment.section }}</td>
-                        {% if is_admin %}
-                        <td>
-                            <form method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="id" value="{{ equipment.id }}">
-                                <button type="submit" class="btn btn-store">
-                                    <i class="fas fa-check me-2"></i>Received
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                        {% else %}
-                        <td>{{ equipment.status }}</td>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="dropdown-container">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-toolbox me-2"></i>Accessories List
+            </button>
+            <div class="dropdown-menu p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Equipment</th>
+                                <th>Status</th>
+                                {% if is_admin %}
+                                <th>Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for accessory in accessories %}
+                            <tr>
+                                <td>{{ accessory.name }}</td>
+                                <td>{{ accessory.equipment.name }}</td>
+                               
+                                <td>
+                                    <span class="badge {% if accessory.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ accessory.status }}
+                                    </span>
+                                </td>
+                                {% if is_admin %}
+                                <td>
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
+                                        <button type="submit" class="btn btn-store">
+                                            <i class="fas fa-check me-2"></i>Received
+                                        </button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
     {% else %}

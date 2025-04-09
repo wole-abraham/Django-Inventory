@@ -304,6 +304,8 @@ def store_returning(request):
         return redirect('store_returning')
     if request.user.is_superuser:
         data = EquipmentsInSurvey.objects.filter(status='Returning')
+        accessories_data = Accessory.objects.filter(equipment__in=data)
+
     else:
         data = EquipmentsInSurvey.objects.filter(
             status='Returning',
@@ -312,6 +314,7 @@ def store_returning(request):
             status='Returning',
             surveyor_responsible=request.user.username
         )
+        accessories_data = accessories_data = Accessory.objects.filter(equipment__in=data)
 
-    return render(request, 'inventory/store_returning.html', {'data': data})
+    return render(request, 'inventory/store_returning.html', {'data': data, 'accessories': accessories_data})
 
