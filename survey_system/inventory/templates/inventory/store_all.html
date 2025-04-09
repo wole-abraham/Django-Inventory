@@ -25,35 +25,35 @@
                             <th>Section</th>
                             <th>Date Receiving (Department)</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for info in data %}
-                        <form action="{% url 'return_equipment' %}" method="post">
-                            {% csrf_token %}
-                            <tr>
-                                <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
-                                <td>{{ info.date_of_receiving_from_supplier }}</td>
-                                <td>{{ info.supplier }}</td>
-                                <td>{{ info.base_serial }}</td>
-                                <td>{{ info.roover_serial }}</td>
-                                <td>{{ info.data_logger_serial }}</td>
-                                <td>{{ info.radio_serial }}</td>
-                                <td>{{ info.chief_surveyor }}</td>
-                                <td>
-                                    {{ info.surveyor_responsible }}
-                                    <input type="hidden" name="id" value="{{ info.id }}">
-                                </td>
-                                <td>{{ info.project }}</td>
-                                <td>{{ info.section }}</td>
-                                <td>{{ info.date_receiving_from_department }}</td>
-                                <td>
-                                    <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
-                                        {{ info.status }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </form>
+                        <tr>
+                            <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
+                            <td>{{ info.date_of_receiving_from_supplier }}</td>
+                            <td>{{ info.supplier }}</td>
+                            <td>{{ info.base_serial }}</td>
+                            <td>{{ info.roover_serial }}</td>
+                            <td>{{ info.data_logger_serial }}</td>
+                            <td>{{ info.radio_serial }}</td>
+                            <td>{{ info.chief_surveyor }}</td>
+                            <td>{{ info.surveyor_responsible }}</td>
+                            <td>{{ info.project }}</td>
+                            <td>{{ info.section }}</td>
+                            <td>{{ info.date_receiving_from_department }}</td>
+                            <td>
+                                <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
+                                    {{ info.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'return_equipment' info.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-undo"></i> Return
+                                </a>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

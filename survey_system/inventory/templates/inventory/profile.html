@@ -48,13 +48,9 @@
                                 </span>
                             </td>
                             <td>
-                                <form action="{% url 'return_equipment' %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="id" value="{{ info.id }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-undo"></i> Return
-                                    </button>
-                                </form>
+                                <a href="{% url 'return_equipment' info.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-undo"></i> Return
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
