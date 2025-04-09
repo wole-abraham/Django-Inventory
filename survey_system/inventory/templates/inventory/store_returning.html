@@ -100,39 +100,50 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Date of Receiving</th>
                         <th>Base Serial</th>
                         <th>Rover Serial</th>
                         <th>Data Logger Serial</th>
                         <th>Radio Serial</th>
-                        <th>Chief Surveyor</th>
-                        <th>Surveyor Responsible</th>
+                        <th>Chief Surveyor who returned it</th>
+                        
                         <th>Project</th>
                         <th>Section</th>
+                        {% if is_admin %}
                         <th>Action</th>
+                        {% else %}
+                        <th>Status</th>
+                        {% endif %}
+
                     </tr>
                 </thead>
                 <tbody>
                     {% for equipment in data %}
                     <tr>
                         <td><a href="{% url 'equipment_detail' equipment.id %}">{{ equipment.name }}</a></td>
+                        <td>{{ equipment.date_receiving_from_department }}</td>
                         <td>{{ equipment.base_serial }}</td>
                         <td>{{ equipment.roover_serial }}</td>
                         <td>{{ equipment.data_logger_serial }}</td>
                         <td>{{ equipment.radio_serial }}</td>
                         <td>{% if equipment.chief_surveyor %}{{ equipment.chief_surveyor.get_full_name }}{% else %}None{% endif %}</td>
-                        <td>{{ equipment.surveyor_responsible }}</td>
+                        
                         <td>{{ equipment.project }}</td>
                         <td>{{ equipment.section }}</td>
+                        {% if is_admin %}
                         <td>
                             <form method="post" style="display: inline;">
                                 {% csrf_token %}
                                 <input type="hidden" name="id" value="{{ equipment.id }}">
                                 <button type="submit" class="btn btn-store">
-                                    <i class="fas fa-check me-2"></i>Mark as In Store
+                                    <i class="fas fa-check me-2"></i>Received
                                 </button>
                             </form>
                         </td>
                     </tr>
+                        {% else %}
+                        <td>{{ equipment.status }}</td>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

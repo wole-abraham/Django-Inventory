@@ -12,7 +12,11 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
+                            {% if is_admin %}
                             <th>Date of Receiving (Supplier)</th>
+                            {% else %}
+                            <th>Date of Receiving (Department)</th>
+                            {% endif %}
                             <th>Supplier</th>
                             <th>Base Serial</th>
                             <th>Roover Serial</th>
@@ -29,7 +33,11 @@
                             <form action="{% url 'store' %}" method="post">
                                 {% csrf_token %}
                                 <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
+                                {% if is_admin %}
                                 <td>{{ info.date_of_receiving_from_supplier }}</td>
+                                {% else %}
+                                <td>{{ info.date_receiving_from_department }}</td>
+                                {% endif %}
                                 <td>{{ info.supplier }}</td>
                                 <td>{{ info.base_serial }}</td>
                                 <td>{{ info.roover_serial }}</td>

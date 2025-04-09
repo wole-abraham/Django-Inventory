@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey, Accessory
+from django.utils import timezone
 
 from .forms import Survey, AccessoryForm
 from .forms import EquipmentEditForm
@@ -70,6 +71,7 @@ def store(request):
         equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
         equipment.chief_surveyor = user
         equipment.status = "With Chief Surveyor"
+        equipment.date_receiving_from_department = timezone.now().date()  # Update the date
         equipment.save()
         messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
         return redirect('store')

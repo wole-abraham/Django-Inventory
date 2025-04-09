@@ -12,7 +12,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
-                            <th>Date of Receiving (Supplier)</th>
+                            <th>Date of Receiving</th>
                             <th>Supplier</th>
                             <th>Base Serial</th>
                             <th>Roover Serial</th>
@@ -34,7 +34,7 @@
                             {% csrf_token %}
                         <tr>
                             <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
-                            <td>{{ info.date_of_receiving_from_supplier }}</td>
+                            <td>{{ info.date_receiving_from_department }}</td>
                             <td>{{ info.supplier }}</td>
                             <td>{{ info.base_serial }}</td>
                             <td>{{ info.roover_serial }}</td>
