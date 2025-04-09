@@ -110,146 +110,134 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <!-- Equipment Details Column -->
-        <div class="col-lg-6 mb-4">
-            <div class="card equipment-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="section-title mb-0">
-                            <i class="fas fa-tools me-2"></i>Equipment Details
-                        </h2>
-                        <a href="{% url 'edit_equipment' equipment.id %}" class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Edit Equipment
-                        </a>
-                    </div>
-                    
-                    {% if equipment.image %}
-                    <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="equipment-image">
-                    {% endif %}
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-signature me-2"></i>Name:</span>
-                        <span class="info-value">{{ equipment.name }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-check-circle me-2"></i>Status:</span>
-                        <span class="status-badge 
-                            {% if equipment.status == 'In Store' %}status-in-store
-                            {% elif equipment.status == 'In Field' %}status-in-field
-                            {% else %}status-with-chief{% endif %}">
-                            {{ equipment.status }}
-                        </span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-building me-2"></i>Supplier:</span>
-                        <span class="info-value">{{ equipment.supplier }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-calendar me-2"></i>Received from Supplier:</span>
-                        <span class="info-value date-info">{{ equipment.date_of_receiving_from_supplier }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-calendar-alt me-2"></i>Received from Department:</span>
-                        <span class="info-value date-info">{{ equipment.date_receiving_from_department }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-barcode me-2"></i>Base Serial:</span>
-                        <span class="info-value serial-info">{{ equipment.base_serial }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-barcode me-2"></i>Rover Serial:</span>
-                        <span class="info-value serial-info">{{ equipment.roover_serial }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-barcode me-2"></i>Data Logger Serial:</span>
-                        <span class="info-value serial-info">{{ equipment.data_logger_serial }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-broadcast-tower me-2"></i>Radio Serial:</span>
-                        <span class="info-value serial-info">{{ equipment.radio_serial }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-user-tie me-2"></i>Chief Surveyor:</span>
-                        <span class="info-value">{{ equipment.chief_surveyor.get_full_name }}</span>
-                    </div>
-
-                    {% if equipment.surveyor_responsible %}
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-user me-2"></i>Surveyor Responsible:</span>
-                        <span class="info-value">{{ equipment.surveyor_responsible }}</span>
-                    </div>
-                    {% endif %}
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-project-diagram me-2"></i>Project:</span>
-                        <span class="info-value">{{ equipment.project }}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Section:</span>
-                        <span class="info-value">{{ equipment.section }}</span>
-                    </div>
+<div class="container">
+    <div class="equipment-detail">
+        <h1 class="page-title">
+            <i class="fas fa-tools me-2"></i>{{ equipment.name }}
+        </h1>
+        
+        <div class="equipment-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Equipment Details</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Serial Number:</strong> {{ equipment.base_serial }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Status:</strong> 
+                            <span class="badge {% if equipment.status == 'In Store' %}bg-success{% elif equipment.status == 'In Field' %}bg-primary{% else %}bg-warning{% endif %}">
+                                {{ equipment.status }}
+                            </span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Project:</strong> {{ equipment.project }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Section:</strong> {{ equipment.section }}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Accessories Column -->
-        <div class="col-lg-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="section-title mb-0">
-                            <i class="fas fa-puzzle-piece me-2"></i>Accessories
-                        </h2>
-                        <a href="{% url 'accessory' equipment.id %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Add Accessory
-                        </a>
-                    </div>
-
-                    {% if equipment.accessories.all %}
-                        {% for accessory in equipment.accessories.all %}
-                        <a href="{% url 'edit_accessory' accessory.id %}" class="text-decoration-none">
-                            <div class="card accessory-card">
+        <div class="accessories-section mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">
+                    <i class="fas fa-puzzle-piece me-2"></i>Accessories
+                </h2>
+                {% if user.is_superuser %}
+                <a href="{% url 'accessory' equipment.id %}" class="btn btn-primary add-accessory-btn">
+                    <i class="fas fa-plus me-2"></i>Add Accessory
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if active_accessories %}
+                <div class="row">
+                    {% for accessory in active_accessories %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h5 class="card-title mb-0">
-                                            <i class="fas fa-cube me-2"></i>{{ accessory.get_name_display }}
-                                        </h5>
-                                        <span class="status-badge 
-                                            {% if accessory.status == 'Good' %}accessory-status-good
-                                            {% elif accessory.status == 'Needs Repair' %}accessory-status-repair
-                                            {% else %}accessory-status-spoiled{% endif %}">
+                                    <h5 class="card-title">{{ accessory.get_name_display }}</h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            {% if accessory.serial_number %}
+                                                Serial: {{ accessory.serial_number }}
+                                            {% else %}
+                                                Serial: Not assigned
+                                            {% endif %}
+                                        </small>
+                                    </p>
+                                    <p class="card-text">
+                                        <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
                                             {{ accessory.status }}
                                         </span>
-                                    </div>
-                                    {% if accessory.comment %}
-                                    <p class="card-text text-muted mt-2 mb-0">
-                                        <i class="fas fa-comment-alt me-2"></i>{{ accessory.comment }}
                                     </p>
+                                    {% if accessory.comment %}
+                                        <p class="card-text"><small class="text-muted">{{ accessory.comment }}</small></p>
                                     {% endif %}
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'edit_accessory' accessory.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'return_equipment' equipment.id %}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-undo"></i> Return
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </a>
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>No accessories found for this equipment.
                         </div>
-                    {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No active accessories for this equipment.
+                </div>
+            {% endif %}
+        </div>
+
+        {% if returned_accessories %}
+            <div class="returned-accessories-section mt-4">
+                <h3>Returned Accessories</h3>
+                <div class="row">
+                    {% for accessory in returned_accessories %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ accessory.get_name_display }}</h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            {% if accessory.serial_number %}
+                                                Serial: {{ accessory.serial_number }}
+                                            {% else %}
+                                                Serial: Not assigned
+                                            {% endif %}
+                                        </small>
+                                    </p>
+                                    <p class="card-text">
+                                        <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ accessory.status }}
+                                        </span>
+                                    </p>
+                                    {% if accessory.comment %}
+                                        <p class="card-text"><small class="text-muted">{{ accessory.comment }}</small></p>
+                                    {% endif %}
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Returned on: {{ accessory.date_returned|date:"Y-m-d H:i" }}
+                                            {% if accessory.returned_by %}
+                                                by {{ accessory.returned_by.username }}
+                                            {% endif %}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

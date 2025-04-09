@@ -90,11 +90,12 @@ def store_field(request):
 @login_required
 def return_equipment(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    active_accessories = equipment.accessories.filter(return_status='In Use')
     
     if request.method == 'POST':
         # Check if any accessories are being returned
         accessories_being_returned = False
-        for accessory in equipment.accessories.all():
+        for accessory in active_accessories:
             if f'accessory_{accessory.id}' in request.POST:
                 accessories_being_returned = True
                 break
@@ -106,24 +107,31 @@ def return_equipment(request, id):
             equipment.save()
         
         # Update accessories
-        for accessory in equipment.accessories.all():
+        for accessory in active_accessories:
             accessory_id = str(accessory.id)
             if f'accessory_{accessory_id}' in request.POST:  # If accessory is checked for return
                 status = request.POST.get(f'accessory_{accessory_id}_status')
                 comment = request.POST.get(f'accessory_{accessory_id}_comment')
                 
+                # Handle image upload
+                if f'accessory_{accessory_id}_image' in request.FILES:
+                    image = request.FILES[f'accessory_{accessory_id}_image']
+                    accessory.image = image
+                
                 accessory.status = status
                 accessory.comment = comment
+                accessory.mark_as_returned(request.user)  # Mark as returned with timestamp and user
                 accessory.save()
         
         if accessories_being_returned:
-            messages.success(request, 'Selected accessories have been updated successfully.')
+            messages.success(request, 'Selected accessories have been returned successfully.')
         if 'return_equipment' in request.POST:
             messages.success(request, f'{equipment.name} has been marked for return.')
         return redirect('equipment_detail', id=equipment.id)
     
     return render(request, 'equipments/return_equipment.html', {
-        'equipment': equipment
+        'equipment': equipment,
+        'active_accessories': active_accessories
     })
 
 
@@ -215,6 +223,11 @@ def equipment(request):
 def accessory(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
     
+    # Check if user is an admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Only administrators can add accessories.')
+        return redirect('equipment_detail', id=equipment.id)
+    
     if request.method == 'POST':
         form = AccessoryForm(request.POST, equipment=equipment)
         if form.is_valid():
@@ -230,8 +243,15 @@ def accessory(request, id):
     })
 
 def equipment_detail(request, id):
-    equipment = EquipmentsInSurvey.objects.filter(id=id).first()
-    return render(request, 'equipments/equipments_detail.html', {'equipment': equipment})
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    active_accessories = equipment.accessories.filter(return_status='In Use')
+    returned_accessories = equipment.accessories.filter(return_status='Returned')
+    
+    return render(request, 'equipments/equipments_detail.html', {
+        'equipment': equipment,
+        'active_accessories': active_accessories,
+        'returned_accessories': returned_accessories
+    })
 
 @login_required
 def edit_equipment(request, id):

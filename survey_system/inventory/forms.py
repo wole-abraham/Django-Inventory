@@ -27,11 +27,15 @@ class AccessoryForm(forms.ModelForm):
 
     class Meta:
         model = Accessory
-        fields = '__all__'
+        fields = ['name', 'serial_number', 'equipment', 'status', 'comment', 'image']
         widgets = {
             'name': forms.Select(attrs={
                 'class': 'form-select',
                 'placeholder': 'Select Accessory Type'
+            }),
+            'serial_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter serial number'
             }),
             'equipment': forms.Select(attrs={
                 'class': 'form-select',
@@ -47,6 +51,13 @@ class AccessoryForm(forms.ModelForm):
                 'rows': 3
             })
         }
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.return_status = 'In Use'  # Set default return status
+        if commit:
+            instance.save()
+        return instance
 
 class EquipmentEditForm(forms.ModelForm):
     class Meta:
@@ -107,6 +118,13 @@ class AccessoryReturnForm(forms.Form):
                     widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Add any comments about the accessory condition'}),
                     initial=accessory.comment,
                     label='Comments'
+                )
+
+                # Add image upload field
+                self.fields[f'accessory_{accessory.id}_image'] = forms.ImageField(
+                    required=False,
+                    widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+                    label='Upload Image'
                 )
                 
                 # Store accessory ID for easy access in template

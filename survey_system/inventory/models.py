@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 # Create your models here.
@@ -66,16 +67,16 @@ class EquipmentsInSurvey(models.Model):
     
 class Accessory(models.Model):
     ACCESSORY_TYPES = (
-    ("tripod", "Tripod"),
-    ("levelling_staff", "Levelling Staff"),
-    ("tracking_rod", "Tracking Rod"),
-    ("reflector", "Reflector"),
-    ("gps_extension_bar", "GPS Extension Bar"),
-    ("bar_port", "Bar Port"),
-    ("powerbank", "Powerbank"),
-    ("tribach", "Tribach"),
-    ("external_radio_antenna", "External Radio Antenna"),
-)
+        ("tripod", "Tripod"),
+        ("levelling_staff", "Levelling Staff"),
+        ("tracking_rod", "Tracking Rod"),
+        ("reflector", "Reflector"),
+        ("gps_extension_bar", "GPS Extension Bar"),
+        ("bar_port", "Bar Port"),
+        ("powerbank", "Powerbank"),
+        ("tribach", "Tribach"),
+        ("external_radio_antenna", "External Radio Antenna"),
+    )
 
     STATUS_CHOICES = [
         ('Good', 'Good'),
@@ -83,11 +84,26 @@ class Accessory(models.Model):
         ('Spoiled', 'Spoiled'),
     ]
 
+    RETURN_STATUS_CHOICES = [
+        ('In Use', 'In Use'),
+        ('Returned', 'Returned'),
+    ]
+
     name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
+    serial_number = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good')
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Use')
     comment = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to='accessory_images/', null=True, blank=True)
+    date_returned = models.DateTimeField(null=True, blank=True)
+    returned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='returned_accessories')
 
     def __str__(self):
-        return f"{self.name} ({self.equipment.name}) - {self.status}"
+        return f"{self.get_name_display()} (SN: {self.serial_number}) - {self.status}"
+
+    def mark_as_returned(self, user):
+        self.return_status = 'Returned'
+        self.date_returned = timezone.now()
+        self.returned_by = user
+        self.save()
