@@ -44,7 +44,7 @@ def request_equipment(request):
         equipment.save()
         return redirect('profile')
     user = request.user
-    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Store')
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
     return render(request, 'inventory/request_equipment.html', {'data':data})
 
 @receiver(post_save, sender=User)
@@ -70,8 +70,9 @@ def store(request):
         equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
         equipment.chief_surveyor = user
         equipment.status = "With Chief Surveyor"
-        equipment.save() 
-        redirect('store')
+        equipment.save()
+        messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
+        return redirect('store')
     users = User.objects.filter(is_superuser=False)
     data = EquipmentsInSurvey.objects.filter(status="In Store")
     all = EquipmentsInSurvey.objects.all()
@@ -171,7 +172,7 @@ def profile(request):
         messages.success(request, 'Equipment returned successfully!')
         return redirect('profile')
     user = request.user
-    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='In Field')
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
     return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data})
 
 def create_user(request):
