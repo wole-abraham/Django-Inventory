@@ -119,7 +119,7 @@
                         <td>{{ equipment.roover_serial }}</td>
                         <td>{{ equipment.data_logger_serial }}</td>
                         <td>{{ equipment.radio_serial }}</td>
-                        <td>{{ equipment.chief_surveyor.get_full_name }}</td>
+                        <td>{% if equipment.chief_surveyor %}{{ equipment.chief_surveyor.get_full_name }}{% else %}None{% endif %}</td>
                         <td>{{ equipment.surveyor_responsible }}</td>
                         <td>{{ equipment.project }}</td>
                         <td>{{ equipment.section }}</td>

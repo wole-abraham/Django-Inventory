@@ -104,7 +104,7 @@ def return_equipment(request, id):
         # Only update equipment status if explicitly requested
         if 'return_equipment' in request.POST:
             equipment.status = 'Returning'
-            equipment.chief_surveyor = None
+            # Don't remove the chief_surveyor information
             equipment.save()
         
         # Update accessories
@@ -291,6 +291,7 @@ def edit_accessory(request, id):
         'equipment': accessory.equipment
     })
 
+@login_required
 def store_returning(request):
     if request.method == 'POST':
         equipment_id = request.POST.get('id')
@@ -299,7 +300,16 @@ def store_returning(request):
         equipment.save()
         messages.success(request, f'{equipment.name} has been marked as In Store.')
         return redirect('store_returning')
-    
-    data = EquipmentsInSurvey.objects.filter(status='Returning')
+    if request.user.is_superuser:
+        data = EquipmentsInSurvey.objects.filter(status='Returning')
+    else:
+        data = EquipmentsInSurvey.objects.filter(
+            status='Returning',
+            chief_surveyor=request.user
+        ) | EquipmentsInSurvey.objects.filter(
+            status='Returning',
+            surveyor_responsible=request.user.username
+        )
+
     return render(request, 'inventory/store_returning.html', {'data': data})
 

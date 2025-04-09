@@ -168,7 +168,7 @@
         </h1>
         
         <div class="equipment-info">
-            <div class="row">
+    <div class="row">
                 <div class="col-md-6">
                     <h5>Equipment Details</h5>
                     <ul class="list-group">
@@ -178,8 +178,8 @@
                         <li class="list-group-item">
                             <strong>Status:</strong> 
                             <span class="badge {% if equipment.status == 'In Store' %}bg-success{% elif equipment.status == 'In Field' %}bg-primary{% else %}bg-warning{% endif %}">
-                                {{ equipment.status }}
-                            </span>
+                            {{ equipment.status }}
+                        </span>
                         </li>
                         <li class="list-group-item">
                             <strong>Project:</strong> {{ equipment.project }}
@@ -193,17 +193,17 @@
         </div>
 
         <div class="accessories-section mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="section-title mb-0">
-                    <i class="fas fa-puzzle-piece me-2"></i>Accessories
-                </h2>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="section-title mb-0">
+                            <i class="fas fa-puzzle-piece me-2"></i>Accessories
+                        </h2>
                 {% if user.is_superuser %}
                 <a href="{% url 'accessory' equipment.id %}" class="btn btn-primary add-accessory-btn">
-                    <i class="fas fa-plus me-2"></i>Add Accessory
-                </a>
+                            <i class="fas fa-plus me-2"></i>Add Accessory
+                        </a>
                 {% endif %}
-            </div>
-            
+                    </div>
+
             {% if active_accessories %}
                 <div class="row">
                     {% for accessory in active_accessories %}
@@ -244,10 +244,10 @@
                                 </div>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
                 </div>
-            {% else %}
-                <div class="alert alert-info">
+                    {% else %}
+                        <div class="alert alert-info">
                     No active accessories for this equipment.
                 </div>
             {% endif %}
