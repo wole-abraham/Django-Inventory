@@ -46,7 +46,8 @@ def request_equipment(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
-    return render(request, 'inventory/request_equipment.html', {'data':data})
+    accessories = Accessory.objects.filter(chief_surveyor=user)
+    return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -78,7 +79,9 @@ def store(request):
     users = User.objects.filter(is_superuser=False)
     data = EquipmentsInSurvey.objects.filter(status="In Store")
     all = EquipmentsInSurvey.objects.all()
-    return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all})
+    accessories = Accessory.objects.all()
+    return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all,
+                                                    'accessories': accessories})
 
 def store_all(request):
     data = EquipmentsInSurvey.objects.all()
@@ -86,7 +89,8 @@ def store_all(request):
 
 def store_field(request):
     data = EquipmentsInSurvey.objects.filter(status__in=['In Field', 'With Chief Surveyor'])
-    return render(request, 'inventory/store_field.html', {'data': data})
+    accessories = Accessory.objects.all()
+    return render(request, 'inventory/store_field.html', {'data': data, 'accessories': accessories})
 
 
 
@@ -324,3 +328,13 @@ def return_accessory(request, id):
     accessory.return_status = 'Returned'
     accessory.save()
     return redirect('store_returning')
+
+def release_accessory(request):
+    if request.method == 'POST':
+        chief_surveyor = request.POST.get('chief_surveyor')
+        accessory_id = request.POST.get('accessory_id')
+        accessory = get_object_or_404(Accessory, id=accessory_id)
+        accessory.chief_surveyor = User.objects.filter(id=chief_surveyor).first()
+        accessory.return_status = 'In Use'
+        accessory.save()
+        return redirect('store_returning')
