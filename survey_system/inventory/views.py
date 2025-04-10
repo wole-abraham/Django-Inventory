@@ -309,16 +309,28 @@ def edit_accessory(request, id):
 @login_required
 def store_returning(request):
     if request.method == 'POST':
-        equipment_id = request.POST.get('id')
-        equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
-        equipment.status = 'In Store'
-        equipment.save()
-        messages.success(request, f'{equipment.name} has been marked as In Store.')
-        return redirect('store_returning')
+        # Handle equipment return
+        if 'id' in request.POST:
+            equipment_id = request.POST.get('id')
+            equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
+            equipment.status = 'In Store'
+            equipment.save()
+            messages.success(request, f'{equipment.name} has been marked as In Store.')
+            return redirect('store_returning')
+        
+        # Handle accessory return
+        if 'accessory_id' in request.POST:
+            accessory_id = request.POST.get('accessory_id')
+            accessory = Accessory.objects.filter(id=accessory_id).first()
+            accessory.status = 'Available'
+            accessory.return_status = 'Returned'
+            accessory.save()
+            messages.success(request, f'{accessory.name} has been marked as Available.')
+            return redirect('store_returning')
+
     if request.user.is_superuser:
         data = EquipmentsInSurvey.objects.filter(status='Returning')
-        accessories_data = Accessory.objects.filter(equipment__in=data)
-
+        accessories_data = Accessory.objects.filter(return_status='Returning')
     else:
         data = EquipmentsInSurvey.objects.filter(
             status='Returning',
@@ -327,9 +339,16 @@ def store_returning(request):
             status='Returning',
             surveyor_responsible=request.user.username
         )
-        accessories_data = Accessory.objects.filter(equipment__in=data)
+        accessories_data = Accessory.objects.filter(
+            return_status='Returning',
+            chief_surveyor=request.user
+        )
 
-    return render(request, 'inventory/store_returning.html', {'data': data, 'accessories': accessories_data})
+    return render(request, 'inventory/store_returning.html', {
+        'data': data,
+        'accessories': accessories_data,
+        'is_admin': request.user.is_superuser
+    })
 
 
 @login_required

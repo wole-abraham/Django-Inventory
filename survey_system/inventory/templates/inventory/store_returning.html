@@ -94,55 +94,41 @@
     {% if data %}
     <div class="dropdown-container">
         <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-tools me-2"></i>Equipment List
+            <button class="btn btn-primary dropdown-toggle" type="button" id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                Equipment in Returning
             </button>
-            <div class="dropdown-menu p-3">
+            <div class="dropdown-menu p-3" style="min-width: 800px;">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Date of Receiving</th>
-                                <th>Base Serial</th>
-                                <th>Rover Serial</th>
-                                <th>Data Logger Serial</th>
-                                <th>Radio Serial</th>
+                                <th>Serial Number</th>
                                 <th>Chief Surveyor</th>
-                                <th>Project</th>
-                                <th>Section</th>
-                                {% if is_admin %}
-                                <th>Action</th>
-                                {% else %}
+                                <th>Surveyor Responsible</th>
                                 <th>Status</th>
-                                {% endif %}
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for equipment in data %}
+                            {% for item in data %}
                             <tr>
-                                <td><a href="{% url 'equipment_detail' equipment.id %}">{{ equipment.name }}</a></td>
-                                <td>{{ equipment.date_receiving_from_department }}</td>
-                                <td>{{ equipment.base_serial }}</td>
-                                <td>{{ equipment.roover_serial }}</td>
-                                <td>{{ equipment.data_logger_serial }}</td>
-                                <td>{{ equipment.radio_serial }}</td>
-                                <td>{% if equipment.chief_surveyor %}{{ equipment.chief_surveyor.get_full_name }}{% else %}None{% endif %}</td>
-                                <td>{{ equipment.project }}</td>
-                                <td>{{ equipment.section }}</td>
-                                {% if is_admin %}
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.serial_number }}</td>
+                                <td>{{ item.chief_surveyor }}</td>
+                                <td>{{ item.surveyor_responsible }}</td>
                                 <td>
-                                    <form method="post" style="display: inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="id" value="{{ equipment.id }}">
-                                        <button type="submit" class="btn btn-store">
-                                            <i class="fas fa-check me-2"></i>Received
-                                        </button>
-                                    </form>
+                                    <span class="badge bg-warning">{{ item.status }}</span>
                                 </td>
-                                {% else %}
-                                <td>{{ equipment.status }}</td>
-                                {% endif %}
+                                <td>
+                                    {% if is_admin %}
+                                    <form method="post" action="{% url 'store_returning' %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ item.id }}">
+                                        <button type="submit" class="btn btn-success btn-sm">Receive</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -153,45 +139,46 @@
     </div>
 
     <div class="dropdown-container">
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-toolbox me-2"></i>Accessories List
+        <div class="dropdown mt-3">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                Accessories in Returning
             </button>
-            <div class="dropdown-menu p-3">
+            <div class="dropdown-menu p-3" style="min-width: 800px;">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Serial Number</th>
                                 <th>Equipment</th>
+                                <th>Chief Surveyor</th>
                                 <th>Status</th>
-                                {% if is_admin %}
+                                <th>Return Status</th>
                                 <th>Action</th>
-                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for accessory in accessories %}
                             <tr>
                                 <td>{{ accessory.name }}</td>
+                                <td>{{ accessory.serial_number }}</td>
                                 <td>{{ accessory.equipment.name }}</td>
-                               
+                                <td>{{ accessory.chief_surveyor }}</td>
                                 <td>
-                                    <span class="badge {% if accessory.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
-                                        {{ accessory.status }}
-                                    </span>
+                                    <span class="badge bg-warning">{{ accessory.status }}</span>
                                 </td>
-                                {% if is_admin %}
                                 <td>
-                                    <form action="{% url 'return_accessory' accessory.id %}" method="post" style="display: inline;">
+                                    <span class="badge bg-warning">{{ accessory.return_status }}</span>
+                                </td>
+                                <td>
+                                    {% if is_admin %}
+                                    <form method="post" action="{% url 'store_returning' %}" style="display: inline;">
                                         {% csrf_token %}
                                         <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
-                                        <button type="submit" class="btn btn-store">
-                                            <i class="fas fa-check me-2"></i>Received
-                                        </button>   
+                                        <button type="submit" class="btn btn-success btn-sm">Receive</button>
                                     </form>
+                                    {% endif %}
                                 </td>
-                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -208,4 +195,13 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    // Prevent dropdown from closing when clicking inside
+    document.querySelectorAll('.dropdown-menu').forEach(function(element) {
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock %} 
