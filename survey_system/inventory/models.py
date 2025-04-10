@@ -86,6 +86,7 @@ class Accessory(models.Model):
 
     RETURN_STATUS_CHOICES = [
         ('In Use', 'In Use'),
+        ('Returning', 'Returning'),
         ('Returned', 'Returned'),
     ]
 

@@ -46,13 +46,16 @@ def request_equipment(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
-    accessories = Accessory.objects.filter(chief_surveyor=user)
-    users = User.objects.filter(is_superuser=False)
-    return render(request, 'inventory/request_equipment.html', {
-        'data': data,
-        'accessories': accessories,
-        'users': users
-    })
+    # Only show accessories that are assigned to the user and not in use or returning
+    accessories = Accessory.objects.filter(
+        chief_surveyor=user,
+        return_status='Returned'
+    ).exclude(
+        status='In Use'
+    ).exclude(
+        status='Returning'
+    )
+    return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -329,11 +332,31 @@ def store_returning(request):
     return render(request, 'inventory/store_returning.html', {'data': data, 'accessories': accessories_data})
 
 
+@login_required
 def return_accessory(request, id):
     accessory = get_object_or_404(Accessory, id=id)
-    accessory.return_status = 'Returned'
-    accessory.save()
-    return redirect('store_returning')
+    
+    if request.method == 'POST':
+        # Update accessory status and details
+        status = request.POST.get('status')
+        comment = request.POST.get('comment')
+        
+        # Handle image upload
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            accessory.image = image
+        
+        accessory.status = status
+        accessory.comment = comment
+        accessory.return_status = 'Returning'
+        accessory.save()
+        
+        messages.success(request, f'Accessory {accessory.name} has been marked for return.')
+        return redirect('request_equipment')
+    
+    return render(request, 'inventory/return_accessory.html', {
+        'accessory': accessory
+    })
 
 def release_accessory(request):
     if request.method == 'POST':
