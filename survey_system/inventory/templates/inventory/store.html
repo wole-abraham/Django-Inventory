@@ -35,7 +35,7 @@
                                     {% csrf_token %}
                                     <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
                                     {% if is_admin %}
-                                    <td>{{ info.date_of_receiving_from_department }}</td>
+                                    <td>{{ info.date_receiving_from_department }}</td>
                                     {% else %}
                                     <td>{{ info.date_receiving_from_department }}</td>
                                     {% endif %}
