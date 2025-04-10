@@ -101,7 +101,7 @@
                             <th>Name</th>
                             <th>Equipment</th>
                             <th>Serial Number</th>
-                            <th>Chief Surveyor</th>
+                            <th>Surveyor Responsible</th>
                             <th>Condition</th>
                             <th>Status</th>
                             <th>Action</th>
@@ -109,27 +109,33 @@
                     </thead>
                     <tbody>
                         {% for accessory in accessories %}
-                            {% if accessory.return_status != 'Returned' %}
+                            {% if accessory.return_status == 'Returned' %}
                             <tr>
-                                <td>{{ accessory.name }}</td>
-                                <td>{{ accessory.equipment.name }}</td>
-                                <td>{{ accessory.serial_number }}</td>
-                                <td>{{ accessory.chief_surveyor }}</td>
-                                <td>
-                                    <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
-                                        {{ accessory.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
-                                        {{ accessory.return_status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{% url 'return_accessory' accessory.id %}" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-undo"></i> Return
-                                    </a>
-                                </td>
+                                <form action="{% url 'release_accessory' %}" method="post">
+                                    {% csrf_token %}
+                                    <td>{{ accessory.name }}</td>
+                                    <td>{{ accessory.equipment.name }}</td>
+                                    <td>{{ accessory.serial_number }}</td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="surveyor_responsible" value="{{ accessory.surveyor_responsible }}" required>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ accessory.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ accessory.return_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-paper-plane"></i> Release
+                                        </button>
+                                    </td>
+                                </form>
                             </tr>
                             {% endif %}
                         {% endfor %}

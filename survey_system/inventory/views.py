@@ -47,7 +47,12 @@ def request_equipment(request):
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
     accessories = Accessory.objects.filter(chief_surveyor=user)
-    return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
+    users = User.objects.filter(is_superuser=False)
+    return render(request, 'inventory/request_equipment.html', {
+        'data': data,
+        'accessories': accessories,
+        'users': users
+    })
 
 @receiver(post_save, sender=User)
 def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -179,7 +184,8 @@ def profile(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
-    return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data})
+    accessories = Accessory.objects.filter(chief_surveyor=user)
+    return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data, 'accessories': accessories})
 
 def create_user(request):
     if request.method == 'POST':
@@ -331,10 +337,11 @@ def return_accessory(request, id):
 
 def release_accessory(request):
     if request.method == 'POST':
-        chief_surveyor = request.POST.get('chief_surveyor')
+        surveyor_responsible = request.POST.get('surveyor_responsible')
         accessory_id = request.POST.get('accessory_id')
         accessory = get_object_or_404(Accessory, id=accessory_id)
-        accessory.chief_surveyor = User.objects.filter(id=chief_surveyor).first()
+        accessory.surveyor_responsible = surveyor_responsible
         accessory.return_status = 'In Use'
         accessory.save()
-        return redirect('store_returning')
+        messages.success(request, f'Accessory {accessory.name} has been released to {surveyor_responsible}.')
+        return redirect('request_equipment')
