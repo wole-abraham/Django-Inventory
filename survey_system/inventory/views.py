@@ -50,7 +50,9 @@ def request_equipment(request):
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
     # Only show accessories that are assigned to the user and not in use or returning
     accessories = Accessory.objects.filter(
-        chief_surveyor=user, return_status='In Use')
+    Q(chief_surveyor=user, return_status='With Chief Surveyor') |
+    Q(equipment__chief_surveyor=user)
+)
     return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
 @receiver(post_save, sender=User)
@@ -183,7 +185,7 @@ def profile(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
-    accessories = Accessory.objects.select_related("equipment").filter(equipment__chief_surveyor=user, return_status="In Use")
+    accessories = Accessory.objects.filter(chief_surveyor=user, return_status="In Use")
     return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data, 'accessories': accessories})
 
 def create_user(request):
@@ -263,6 +265,11 @@ def equipment_detail(request, id):
         'equipment': equipment,
         'active_accessories': active_accessories,
         'returned_accessories': returned_accessories
+    })
+def accessory_detail(request, id):
+    equipment = get_object_or_404(Accessory, id=id)
+    return render(request, 'equipments/accessory_detail.html', {
+        'accessory': equipment,
     })
 
 @login_required
@@ -364,7 +371,10 @@ def return_accessory(request, id):
         accessory.save()
         
         messages.success(request, f'{accessory.get_name_display()} has been returned successfully.')
-        return redirect('equipment_detail', id=accessory.equipment.id)
+        if accessory.equipment:
+            return redirect('equipment_detail', id=accessory.equipment.id)
+        else:
+            return redirect('profile')
     
     return render(request, 'inventory/return_accessory.html', {
         'accessory': accessory,
@@ -381,6 +391,19 @@ def release_accessory(request):
         accessory.save()
         messages.success(request, f'Accessory {accessory.name} has been released to {surveyor_responsible}.')
         return redirect('request_equipment')
+
+def admin_release_accessory(request):
+    if request.method == 'POST':
+        chief_surveyor = request.POST.get('chief_surveyor')
+        accessory_id = request.POST.get('accessory_id')
+        accessory = get_object_or_404(Accessory, id=accessory_id)
+        chief_surveyor = User.objects.get(id=chief_surveyor)
+        accessory.chief_surveyor = chief_surveyor
+        accessory.return_status = 'With Chief Surveyor'
+        accessory.save()
+        return redirect('request_equipment')
+    
+
 
 @login_required
 def equipment_history(request, id):

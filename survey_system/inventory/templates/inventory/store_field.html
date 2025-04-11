@@ -80,7 +80,11 @@
                                 <td>{{ accessory.name }}</td>
                                 <td>{{ accessory.equipment.name }}</td>
                                 <td>{{ accessory.serial_number }}</td>
+                                {% if accessory.chief_surveyor %}
                                 <td>{{ accessory.chief_surveyor }}</td>
+                                {% else %}
+                                <td>{{  accessory.equipment.chief_surveyor }}</td>
+                                {% endif %}
                                 <td>
                                     <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
                                         {{ accessory.status }}

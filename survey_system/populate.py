@@ -15,10 +15,15 @@ from inventory.models import EquipmentsInSurvey, Accessory, EquipmentHistory, Ac
 
 for i in EquipmentsInSurvey.objects.all():
     i.status = 'In Store'
+    i.chief_surveyor = None
+    i.surveyor_responsible = None
     i.save()
 
 for i in Accessory.objects.all():
     i.status = 'Good'
+    i.chief_surveyor = None
+    i.surveyor_responsible = None
+    i.equipment = None
     i.return_status = 'Returned'
     i.save()
 

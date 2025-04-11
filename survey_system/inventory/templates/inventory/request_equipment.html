@@ -109,7 +109,7 @@
                     </thead>
                     <tbody>
                         {% for accessory in accessories %}
-                            {% if accessory.return_status == 'Returned' %}
+                            
                             <tr>
                                 <form action="{% url 'release_accessory' %}" method="post">
                                     {% csrf_token %}
@@ -142,7 +142,7 @@
                                     </td>
                                 </form>
                             </tr>
-                            {% endif %}
+                           
                         {% endfor %}
                     </tbody>
                 </table>

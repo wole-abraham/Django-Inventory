@@ -93,7 +93,7 @@
                             {% for accessory in accessories %}
                                 {% if accessory.return_status == 'Returned' %}
                                 <tr>
-                                    <form action="{% url 'release_accessory' %}" method="post">
+                                    <form action="{% url 'admin_release_accessory' %}" method="post">
                                         {% csrf_token %}
                                         <td>{{ accessory.name }}</td>
                                         <td>{{ accessory.equipment.name }}</td>
