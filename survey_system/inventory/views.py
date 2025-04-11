@@ -50,13 +50,7 @@ def request_equipment(request):
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
     # Only show accessories that are assigned to the user and not in use or returning
     accessories = Accessory.objects.filter(
-        chief_surveyor=user,
-        return_status='Returned'
-    ).exclude(
-        status='In Use'
-    ).exclude(
-        status='Returning'
-    )
+        chief_surveyor=user, return_status='In Use')
     return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
 @receiver(post_save, sender=User)
@@ -189,7 +183,7 @@ def profile(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
-    accessories = Accessory.objects.filter(chief_surveyor=user, return_status__in=['In Use', 'Returning'])
+    accessories = Accessory.objects.select_related("equipment").filter(equipment__chief_surveyor=user, return_status="In Use")
     return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data, 'accessories': accessories})
 
 def create_user(request):

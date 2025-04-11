@@ -83,9 +83,13 @@
                     </thead>
                     <tbody>
                         {% for accessory in accessories %}
-                            {% if accessory.chief_surveyor == request.user %}
+                        
                             <tr>
-                                <td>{{ accessory.name }}</td>
+                                <td>
+                                    <a href="{% url 'equipment_detail' accessory.equipment.id %}" class="item-link">
+                                        {{ accessory.name }} ({{ accessory.equipment.name }})
+                                    </a>
+                                </td>
                                 <td>{{ accessory.equipment.name }}</td>
                                 <td>{{ accessory.serial_number }}</td>
                                 <td>{{ accessory.chief_surveyor }}</td>
@@ -106,7 +110,7 @@
                                     </a>
                                 </td>
                             </tr>
-                            {% endif %}
+                            
                         {% endfor %}
                     </tbody>
                 </table>
