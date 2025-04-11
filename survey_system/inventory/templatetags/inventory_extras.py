@@ -8,4 +8,8 @@ def get_item(dictionary, key):
 
 @register.filter
 def replace(value, arg):
-    return value.replace(arg, '') 
+    return value.replace(arg, '')
+
+@register.filter
+def get_class(value):
+    return value.__class__.__name__ 

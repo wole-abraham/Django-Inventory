@@ -1,0 +1,221 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+{% load inventory_extras %}
+
+{% block content %}
+<div class="container">
+    <div class="history-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-history me-2"></i>All History
+            </h1>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary" id="filterEquipment">
+                    <i class="fas fa-tools me-2"></i>Equipment Only
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="filterAccessory">
+                    <i class="fas fa-puzzle-piece me-2"></i>Accessories Only
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="showAll">
+                    <i class="fas fa-list me-2"></i>Show All
+                </button>
+            </div>
+        </div>
+
+        <div class="history-timeline">
+            {% if history %}
+                {% for entry in history %}
+                <div class="timeline-item {% if entry|get_class == 'EquipmentHistory' %}equipment-entry{% else %}accessory-entry{% endif %}">
+                    <div class="timeline-marker">
+                        <i class="fas {% if entry|get_class == 'EquipmentHistory' %}fa-tools{% else %}fa-puzzle-piece{% endif %}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <span class="timeline-date">{{ entry.changed_at|date:"Y-m-d H:i" }}</span>
+                            <span class="badge bg-info">{{ entry.get_action_display }}</span>
+                        </div>
+                        <div class="timeline-body">
+                            {% if entry|get_class == 'EquipmentHistory' %}
+                                <h6 class="mb-2">
+                                    <a href="{% url 'equipment_detail' entry.equipment.id %}" class="text-decoration-none">
+                                        {{ entry.equipment.name }}
+                                    </a>
+                                </h6>
+                                {% if entry.previous_status != entry.new_status %}
+                                    <p>
+                                        <strong>Status Changed:</strong>
+                                        <span class="badge bg-secondary">{{ entry.previous_status }}</span>
+                                        <i class="fas fa-arrow-right mx-2"></i>
+                                        <span class="badge {% if entry.new_status == 'In Store' %}bg-success{% elif entry.new_status == 'In Field' %}bg-primary{% else %}bg-warning{% endif %}">
+                                            {{ entry.new_status }}
+                                        </span>
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                <h6 class="mb-2">
+                                    <a href="{% url 'equipment_detail' entry.accessory.equipment.id %}" class="text-decoration-none">
+                                        {{ entry.accessory.get_name_display }} ({{ entry.accessory.equipment.name }})
+                                    </a>
+                                </h6>
+                                {% if entry.previous_status != entry.new_status %}
+                                    <p>
+                                        <strong>Status Changed:</strong>
+                                        <span class="badge bg-secondary">{{ entry.previous_status }}</span>
+                                        <i class="fas fa-arrow-right mx-2"></i>
+                                        <span class="badge {% if entry.new_status == 'Good' %}bg-success{% elif entry.new_status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ entry.new_status }}
+                                        </span>
+                                    </p>
+                                {% endif %}
+                                {% if entry.previous_return_status != entry.new_return_status %}
+                                    <p>
+                                        <strong>Return Status Changed:</strong>
+                                        <span class="badge bg-secondary">{{ entry.previous_return_status }}</span>
+                                        <i class="fas fa-arrow-right mx-2"></i>
+                                        <span class="badge {% if entry.new_return_status == 'In Use' %}bg-success{% elif entry.new_return_status == 'Returning' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ entry.new_return_status }}
+                                        </span>
+                                    </p>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if entry.previous_chief_surveyor != entry.new_chief_surveyor %}
+                                <p>
+                                    <strong>Chief Surveyor Changed:</strong>
+                                    {{ entry.previous_chief_surveyor|default:"Not assigned" }}
+                                    <i class="fas fa-arrow-right mx-2"></i>
+                                    {{ entry.new_chief_surveyor|default:"Not assigned" }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if entry.comment %}
+                                <p class="mt-2">
+                                    <strong>Comment:</strong> {{ entry.comment }}
+                                </p>
+                            {% endif %}
+                            
+                            <p class="text-muted mt-2">
+                                <small>Changed by: {{ entry.changed_by }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No history available.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.history-timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 30px;
+    transition: opacity 0.3s ease;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #0d6efd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-marker i {
+    font-size: 10px;
+    color: #0d6efd;
+}
+
+.timeline-content {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.timeline-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.timeline-body {
+    color: #212529;
+}
+
+.timeline-body p {
+    margin-bottom: 5px;
+}
+
+.badge {
+    font-size: 0.85rem;
+    padding: 0.35em 0.65em;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterEquipment = document.getElementById('filterEquipment');
+    const filterAccessory = document.getElementById('filterAccessory');
+    const showAll = document.getElementById('showAll');
+    const equipmentEntries = document.querySelectorAll('.equipment-entry');
+    const accessoryEntries = document.querySelectorAll('.accessory-entry');
+
+    filterEquipment.addEventListener('click', function() {
+        equipmentEntries.forEach(entry => entry.style.display = 'block');
+        accessoryEntries.forEach(entry => entry.style.display = 'none');
+        filterEquipment.classList.add('active');
+        filterAccessory.classList.remove('active');
+        showAll.classList.remove('active');
+    });
+
+    filterAccessory.addEventListener('click', function() {
+        equipmentEntries.forEach(entry => entry.style.display = 'none');
+        accessoryEntries.forEach(entry => entry.style.display = 'block');
+        filterEquipment.classList.remove('active');
+        filterAccessory.classList.add('active');
+        showAll.classList.remove('active');
+    });
+
+    showAll.addEventListener('click', function() {
+        equipmentEntries.forEach(entry => entry.style.display = 'block');
+        accessoryEntries.forEach(entry => entry.style.display = 'block');
+        filterEquipment.classList.remove('active');
+        filterAccessory.classList.remove('active');
+        showAll.classList.add('active');
+    });
+});
+</script>
+{% endblock %} 

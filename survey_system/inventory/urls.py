@@ -14,5 +14,8 @@ urlpatterns = [
     path('store/returning/', views.store_returning, name='store_returning'),
     path('equipment/<int:id>/return/', views.return_equipment, name='return_equipment'),
     path('return-accessory/<int:id>/', views.return_accessory, name='return_accessory'),
-    path('release-accessory/', views.release_accessory, name='release_accessory')
+    path('release-accessory/', views.release_accessory, name='release_accessory'),
+    path('equipment/<int:id>/history/', views.equipment_history, name='equipment_history'),
+    path('accessory/<int:id>/history/', views.accessory_history, name='accessory_history'),
+    path('history/', views.all_history, name='all_history'),
 ]

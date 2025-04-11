@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Create your models here.
@@ -106,7 +108,54 @@ class Accessory(models.Model):
         return f"{self.get_name_display()} (SN: {self.serial_number}) - {self.status}"
 
     def mark_as_returned(self, user):
-        self.return_status = 'Returned'
+        self.return_status = 'Returning'
         self.date_returned = timezone.now()
         self.returned_by = user
         self.save()
+
+class EquipmentHistory(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('released', 'Released'),
+        ('returned', 'Returned'),
+        ('status_changed', 'Status Changed'),
+    ]
+
+    equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='history')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    previous_status = models.CharField(max_length=20, null=True, blank=True)
+    new_status = models.CharField(max_length=20, null=True, blank=True)
+    previous_chief_surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_equipment_history')
+    new_chief_surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='new_equipment_history')
+    comment = models.TextField(null=True, blank=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='equipment_changes')
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.equipment.name} - {self.action} by {self.changed_by} at {self.changed_at}"
+
+class AccessoryHistory(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('released', 'Released'),
+        ('returned', 'Returned'),
+        ('status_changed', 'Status Changed'),
+        ('image_uploaded', 'Image Uploaded'),
+    ]
+
+    accessory = models.ForeignKey(Accessory, on_delete=models.CASCADE, related_name='history')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    previous_status = models.CharField(max_length=20, null=True, blank=True)
+    new_status = models.CharField(max_length=20, null=True, blank=True)
+    previous_return_status = models.CharField(max_length=20, null=True, blank=True)
+    new_return_status = models.CharField(max_length=20, null=True, blank=True)
+    previous_chief_surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_accessory_history')
+    new_chief_surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='new_accessory_history')
+    comment = models.TextField(null=True, blank=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='accessory_changes')
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.accessory.name} - {self.action} by {self.changed_by} at {self.changed_at}"

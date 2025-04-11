@@ -37,7 +37,6 @@ urlpatterns = [
     path('', views.request_equipment, name='/'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
     path('create-user/', views.create_user, name='create_user'),
     path('inventory/', include('inventory.urls')),
     path('api/equipment/in-store/', views.equipment_in_store, name='equipment_in_store'),

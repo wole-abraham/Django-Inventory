@@ -12,6 +12,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey, Accessory
 from django.utils import timezone
+from .models import EquipmentHistory, AccessoryHistory
+from django.db.models import Q
 
 from .forms import Survey, AccessoryForm
 from .forms import EquipmentEditForm
@@ -187,7 +189,7 @@ def profile(request):
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
-    accessories = Accessory.objects.filter(chief_surveyor=user)
+    accessories = Accessory.objects.filter(chief_surveyor=user, return_status__in=['In Use', 'Returning'])
     return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data, 'accessories': accessories})
 
 def create_user(request):
@@ -233,7 +235,7 @@ def equipment(request):
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
     
-    return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})
+    return render(request, 'equipmen    ts/equipments.html', {'form': Survey, 'data': data})
 
 @login_required
 def accessory(request, id):
@@ -261,7 +263,7 @@ def accessory(request, id):
 def equipment_detail(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
     active_accessories = equipment.accessories.filter(return_status='In Use')
-    returned_accessories = equipment.accessories.filter(return_status='Returned')
+    returned_accessories = equipment.accessories.filter(return_status__in=['Returned', 'Returning'])
     
     return render(request, 'equipments/equipments_detail.html', {
         'equipment': equipment,
@@ -329,19 +331,18 @@ def store_returning(request):
             return redirect('store_returning')
 
     if request.user.is_superuser:
+        # Admin sees all returning items
         data = EquipmentsInSurvey.objects.filter(status='Returning')
         accessories_data = Accessory.objects.filter(return_status='Returning')
     else:
+        # Normal users see items they have returned
         data = EquipmentsInSurvey.objects.filter(
-            status='Returning',
+            Q(status='Returning') | Q(status='In Field'),
             chief_surveyor=request.user
-        ) | EquipmentsInSurvey.objects.filter(
-            status='Returning',
-            surveyor_responsible=request.user.username
         )
         accessories_data = Accessory.objects.filter(
             return_status='Returning',
-            chief_surveyor=request.user
+            returned_by=request.user
         )
 
     return render(request, 'inventory/store_returning.html', {
@@ -356,25 +357,24 @@ def return_accessory(request, id):
     accessory = get_object_or_404(Accessory, id=id)
     
     if request.method == 'POST':
-        # Update accessory status and details
-        status = request.POST.get('status')
-        comment = request.POST.get('comment')
-        
         # Handle image upload
         if 'image' in request.FILES:
-            image = request.FILES['image']
-            accessory.image = image
+            accessory.image = request.FILES['image']
         
-        accessory.status = status
-        accessory.comment = comment
-        accessory.return_status = 'Returning'
+        # Update status and comment
+        accessory.status = request.POST.get('status', accessory.status)
+        accessory.comment = request.POST.get('comment', '')
+        
+        # Mark as returned - this will set returned_by and date_returned
+        accessory.mark_as_returned(request.user)
         accessory.save()
         
-        messages.success(request, f'Accessory {accessory.name} has been marked for return.')
-        return redirect('request_equipment')
+        messages.success(request, f'{accessory.get_name_display()} has been returned successfully.')
+        return redirect('equipment_detail', id=accessory.equipment.id)
     
     return render(request, 'inventory/return_accessory.html', {
-        'accessory': accessory
+        'accessory': accessory,
+        'equipment': accessory.equipment
     })
 
 def release_accessory(request):
@@ -387,3 +387,41 @@ def release_accessory(request):
         accessory.save()
         messages.success(request, f'Accessory {accessory.name} has been released to {surveyor_responsible}.')
         return redirect('request_equipment')
+
+@login_required
+def equipment_history(request, id):
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    history = equipment.history.all().order_by('-changed_at')
+    
+    return render(request, 'inventory/history/equipment_history.html', {
+        'equipment': equipment,
+        'history': history
+    })
+
+@login_required
+def accessory_history(request, id):
+    accessory = get_object_or_404(Accessory, id=id)
+    history = accessory.history.all().order_by('-changed_at')
+    
+    return render(request, 'inventory/history/accessory_history.html', {
+        'accessory': accessory,
+        'history': history
+    })
+
+@login_required
+def all_history(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to view all history.')
+        return redirect('login')
+    
+    # Get all history entries ordered by most recent
+    equipment_history = EquipmentHistory.objects.all().order_by('-changed_at')
+    accessory_history = AccessoryHistory.objects.all().order_by('-changed_at')
+    
+    # Combine and sort all history entries
+    all_history = list(equipment_history) + list(accessory_history)
+    all_history.sort(key=lambda x: x.changed_at, reverse=True)
+    
+    return render(request, 'inventory/history/all_history.html', {
+        'history': all_history
+    })
