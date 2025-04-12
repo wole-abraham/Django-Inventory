@@ -20,4 +20,5 @@ urlpatterns = [
     path('equipment/<int:id>/history/', views.equipment_history, name='equipment_history'),
     path('accessory/<int:id>/history/', views.accessory_history, name='accessory_history'),
     path('history/', views.all_history, name='all_history'),
+    path('remove_from_equipment/<int:id>', views.remove_from_equipment, name="remove_from_equipment")
 ]

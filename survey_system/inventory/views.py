@@ -442,3 +442,9 @@ def all_history(request):
     return render(request, 'inventory/history/all_history.html', {
         'history': all_history
     })
+
+def remove_from_equipment(request, id):
+    access = Accessory.objects.filter(id=id).first()
+    access.equipment = None
+    access.save()
+    return redirect(request.META.get("HTTP_REFERER", "/"))
