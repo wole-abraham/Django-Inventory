@@ -58,7 +58,7 @@ class EquipmentsInSurvey(models.Model):
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     surveyor_responsible = models.CharField(max_length=100, null=True)
     project = models.CharField(max_length=20)
-    section = models.CharField(max_length=100)
+    section = models.CharField(max_length=100, null=True, blank=True)
     date_receiving_from_department = models.DateField()
     status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning')], max_length=100, default='In Store')
 

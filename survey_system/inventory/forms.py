@@ -27,7 +27,7 @@ class AccessoryForm(forms.ModelForm):
         
 
         self.fields['name'] = forms.ModelChoiceField(
-            queryset=Accessory.objects.filter(status='Good'),
+            queryset=Accessory.objects.filter(status='Good', return_status="Returned"),
             empty_label="Select Accessory Type",  # Optional: placeholder for dropdown
             widget=forms.Select(attrs={
                 'class': 'form-select',

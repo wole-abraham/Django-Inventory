@@ -116,7 +116,7 @@
                                     <form action="{% url 'admin_release_accessory' %}" method="post">
                                         {% csrf_token %}
                                         <td>{{ accessory.name }}</td>
-                                        <td>{{ accessory.equipment.name }}</td>
+                                        <td>{{ accessory.equipment }}</td>
                                         <td>{{ accessory.serial_number }}</td>
                                     
                                         <td>
