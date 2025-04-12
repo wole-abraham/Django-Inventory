@@ -394,14 +394,12 @@ def release_accessory(request):
 
 def admin_release_accessory(request):
     if request.method == 'POST':
-        chief_surveyor = request.POST.get('chief_surveyor')
         accessory_id = request.POST.get('accessory_id')
         accessory = get_object_or_404(Accessory, id=accessory_id)
-        chief_surveyor = User.objects.get(id=chief_surveyor)
-        accessory.chief_surveyor = chief_surveyor
-        accessory.return_status = 'With Chief Surveyor'
+        status  = request.POST.get('condition')
+        accessory.status = status
         accessory.save()
-        return redirect('request_equipment')
+        return redirect('store')
     
 
 

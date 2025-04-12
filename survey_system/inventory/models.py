@@ -85,7 +85,7 @@ class Accessory(models.Model):
     STATUS_CHOICES = [
         ('Good', 'Good'),
         ('Needs Repair', 'Needs Repair'),
-        ('Spoiled', 'Spoiled'),
+        ('Bad', 'Bad'),
     ]
 
     RETURN_STATUS_CHOICES = [
