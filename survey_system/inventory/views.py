@@ -370,7 +370,7 @@ def return_accessory(request, id):
         accessory.mark_as_returned(request.user)
         accessory.save()
         
-        messages.success(request, f'{accessory.get_name_display()} has been returned successfully.')
+        messages.success(request, f'{accessory.name()} has been returned successfully.')
         if accessory.equipment:
             return redirect('equipment_detail', id=accessory.equipment.id)
         else:

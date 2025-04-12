@@ -54,7 +54,7 @@
                             {% else %}
                                 <h6 class="mb-2">
                                     <a href="{% url 'equipment_detail' entry.accessory.equipment.id %}" class="text-decoration-none">
-                                        {{ entry.accessory.get_name_display }} ({{ entry.accessory.equipment.name }})
+                                        {{ entry.accessory.name }} ({{ entry.accessory.equipment.name }})
                                     </a>
                                 </h6>
                                 {% if entry.previous_status != entry.new_status %}
