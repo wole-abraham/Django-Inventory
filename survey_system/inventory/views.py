@@ -76,9 +76,10 @@ def store(request):
         equipment = request.POST.get('equipment_id')
         user = User.objects.filter(id=chief_id).first()
         equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
+        equipment.section = request.POST.get("section")
         equipment.chief_surveyor = user
         equipment.status = "With Chief Surveyor"
-        equipment.date_receiving_from_department = timezone.now().date()  # Update the date
+        equipment.date_receiving_from_department = request.POST.get("date_receiving") or timezone.now().date()  # Update the date
         equipment.save()
         messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
         return redirect('store')
@@ -325,7 +326,6 @@ def store_returning(request):
         if 'accessory_id' in request.POST:
             accessory_id = request.POST.get('accessory_id')
             accessory = Accessory.objects.filter(id=accessory_id).first()
-            accessory.status = 'Available'
             accessory.return_status = 'Returned'
             accessory.save()
             messages.success(request, f'{accessory.name} has been marked as Available.')
@@ -363,7 +363,7 @@ def return_accessory(request, id):
             accessory.image = request.FILES['image']
         
         # Update status and comment
-        accessory.status = request.POST.get('status', accessory.status)
+        accessory.status = request.POST.get('status')
         accessory.comment = request.POST.get('comment', '')
         
         # Mark as returned - this will set returned_by and date_returned

@@ -47,22 +47,13 @@
                                     <input type="hidden" name="id" value="{{ info.id }}">
                                 </td>
                                 <td>
-                                    <select name="project" class="form-select form-select-sm">
-                                        <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
-                                        <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
-                                    </select>
+                                    {{info.project}}
                                 </td>
                                 <td>
-                                    <select name="section" class="form-select form-select-sm">
-                                        <option value="Section 1" {% if info.section == "Section 1" %}selected{% endif %}>Section 1</option>
-                                        <option value="Section 9" {% if info.section == "Section 9" %}selected{% endif %}>Section 9</option>
-                                        <option value="Section 1-A" {% if info.section == "Section 1-A" %}selected{% endif %}>Section 1-A</option>
-                                        <option value="Section 1-B" {% if info.section == "Section 1-B" %}selected{% endif %}>Section 1-B</option>
-                                        <option value="Section 1-C" {% if info.section == "Section 1-C" %}selected{% endif %}>Section 1-C</option>
-                                    </select>
+                                    {{info.section}}
                                 </td>
                                 <td>
-                                    <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                    {{info.date_receiving_from_department}}
                                 </td>
                                 <td>
                                     <span class="badge {% if info.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">

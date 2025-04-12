@@ -24,7 +24,12 @@
                                 <th>Data Logger Serial</th>
                                 <th>Radio Serial</th>
                                 <th>Chief Surveyor</th>
-                                <th>Status</th>
+                                <th>Project</th>
+                                <th>Status</th> 
+                                <th>Date Receiving</th>
+                                    
+                                <th>Condition</th>
+                                
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -53,8 +58,25 @@
                                         <input type="hidden" value="{{ info.id }}" name="equipment_id">
                                     </td>
                                     <td>
+                                        <select name="section" class="form-select form-select-sm">
+                                            <option value="Section 1" {% if info.section == "Section 1" %}selected{% endif %}>Section 1</option>
+                                            <option value="Section 9" {% if info.section == "Section 9" %}selected{% endif %}>Section 9</option>
+                                            <option value="Section 1-A" {% if info.section == "Section 1-A" %}selected{% endif %}>Section 1-A</option>
+                                            <option value="Section 1-B" {% if info.section == "Section 1-B" %}selected{% endif %}>Section 1-B</option>
+                                            <option value="Section 1-C" {% if info.section == "Section 1-C" %}selected{% endif %}>Section 1-C</option>
+                                        </select>
+                                    </td>
+                                    <td>
                                         <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
                                             {{ info.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                    </td> 
+                                    <td>
+                                        <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
+                                            {{ info.condition }}
                                         </span>
                                     </td>
                                     <td>
@@ -109,15 +131,23 @@
                                             </span>
                                         </td>
                                         <td>
+                                            {% if accessory.status == 'Good' %}
                                             <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
                                             <select name="chief_surveyor" class="form-select form-select-sm mb-2">
                                                 {% for users in user %}
                                                 <option value="{{ users.id }}">{{ users.username }}</option>
                                                 {% endfor %}
                                             </select>
+                                            
                                             <button type="submit" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-paper-plane"></i> Release
                                             </button>
+                                            {% else %}
+
+                                            <button disabled="disabled" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-close"></i> Bad
+                                            </button>
+                                            {% endif %}
                                         </td>
                                     </form>
                                 </tr>

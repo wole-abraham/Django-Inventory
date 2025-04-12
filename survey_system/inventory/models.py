@@ -22,6 +22,7 @@ class Equipment(models.Model):
     ]
     name = models.CharField(max_length=100)
     equipment_type = models.CharField(max_length=50, choices=EQUIPMENT_TYPES)
+    
     status = models.CharField(max_length=20, default='In Store', choices=STATUS)
     requested_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     image = models.ImageField(upload_to='equipment_images/', null=True)
@@ -51,6 +52,7 @@ class EquipmentsInSurvey(models.Model):
     supplier = models.CharField(max_length=20)
     base_serial = models.CharField(max_length=100)
     roover_serial = models.CharField(max_length=100)
+    condition = models.CharField(max_length=10, choices=[("Good", "Good"), ("Bad", "Bad")], default="Good")
     data_logger_serial = models.CharField(max_length=100)
     radio_serial = models.CharField(max_length=100)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
@@ -98,7 +100,7 @@ class Accessory(models.Model):
     serial_number = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    surveyor_responsible = models.CharField(max_length=100, null=True)
+    surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good', null=True, blank=True)
     return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Use', null=True, blank=True)
     comment = models.TextField(null=True, blank=True)

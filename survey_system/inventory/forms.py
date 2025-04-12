@@ -24,10 +24,13 @@ class AccessoryForm(forms.ModelForm):
             self.fields['equipment'].initial = equipment
             self.fields['equipment'].disabled = True
             self.fields['equipment'].widget.attrs['class'] = 'form-select'
+        
+
+        self.fields['name'].queryset = Accessory.objects.filter(status='Good')
 
     class Meta:
         model = Accessory
-        fields = ['name', 'serial_number', 'equipment', 'status', 'comment', 'image']
+        fields = ['name', 'serial_number', 'equipment', 'comment', 'image']
         widgets = {
             'name': forms.Select(attrs={
                 'class': 'form-select',
