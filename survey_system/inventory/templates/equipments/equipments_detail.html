@@ -215,7 +215,7 @@
                         <div class="col-md-4 mb-3">
                             <div class="card">
                                 <div class="card-body postion-relative">
-                                    <a href="{% url 'remove_from_equipment' accessory.id %}" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close"></a>
+                                    <a href="{% url 'remove_from_equipment' accessory.id %}" class="position-absolute top-0 end-0 m-2 text-danger fw-bold text-decoration-none" style="font-size: 2rem;">&times</a>
 
                                     <h5 class="card-title">{{ accessory.get_name_display }}</h5>
                                     <p class="card-text">
