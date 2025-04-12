@@ -338,7 +338,7 @@ def store_returning(request):
     else:
         # Normal users see items they have returned
         data = EquipmentsInSurvey.objects.filter(
-            Q(status='Returning') | Q(status='In Field'),
+            status='Returning',
             chief_surveyor=request.user
         )
         accessories_data = Accessory.objects.filter(
