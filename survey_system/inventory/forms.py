@@ -108,7 +108,7 @@ class AccessoryReturnForm(forms.Form):
                 # Add checkbox field
                 self.fields[f'accessory_{accessory.id}'] = forms.BooleanField(
                     required=True,
-                    label=f"{accessory.name()} - Current Status: {accessory.status}",
+                    label=f"{accessory.name} - Current Status: {accessory.status}",
                     initial=True,
                     widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
                 )
