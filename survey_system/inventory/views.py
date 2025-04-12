@@ -32,10 +32,10 @@ def request_equipment(request):
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
         section = request.POST.get('section')
-        project = request.POST.get('project')
-        date = request.POST.get('date_receiving')
-        
         equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
+        project = equipment.project
+        date = equipment.date_receiving_from_department
+
 
         # Update equipment status and requested_by field
         equipment.status = 'In Field'

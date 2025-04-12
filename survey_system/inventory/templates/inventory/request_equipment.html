@@ -50,7 +50,13 @@
                                     {{info.project}}
                                 </td>
                                 <td>
-                                    {{info.section}}
+                                    <select name="section" class="form-select form-select-sm">
+                                        <option value="Section 1" {% if info.section == "Section 1" %}selected{% endif %}>Section 1</option>
+                                        <option value="Section 9" {% if info.section == "Section 9" %}selected{% endif %}>Section 9</option>
+                                        <option value="Section 1-A" {% if info.section == "Section 1-A" %}selected{% endif %}>Section 1-A</option>
+                                        <option value="Section 1-B" {% if info.section == "Section 1-B" %}selected{% endif %}>Section 1-B</option>
+                                        <option value="Section 1-C" {% if info.section == "Section 1-C" %}selected{% endif %}>Section 1-C</option>
+                                    </select>
                                 </td>
                                 <td>
                                     {{info.date_receiving_from_department}}
