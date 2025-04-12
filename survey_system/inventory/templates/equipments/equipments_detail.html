@@ -219,7 +219,7 @@
                                     <a href="{% url 'remove_from_equipment' accessory.id %}" class="position-absolute top-0 end-0 m-2 text-danger fw-bold text-decoration-none" style="font-size: 2rem;">&times</a>
                                     {% endif %}
 
-                                    <h5 class="card-title">{{ accessory.get_name_display }}</h5>
+                                    <h5 class="card-title">{{ accessory.name }}</h5>
                                     <p class="card-text">
                                         <small class="text-muted">
                                             {% if accessory.serial_number %}
