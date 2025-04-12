@@ -26,7 +26,13 @@ class AccessoryForm(forms.ModelForm):
             self.fields['equipment'].widget.attrs['class'] = 'form-select'
         
 
-        self.fields['name'].queryset = Accessory.objects.filter(status='Good')
+        self.fields['name'] = forms.ModelChoiceField(
+            queryset=Accessory.objects.filter(status='Good'),
+            empty_label="Select Accessory Type",  # Optional: placeholder for dropdown
+            widget=forms.Select(attrs={
+                'class': 'form-select',
+            })
+        )
 
     class Meta:
         model = Accessory

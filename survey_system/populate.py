@@ -19,7 +19,11 @@ for i in EquipmentsInSurvey.objects.all():
     i.surveyor_responsible = None
     i.save()
 
+import uuid 
+
 for i in Accessory.objects.all():
+    uuid_8_digits = str(uuid.uuid4().int)[:8]
+    i.serial_number = uuid_8_digits
     i.status = 'Good'
     i.chief_surveyor = None
     i.surveyor_responsible = None
@@ -28,8 +32,21 @@ for i in Accessory.objects.all():
     i.save()
 
 
+ACCESSORY_TYPES = (
+        ("tripod", "Tripod"),
+        ("levelling_staff", "Levelling Staff"),
+        ("tracking_rod", "Tracking Rod"),
+        ("reflector", "Reflector"),
+        ("gps_extension_bar", "GPS Extension Bar"),
+        ("bar_port", "Bar Port"),
+        ("powerbank", "Powerbank"),
+        ("tribach", "Tribach"),
+        ("external_radio_antenna", "External Radio Antenna"),
+    )
 
 
+# for i in ACCESSORY_TYPES:
+#     Accessory.objects.create(name=i[0])
 
 
 # lin = []

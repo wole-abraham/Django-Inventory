@@ -96,20 +96,20 @@ class Accessory(models.Model):
         ('Returned', 'Returned'),
     ]
 
-    name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
+    name = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good', null=True, blank=True)
-    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Use', null=True, blank=True)
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='Returned', null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to='accessory_images/', null=True, blank=True)
     date_returned = models.DateTimeField(null=True, blank=True)
     returned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='returned_accessories')
 
     def __str__(self):
-        return f"{self.get_name_display()} (SN: {self.serial_number}) - {self.status}"
+        return f"{self.name}-SN({self.serial_number})"
 
     def mark_as_returned(self, user):
         self.return_status = 'Returning'
