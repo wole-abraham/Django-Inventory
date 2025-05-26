@@ -22,8 +22,8 @@ for i in EquipmentsInSurvey.objects.all():
 import uuid 
 
 for i in Accessory.objects.all():
-    uuid_8_digits = str(uuid.uuid4().int)[:8]
-    i.serial_number = uuid_8_digits
+    # uuid_8_digits = str(uuid.uuid4().int)[:8]
+    # i.serial_number = uuid_8_digits
     i.status = 'Good'
     i.chief_surveyor = None
     i.surveyor_responsible = None

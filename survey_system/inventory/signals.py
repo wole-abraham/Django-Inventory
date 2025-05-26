@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey, Accessory, EquipmentHistory, AccessoryHistory
-from .emails import return_equipment_email
+from .emails import returning_equipment_email, returned_equipment_email, released_equipment_field_email, released_equipment_email
 import requests
 import logging
 
@@ -10,14 +10,27 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=EquipmentsInSurvey)
 def notify_surveyor(sender, instance, created, **kwargs):
     if not created:
-        if instance.status == 'Returning':
+        if instance.status:
             equipment = instance
             # Use select_related to ensure the chief_surveyor is loaded with the equipment
             equipment = EquipmentsInSurvey.objects.select_related('chief_surveyor').get(id=equipment.id)
-            message = return_equipment_email(equipment)
+    
+            if equipment.status == 'Returning':
+                subject = "Equipment Returning"
+                message = returning_equipment_email(subject, equipment)
+            elif equipment.status == "In Store":
+                subject = "Equipment Returned"
+                message = returned_equipment_email(subject, equipment)
+            elif equipment.status == "In Field":
+                subject = "Equipment in Field"
+                message = released_equipment_field_email(subject, equipment)
+            elif equipment.status == "With Chief Surveyor":
+                subject = "Equipment with Chief Surveyor"
+                message = released_equipment_email(subject, equipment)
+                
             requests.post(
                 url ='https://hook.eu2.make.com/svxxuei9ivon08wka4dwjih5l2tfrkcy'
-                , data= {"message": message}
+                , data= {"message": message, "subject": subject}
             )
 
 @receiver(post_save, sender=EquipmentsInSurvey)
