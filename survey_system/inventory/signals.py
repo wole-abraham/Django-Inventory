@@ -18,20 +18,37 @@ def notify_surveyor(sender, instance, created, **kwargs):
             if equipment.status == 'Returning':
                 subject = "Equipment Returning"
                 message = returning_equipment_email(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
+                
             elif equipment.status == "In Store":
                 subject = "Equipment Returned"
                 message = returned_equipment_email(subject, equipment)
             elif equipment.status == "In Field":
                 subject = "Equipment in Field"
                 message = released_equipment_field_email(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
+                print(equipment.chief_surveyor.email)
             elif equipment.status == "With Chief Surveyor":
                 subject = "Equipment with Chief Surveyor"
                 message = released_equipment_email(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )  
+            print(equipment.chief_surveyor.email)
                 
             requests.post(
                 url ='https://hook.eu2.make.com/svxxuei9ivon08wka4dwjih5l2tfrkcy'
                 , data= {"message": message, "subject": subject}
             )
+
+           
 
 @receiver(post_save, sender=EquipmentsInSurvey)
 def create_equipment_history(sender, instance, created, **kwargs):
