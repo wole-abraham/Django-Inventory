@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Equipment, SurveyorEngineer
+# from .models import Equipment, SurveyorEngineer
 from  django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -20,11 +20,11 @@ from .forms import EquipmentEditForm
 from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
 
-def filter_equipment(request):
-    equipment_type = request.GET.get('equipment_type')
-    available_equipment = Equipment.objects.filter(equipment_type=equipment_type, status='In Store')  # Ensure only available equipment is returned
-    data = [{'id': eq.id, 'name': eq.name} for eq in available_equipment]
-    return JsonResponse(data, safe=False)
+# def filter_equipment(request):
+#     equipment_type = request.GET.get('equipment_type')
+#     available_equipment = Equipment.objects.filter(equipment_type=equipment_type, status='In Store')  # Ensure only available equipment is returned
+#     data = [{'id': eq.id, 'name': eq.name} for eq in available_equipment]
+#     return JsonResponse(data, safe=False)
 
 
 @login_required
@@ -55,19 +55,19 @@ def request_equipment(request):
 )
     return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
-@receiver(post_save, sender=User)
-def create_surveyor_for_user(sender, instance, created, **kwargs):
-    if created:
-        SurveyorEngineer.objects.create(user=instance)
+# @receiver(post_save, sender=User)
+# def create_surveyor_for_user(sender, instance, created, **kwargs):
+#     if created:
+#         SurveyorEngineer.objects.create(user=instance)
 
-@login_required
-def dashboard_view(request):
-    # Query all equipment
-    all_equipment = Equipment.objects.all()
+# @login_required
+# def dashboard_view(request):
+#     # Query all equipment
+#     all_equipment = Equipment.objects.all()
 
-    return render(request, 'inventory/dashboard.html', {
-        'all_equipment': all_equipment,
-    })
+#     return render(request, 'inventory/dashboard.html', {
+#         'all_equipment': all_equipment,
+#     })
 
 
 def store(request):
@@ -78,7 +78,8 @@ def store(request):
         equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
         equipment.section = request.POST.get("section")
         equipment.chief_surveyor = user
-        equipment.status = "With Chief Surveyor"
+        equipment.delivery_status = "Delivering"
+        equipment.status = "Delivering"
         equipment.date_receiving_from_department = request.POST.get("date_receiving") or timezone.now().date()  # Update the date
         equipment.save()
         messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
@@ -172,7 +173,7 @@ def login_view(request):
 @login_required
 def profile(request):
     # Get all equipment where the user is the requester
-    user_equipment = Equipment.objects.filter(requested_by=request.user)
+    # user_equipment = Equipment.objects.filter(requested_by=request.user)
 
     if request.method == 'POST':
         equipment_id = request.POST.get('id')
@@ -187,7 +188,7 @@ def profile(request):
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
     accessories = Accessory.objects.filter(chief_surveyor=user, return_status="In Use")
-    return render(request, 'inventory/profile.html', {'user_equipment': user_equipment, 'data':data, 'accessories': accessories})
+    return render(request, 'inventory/profile.html', {'data':data, 'accessories': accessories})
 
 def create_user(request):
     if request.method == 'POST':
@@ -201,38 +202,38 @@ def create_user(request):
 
     return render(request, 'registration/create_user.html', {'form': form})
 
-def equipment_in_store(request):
-    """API endpoint for equipment in store."""
-    equipment = Equipment.objects.filter(status='In Store')
-    data = [
-        {
-            'id': eq.id,
-            'name': eq.name,
-            'equipment_type': eq.equipment_type,
-        }
-        for eq in equipment
-    ]
-    return JsonResponse(data, safe=False)
+# def equipment_in_store(request):
+#     """API endpoint for equipment in store."""
+#     equipment = Equipment.objects.filter(status='In Store')
+#     data = [
+#         {
+#             'id': eq.id,
+#             'name': eq.name,
+#             'equipment_type': eq.equipment_type,
+#         }
+#         for eq in equipment
+#     ]
+#     return JsonResponse(data, safe=False)
 
-def equipment_in_field(request):
-    """API endpoint for equipment in the field."""
-    equipment = Equipment.objects.filter(status='In Field')
-    data = [
-        {
-            'id': eq.id,
-            'name': eq.name,
-            'equipment_type': eq.equipment_type,
-            'requested_by': eq.requested_by.username if eq.requested_by else None,
-        }
-        for eq in equipment
-    ]
-    return JsonResponse(data, safe=False)
+# def equipment_in_field(request):
+#     """API endpoint for equipment in the field."""
+#     equipment = Equipment.objects.filter(status='In Field')
+#     data = [
+#         {
+#             'id': eq.id,
+#             'name': eq.name,
+#             'equipment_type': eq.equipment_type,
+#             'requested_by': eq.requested_by.username if eq.requested_by else None,
+#         }
+#         for eq in equipment
+#     ]
+#     return JsonResponse(data, safe=False)
 
 def equipment(request):
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
     
-    return render(request, 'equipmen    ts/equipments.html', {'form': Survey, 'data': data})
+    return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})
 
 @login_required
 def accessory(request, id):
@@ -446,3 +447,24 @@ def remove_from_equipment(request, id):
     access.equipment = None
     access.save()
     return redirect(request.META.get("HTTP_REFERER", "/"))
+
+def delivery(request):
+    if request.user.is_superuser:
+        eq = EquipmentsInSurvey.objects.filter(status="Delivering")
+        return render(request, 'inventory/deliveries.html', {"data": eq})
+    else:
+        eq = EquipmentsInSurvey.objects.filter(status="Delivering", chief_surveyor=request.user)
+        return render(request, 'inventory/deliveries.html', {"data": eq})
+
+def cancel_delivery(request, id):
+    eq = EquipmentsInSurvey.objects.filter(id=id).first()
+    eq.delivery_status = "Cancelled"
+    eq.status = "In Store"
+    eq.save()
+    return redirect('store')
+def delivery_received(request, id):
+    eq = EquipmentsInSurvey.objects.filter(id=id).first()
+    eq.delivery_status = "Received"
+    eq.status = "With Chief Surveyor"
+    eq.save()
+    return redirect('profile')

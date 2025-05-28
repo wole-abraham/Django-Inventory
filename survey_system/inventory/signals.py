@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import EquipmentsInSurvey, Accessory, EquipmentHistory, AccessoryHistory
-from .emails import returning_equipment_email, returned_equipment_email, released_equipment_field_email, released_equipment_email
+from .emails import returning_equipment_email, returned_equipment_email, released_equipment_field_email, released_equipment_email, delivery_email, delivery_cancelled, received_equipment
 import requests
 import logging
 
@@ -22,10 +22,37 @@ def notify_surveyor(sender, instance, created, **kwargs):
                 url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
                 , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
             )
-                
+            
+            elif equipment.status == "In Store" and equipment.delivery_status == 'Cancelled':
+                subject = "Delivery Cancelled"
+                message = delivery_cancelled(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
             elif equipment.status == "In Store":
                 subject = "Equipment Returned"
                 message = returned_equipment_email(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
+            elif equipment.delivery_status == "Delivering":
+                subject = "Equipment Delivery"
+                message = delivery_email(subject, equipment)
+                print("Delivering")
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
+            elif equipment.delivery_status == "Cancelled":
+                subject = "Delivery Cancelled"
+                message = delivery_cancelled(subject, equipment)
+                requests.post(
+                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+            )
+                
             elif equipment.status == "In Field":
                 subject = "Equipment in Field"
                 message = released_equipment_field_email(subject, equipment)
@@ -34,9 +61,9 @@ def notify_surveyor(sender, instance, created, **kwargs):
                 , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
             )
                 print(equipment.chief_surveyor.email)
-            elif equipment.status == "With Chief Surveyor":
-                subject = "Equipment with Chief Surveyor"
-                message = released_equipment_email(subject, equipment)
+            elif equipment.delivery_status == "Received":
+                subject = "Equipment Received"
+                message = received_equipment(subject, equipment)
                 requests.post(
                 url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
                 , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}

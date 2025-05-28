@@ -1,0 +1,212 @@
+{% extends 'base/base_dashboard.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Equipment Dropdown -->
+    <div class="dropdown-container mb-4">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="equipmentDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            <i class="fas fa-tools me-2"></i>Equipment Records for {{ request.user }}
+        </button>
+        <div class="dropdown-menu p-3" style="width: 95vw; max-height: 70vh;">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date of Receiving</th>
+                            <th>Supplier</th>
+                            <th>Base Serial</th>
+                            <th>Roover Serial</th>
+                            <th>Data Logger Serial</th>
+                            <th>Radio Serial</th>
+                            <th>Chief Surveyor</th>
+                            
+                            <th>Project</th>
+                            <th>Section</th>
+                            <th>Date Receiving (Department)</th>
+                            <th>Status</th>
+                            {% if is_admin %}
+                            <th>Cancel</th>
+                            {%else%}
+                            <th>Receive</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for info in data %}
+                        <tr>
+                            <form action="{% url 'request_equipment' %}" method="post">
+                                {% csrf_token %}
+                                <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
+                                <td>{{ info.date_receiving_from_department }}</td>
+                                <td>{{ info.supplier }}</td>
+                                <td>{{ info.base_serial }}</td>
+                                <td>{{ info.roover_serial }}</td>
+                                <td>{{ info.data_logger_serial }}</td>
+                                <td>{{ info.radio_serial }}</td>
+                                <td>{{ info.chief_surveyor }}</td>
+                               
+                                <td>
+                                    {{info.project}}
+                                </td>
+                                <td>
+                                    {{info.section}}
+                                </td>
+                                <td>
+                                    {{info.date_receiving_from_department}}
+                                </td>
+                                <td>
+                                    <span class="badge {% if info.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ info.status }}
+                                    </span>
+                                </td>
+                                {% if is_admin %}
+                                <td>
+                                    <a href="{% url 'cancel_delivery' info.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-undo"></i> Cancel
+                                    </a>
+                                </td>
+                                {% else %}
+                                <td>
+                                    <a href="{% url 'receive_delivery' info.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-check-circle"></i> Receive
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </form>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessories Dropdown -->
+    <div class="dropdown-container">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            <i class="fas fa-toolbox me-2"></i>Accessories Records for {{ request.user }}
+        </button>
+        <div class="dropdown-menu p-3" style="width: 95vw; max-height: 70vh;">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Equipment</th>
+                            <th>Serial Number</th>
+                            <th>Surveyor Responsible</th>
+                            <th>Condition</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for accessory in accessories %}
+                            
+                            <tr>
+                                <form action="{% url 'release_accessory' %}" method="post">
+                                    {% csrf_token %}
+                                    <td>{{ accessory.name }}</td>
+                                    <td>{{ accessory.equipment.name }}</td>
+                                    <td>{{ accessory.serial_number }}</td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="surveyor_responsible" value="{{ accessory.surveyor_responsible }}" required>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ accessory.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ accessory.return_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
+                                        <div class="btn-group" role="group">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-paper-plane"></i> Release
+                                            </button>
+                                            <a href="{% url 'return_accessory' accessory.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-undo"></i> Return to Store
+                                            </a>
+                                        </div>
+                                    </td>
+                                </form>
+                            </tr>
+                           
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dropdown-container {
+        position: relative;
+    }
+    
+    .dropdown-menu {
+        margin-top: 0.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .table-responsive {
+        overflow-y: auto;
+        max-height: calc(70vh - 2rem);
+    }
+    
+    .table th {
+        position: sticky;
+        top: 0;
+        background: #343a40;
+        z-index: 1;
+    }
+    
+    .table td {
+        white-space: nowrap;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5em 0.75em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-control-sm, .form-select-sm {
+        min-width: 120px;
+    }
+
+    .form-select {
+        min-width: 150px;
+    }
+
+    .form-select-sm {
+        font-size: 0.875rem;
+        padding: 0.25rem 2rem 0.25rem 0.5rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevent dropdown from closing when clicking inside
+    document.querySelectorAll('.dropdown-menu').forEach(function(dropdown) {
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+});
+</script>
+{% endblock %}
