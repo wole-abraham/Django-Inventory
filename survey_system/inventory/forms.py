@@ -138,3 +138,9 @@ class AccessoryReturnForm(forms.Form):
                 
                 # Store accessory ID for easy access in template
                 self.fields[f'accessory_{accessory.id}'].accessory_id = accessory.id
+
+class addEquipmentForm(forms.ModelForm):
+    
+    class Meta:
+        model = EquipmentsInSurvey
+        fields = '__all__'

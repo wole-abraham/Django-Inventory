@@ -19,12 +19,25 @@ from .forms import Survey, AccessoryForm
 from .forms import EquipmentEditForm
 from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
+from .forms import addEquipmentForm
 
 # def filter_equipment(request):
 #     equipment_type = request.GET.get('equipment_type')
 #     available_equipment = Equipment.objects.filter(equipment_type=equipment_type, status='In Store')  # Ensure only available equipment is returned
 #     data = [{'id': eq.id, 'name': eq.name} for eq in available_equipment]
 #     return JsonResponse(data, safe=False)
+
+
+
+def add_equipment(request):
+    if request.method == "POST":
+        form = addEquipmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('store')
+    else:
+        form = addEquipmentForm()
+    return render(request, 'inventory/add_equipment.html', {"form": form})
 
 
 @login_required
