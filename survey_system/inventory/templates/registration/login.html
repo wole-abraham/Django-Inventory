@@ -7,25 +7,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body>
-    <div class="login-container">
-        <h2>Login to Your Account</h2>
-
-        <form method="POST">
+<body style="background:#f4f4f4; min-height:100vh; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:32px 24px 24px 24px; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.08); width:350px; max-width:90vw; text-align:center;">
+        <h2 style="margin-bottom:24px; color:#333;">Login as</h2>
+        <div id="role-select" style="display:flex; justify-content:space-around; margin-bottom:24px;">
+            <div onclick="selectRole('chief')" style="cursor:pointer;">
+                <img src="https://img.icons8.com/ios-filled/100/000000/construction-helmet.png" alt="Chief Surveyor" style="width:96px; height:96px; border-radius:50%; border:3px solid #eee; transition:border 0.2s; background:#f8f9fa;" id="chief-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="width:96px; height:96px; border-radius:50%; border:3px solid #eee; background:#f8f9fa; display:none; align-items:center; justify-content:center; font-size:48px;">👷</div>
+                <div style="margin-top:8px; font-weight:bold; color:#444;">Chief Surveyor</div>
+            </div>
+            <div onclick="selectRole('admin')" style="cursor:pointer;">
+                <img src="https://img.icons8.com/ios-filled/100/000000/admin-settings-male.png" alt="Admin" style="width:96px; height:96px; border-radius:50%; border:3px solid #eee; transition:border 0.2s; background:#f8f9fa;" id="admin-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="width:96px; height:96px; border-radius:50%; border:3px solid #eee; background:#f8f9fa; display:none; align-items:center; justify-content:center; font-size:48px;">👨‍💼</div>
+                <div style="margin-top:8px; font-weight:bold; color:#444;">Admin</div>
+            </div>
+        </div>
+        <div id="selected-role-display" style="display:none; margin-bottom:24px; text-align:center;">
+            <div id="selected-role-image" style="margin-bottom:16px; display:flex; justify-content:center;"></div>
+            <div id="selected-role-title" style="font-weight:bold; color:#444; margin-bottom:16px;"></div>
+            <button onclick="goBack()" style="background:#6c757d; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-size:14px; cursor:pointer; margin-bottom:16px;">← Back to Selection</button>
+        </div>
+        <form id="login-form" method="POST" style="display:none; flex-direction:column; align-items:center;" autocomplete="on">
             {% csrf_token %}
+            <input type="hidden" name="role" id="role-input">
             {{ form.as_p }}
-            
-            <div class="form-actions">
-                <button type="submit" class="btn">Login</button>
+            <div style="margin-top:16px;">
+                <button type="submit" style="background:#007bff; color:#fff; border:none; padding:10px 32px; border-radius:6px; font-size:16px; cursor:pointer;">Login</button>
             </div>
         </form>
-
-        <div class="links">
-          
-            <a href="{% url 'create_user' %}">Create a new account</a>
+        <div class="links" style="margin-top:18px;">
+            <a href="{% url 'create_user' %}" style="color:#007bff; text-decoration:none;">Create a new account</a>
         </div>
     </div>
+    <script>
+        function selectRole(role) {
+            // Hide role selection
+            document.getElementById('role-select').style.display = 'none';
+            
+            // Show selected role display
+            document.getElementById('selected-role-display').style.display = 'block';
+            
+            // Set role title
+            const roleTitle = role === 'chief' ? 'Chief Surveyor' : 'Admin';
+            document.getElementById('selected-role-title').textContent = roleTitle;
+            
+            // Set role image
+            const roleImage = document.getElementById('selected-role-image');
+            if (role === 'chief') {
+                roleImage.innerHTML = '<img src="https://img.icons8.com/ios-filled/100/000000/construction-helmet.png" alt="Chief Surveyor" style="width:96px; height:96px; border-radius:50%; border:3px solid #007bff; background:#f8f9fa;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';"><div style="width:96px; height:96px; border-radius:50%; border:3px solid #007bff; background:#f8f9fa; display:none; align-items:center; justify-content:center; font-size:48px;">👷</div>';
+            } else {
+                roleImage.innerHTML = '<img src="https://img.icons8.com/ios-filled/100/000000/admin-settings-male.png" alt="Admin" style="width:96px; height:96px; border-radius:50%; border:3px solid #007bff; background:#f8f9fa;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';"><div style="width:96px; height:96px; border-radius:50%; border:3px solid #007bff; background:#f8f9fa; display:none; align-items:center; justify-content:center; font-size:48px;">👨‍💼</div>';
+            }
+            
+            // Show login form
+            document.getElementById('login-form').style.display = 'flex';
+            document.getElementById('role-input').value = role;
+        }
+
+        function goBack() {
+            // Show role selection
+            document.getElementById('role-select').style.display = 'flex';
+            
+            // Hide selected role display and login form
+            document.getElementById('selected-role-display').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+            
+            // Reset role input
+            document.getElementById('role-input').value = '';
+        }
+    </script>
 </body>
 </html>
