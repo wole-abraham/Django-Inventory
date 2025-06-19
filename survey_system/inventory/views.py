@@ -15,7 +15,7 @@ from django.utils import timezone
 from .models import EquipmentHistory, AccessoryHistory
 from django.db.models import Q
 
-from .forms import Survey, AccessoryForm
+from .forms import Survey, AccessoryForm, AccessoryNoEquipmentForm
 from .forms import EquipmentEditForm
 from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
@@ -45,10 +45,10 @@ def request_equipment(request):
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
         section = request.POST.get('section')
-        equipment = EquipmentsInSurvey.objects.filter(id=request.POST.get('id')).first()
+        equipment_id = request.POST.get('id')
+        equipment = get_object_or_404(EquipmentsInSurvey, id=equipment_id)
         project = equipment.project
         date = equipment.date_receiving_from_department
-
 
         # Update equipment status and requested_by field
         equipment.status = 'In Field'
@@ -488,11 +488,11 @@ def add_accessory(request):
         messages.error(request, 'Only administrators can add accessories.')
         return redirect('store')
     if request.method == 'POST':
-        form = AccessoryForm(request.POST, request.FILES)
+        form = AccessoryNoEquipmentForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Accessory added successfully!')
             return redirect('store')
     else:
-        form = AccessoryForm()
+        form = AccessoryNoEquipmentForm()
     return render(request, 'inventory/add_accessory.html', {'form': form})

@@ -1,3 +1,4 @@
+from hashlib import blake2b
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -43,7 +44,7 @@ from django.dispatch import receiver
 
 class EquipmentsInSurvey(models.Model):
     name = models.CharField(max_length=100)
-    date_of_receiving_from_supplier = models.DateField()
+    date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
     supplier = models.CharField(max_length=20)
     base_serial = models.CharField(max_length=100)
     roover_serial = models.CharField(max_length=100)
@@ -52,7 +53,7 @@ class EquipmentsInSurvey(models.Model):
     radio_serial = models.CharField(max_length=100)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True)
-    project = models.CharField(max_length=20, blank=True)
+    project = models.CharField(max_length=20, blank=True, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto')])
     section = models.CharField(max_length=100, null=True, blank=True)
     date_receiving_from_department = models.DateField()
     status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning'), ('Delivering', 'Delivering')], max_length=100, default='In Store')
@@ -112,7 +113,7 @@ class Accessory(models.Model):
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
 
     def __str__(self):
-        return f"{self.name}-SN({self.serial_number})"
+        return f"{self.name}"
 
     def mark_as_returned(self, user):
         self.return_status = 'Returning'
