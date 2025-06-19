@@ -18,6 +18,7 @@ urlpatterns = [
     path('release-accessory/', views.release_accessory, name='release_accessory'),
     path('admin-release-accessory', views.admin_release_accessory, name="admin_release_accessory"),
     path('add-equipment/', views.add_equipment, name='add_equipment'),
+    path('add-accessory/', views.add_accessory, name='add_accessory'),
     # path('equipment/<int:id>/history/', views.equipment_history, name='equipment_history'),
     # path('accessory/<int:id>/history/', views.accessory_history, name='accessory_history'),
     # path('history/', views.all_history, name='all_history'),

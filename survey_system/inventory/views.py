@@ -481,3 +481,18 @@ def delivery_received(request, id):
     eq.status = "With Chief Surveyor"
     eq.save()
     return redirect('profile')
+
+@login_required
+def add_accessory(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Only administrators can add accessories.')
+        return redirect('store')
+    if request.method == 'POST':
+        form = AccessoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Accessory added successfully!')
+            return redirect('store')
+    else:
+        form = AccessoryForm()
+    return render(request, 'inventory/add_accessory.html', {'form': form})
