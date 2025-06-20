@@ -43,7 +43,7 @@ from django.dispatch import receiver
 
 
 class EquipmentsInSurvey(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, help_text="Equipment Name")
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
     supplier = models.CharField(max_length=20)
     base_serial = models.CharField(max_length=100)
