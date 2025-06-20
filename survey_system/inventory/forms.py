@@ -171,7 +171,6 @@ class addEquipmentForm(forms.ModelForm):
             'data_logger_serial',
             'radio_serial',
             'date_receiving_from_department',
-            'status',
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
