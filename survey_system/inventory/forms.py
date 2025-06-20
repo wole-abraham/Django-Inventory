@@ -64,13 +64,7 @@ class AccessoryForm(forms.ModelForm):
 class AccessoryNoEquipmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['name'] = forms.ModelChoiceField(
-            queryset=Accessory.objects.filter(status='Good', return_status="Returned"),
-            empty_label="Select Accessory Type",
-            widget=forms.Select(attrs={
-                'class': 'form-select',
-            })
-        )
+       
         for field in ['equipment', 'comment', 'image']:
             if field in self.fields:
                 self.fields.pop(field)

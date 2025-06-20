@@ -99,7 +99,7 @@ class Accessory(models.Model):
         ('Returned', 'Returned'),
     ]
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
     serial_number = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
