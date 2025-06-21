@@ -19,47 +19,49 @@ class AccessoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         equipment = kwargs.pop('equipment', None)
         super().__init__(*args, **kwargs)
-        if equipment:
-            self.fields['equipment'].initial = equipment
-            self.fields['equipment'].disabled = True
-            self.fields['equipment'].widget.attrs['class'] = 'form-select'
-
-        self.fields['name'] = forms.ModelChoiceField(
-            queryset=Accessory.objects.filter(status='Good', return_status="Returned"),
-            empty_label="Select Accessory Type",  # Optional: placeholder for dropdown
+        
+        # Show only accessories that are not assigned to any equipment and are in store
+        self.fields['accessory'] = forms.ModelChoiceField(
+            queryset=Accessory.objects.filter(equipment=None, return_status="Returned"),
+            empty_label="Select Accessory",
             widget=forms.Select(attrs={
                 'class': 'form-select',
             })
         )
+        
+        # Custom label to show name and serial number
+        def label_from_instance(obj):
+            if obj.serial_number:
+                return f"{obj.name} - SN: {obj.serial_number}"
+            else:
+                return f"{obj.name} - SN: Not assigned"
+        
+        self.fields['accessory'].label_from_instance = label_from_instance
+        
         # Remove unwanted fields if present
-        for field in ['comment', 'image']:
+        for field in ['equipment', 'comment', 'image', 'name', 'serial_number']:
             if field in self.fields:
                 self.fields.pop(field)
+        
+        # Store equipment for later use in save method
+        self.equipment = equipment
 
     class Meta:
         model = Accessory
-        fields = ['name', 'serial_number', 'equipment']
-        widgets = {
-            'name': forms.Select(attrs={
-                'class': 'form-select',
-                'placeholder': 'Select Accessory Type'
-            }),
-            'serial_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter serial number'
-            }),
-            'equipment': forms.Select(attrs={
-                'class': 'form-select',
-                'placeholder': 'Select Equipment'
-            }),
-        }
+        fields = []  # We'll handle the accessory selection manually
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.return_status = 'In Use'  # Set default return status
+        # Get the selected accessory
+        selected_accessory = self.cleaned_data['accessory']
+        
+        # Assign the accessory to the equipment
+        selected_accessory.equipment = self.equipment
+        selected_accessory.return_status = 'In Use'
+        
         if commit:
-            instance.save()
-        return instance
+            selected_accessory.save()
+        
+        return selected_accessory
 
 class AccessoryNoEquipmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

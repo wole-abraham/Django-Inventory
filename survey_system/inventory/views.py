@@ -458,6 +458,7 @@ def all_history(request):
 def remove_from_equipment(request, id):
     access = Accessory.objects.filter(id=id).first()
     access.equipment = None
+    access.return_status = "Returned"
     access.save()
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
