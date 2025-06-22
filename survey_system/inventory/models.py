@@ -43,12 +43,33 @@ from django.dispatch import receiver
 
 
 class EquipmentsInSurvey(models.Model):
-    name = models.CharField(max_length=100, help_text="Equipment Name")
+
+    EQUIPMENT_CHOICES = [
+        ('GNSS base-roover', 'GNSS base-roover'),
+        ('GNSS rover', 'GNSS rover'),
+        ('GNSS base', 'GNSS base'),
+        ('Total Station', "Total Station"),
+        ('Level Instruments', "Level Instrument"),
+        ('Drone', 'Drone'),
+        ('Eco Sounder', 'Eco Sounder'),
+        ('Machine Control', 'Machine Control'),
+        ('3d Scanner', '3d Scanner')
+    ]
+
+    supplier_name = [
+        ('Hi Target', 'Hi Targer'),
+        ('TopCon', 'TopCon'),
+        ('Leica', 'Leica'),
+        ('Sokkia', 'Sokkia')
+    ]
+
+
+    name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
-    supplier = models.CharField(max_length=20)
-    base_serial = models.CharField(max_length=100)
+    supplier = models.CharField(max_length=20, choices=supplier_name)
+    base_serial = models.CharField(max_length=100, null=True, blank=True)
     roover_serial = models.CharField(max_length=100)
-    condition = models.CharField(max_length=10, choices=[("Good", "Good"), ("Bad", "Bad")], default="Good")
+    condition = models.CharField(max_length=20, choices=[("New", "New"), ("Second Hand", "Second Hand")], default="New")
     data_logger_serial = models.CharField(max_length=100)
     radio_serial = models.CharField(max_length=100)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -75,6 +96,13 @@ class Accessory(models.Model):
     ACCESSORY_TYPES = (
         ("tripod", "Tripod"),
         ("levelling_staff", "Levelling Staff"),
+        ("Data Logger", "Data Logger"),
+        ("GNSS Battery", "GNSS Battery"),
+        ("Pole", "Pole"),
+        ("Mini Prism", "Mini Prism"),
+        ("Sheet", "Sheet"),
+        ("Total Station prism", "Total Station Prism"),
+        ("Radio", "Radio"),
         ("tracking_rod", "Tracking Rod"),
         ("reflector", "Reflector"),
         ("gps_extension_bar", "GPS Extension Bar"),
