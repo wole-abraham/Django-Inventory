@@ -46,7 +46,7 @@ class EquipmentsInSurvey(models.Model):
 
     EQUIPMENT_CHOICES = [
         ('GNSS base-roover', 'GNSS base-roover'),
-        ('GNSS rover', 'GNSS rover'),
+        ('GNSS roover', 'GNSS roover'),
         ('GNSS base', 'GNSS base'),
         ('Total Station', "Total Station"),
         ('Level Instruments', "Level Instrument"),

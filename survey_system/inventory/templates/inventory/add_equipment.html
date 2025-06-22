@@ -1,6 +1,7 @@
 <!-- templates/add_equipment.html -->
  {% extends 'base/base_dashboard.html' %} 
  {% load static %}
+ {% load widget_tweaks %}
 {% block content %}
      <style>
         body {
@@ -77,6 +78,36 @@
         <form method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}
+                {% if field.name == 'base_serial' %}
+                <div class="mb-4" id="base_serial_field">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% elif field.name == 'name' %}
+                <div class="mb-4">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field|add_class:'form-control' }}
+                    <script>
+                        // Add id to the select after rendering
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var nameField = document.getElementsByName('name')[0];
+                            if (nameField) nameField.id = 'id_equipment_type';
+                        });
+                    </script>
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% else %}
                 <div class="mb-4">
                     <label class="form-label">{{ field.label }}</label>
                     {{ field }}
@@ -87,6 +118,7 @@
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
+                {% endif %}
             {% endfor %}
             <button type="submit" class="btn btn-primary w-100">Save Equipment</button>
         </form>
@@ -94,3 +126,5 @@
 </div>
 
 {% endblock %}
+
+
