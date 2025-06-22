@@ -62,11 +62,16 @@ class EquipmentsInSurvey(models.Model):
         ('Leica', 'Leica'),
         ('Sokkia', 'Sokkia')
     ]
-
+    
+    owner_choice = [
+        ('Company', "Company"),
+        ("Sub-Contractor", "Sub-Contractor")
+    ]
 
     name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
     supplier = models.CharField(max_length=20, choices=supplier_name)
+    owner = models.CharField(max_length=20, choices=owner_choice)
     base_serial = models.CharField(max_length=100, null=True, blank=True)
     roover_serial = models.CharField(max_length=100)
     condition = models.CharField(max_length=20, choices=[("New", "New"), ("Second Hand", "Second Hand")], default="New")

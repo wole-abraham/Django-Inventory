@@ -165,6 +165,7 @@ class addEquipmentForm(forms.ModelForm):
         model = EquipmentsInSurvey
         fields = [
             'name',
+            'owner',
             'date_of_receiving_from_supplier',
             'supplier',
             'base_serial',
