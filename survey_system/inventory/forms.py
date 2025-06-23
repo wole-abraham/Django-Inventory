@@ -157,6 +157,12 @@ class AccessoryReturnForm(forms.Form):
                 self.fields[f'accessory_{accessory.id}'].accessory_id = accessory.id
 
 class addEquipmentForm(forms.ModelForm):
+    accessory_types = forms.MultipleChoiceField(
+        choices=Accessory.ACCESSORY_TYPES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label="Select Accessory Types to Create"
+    )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'chief_surveyor' in self.fields:
@@ -173,9 +179,7 @@ class addEquipmentForm(forms.ModelForm):
             'condition',
             'data_logger_serial',
             'radio_serial',
-            'date_receiving_from_department',
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
-            'date_receiving_from_department': forms.DateInput(attrs={'type': 'date'}),
         }

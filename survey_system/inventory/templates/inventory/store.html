@@ -1,164 +1,167 @@
-    {% extends 'base/base_dashboard.html' %} 
+{% extends 'base/base_dashboard.html' %} 
 
     {% block content %}
     <div class="container-fluid mt-4">
         <!-- Equipment Dropdown -->
-        <div class="dropdown-container mb-4">
-            <a class="btn btn-primary" href="{% url 'add_equipment' %}">add equipment</a>
+        <div class="dropdown-container mb-4 ">
+            
             {% if is_admin %}
-            <a class="btn btn-secondary ms-2" href="{% url 'add_accessory' %}">add accessory</a>
+            <a class="btn btn-danger" href="{% url 'add_equipment' %}">add equipment</a>
+            <a class="btn ms-2" href="{% url 'add_accessory' %}" style="background-color: yellow;">add accessory</a>
             {% endif %}
-            <button class="btn btn-primary dropdown-toggle" type="button"  id="equipmentDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                <i class="fas fa-tools me-2"></i>Equipment in Store
-            </button>
-            <div class="dropdown-menu p-3" style="width: 95vw; max-height: 70vh;">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Name</th>
-                                {% if is_admin %}
-                                <th>Date of Receiving (Supplier)</th>
-                                {% else %}
-                                <th>Date of Receiving (Department)</th>
-                                {% endif %}
-                                <th>Supplier</th>
-                                <th>Base Serial</th>
-                                <th>Roover Serial</th>
-                                <th>Data Logger Serial</th>
-                                <th>Radio Serial</th>
-                                <th>Chief Surveyor</th>
-                                <th>Project</th>
-                                <th>Status</th> 
-                                <th>Date Receiving</th>
-                                    
-                                <th>Condition</th>
-                                
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for info in data %}
-                            <tr>
-                                <form action="{% url 'store' %}" method="post">
-                                    {% csrf_token %}
-                                    <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-primary dropdown-toggle" type="button"  id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-tools me-2"></i>Equipment in Store
+                </button>
+                <div class="dropdown-menu p-3" aria-labelledby="equipmentDropdown" style="width: 95vw; max-height: 70vh;">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
                                     {% if is_admin %}
-                                    <td>{{ info.date_of_receiving_from_supplier }}</td>
+                                    <th>Date of Receiving (Supplier)</th>
                                     {% else %}
-                                    <td>{{ info.date_receiving_from_department }}</td>
+                                    <th>Date of Receiving (Department)</th>
                                     {% endif %}
-                                    <td>{{ info.supplier }}</td>
-                                    <td>{{ info.base_serial }}</td>
-                                    <td>{{ info.roover_serial }}</td>
-                                    <td>{{ info.data_logger_serial }}</td>
-                                    <td>{{ info.radio_serial }}</td>
-                                    <td>
-                                        <select name="id" class="form-select form-select-sm">
-                                            {% for users in user %}
-                                            <option value="{{ users.id }}">{{ users.username }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <input type="hidden" value="{{ info.id }}" name="equipment_id">
-                                    </td>
-                                    <td>
-                                        <select name="project" class="form-select form-select-sm">
-                                            <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
-                                            <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
-                                            {{ info.status }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <input type="date" class="form-control form-control-sm" name="date_receiving" required>
-                                    </td> 
-                                    <td>
-                                        <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
-                                            {{ info.condition }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-paper-plane"></i> Release
-                                        </button>
-                                    </td>
-                                </form>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    <th>Supplier</th>
+                                    <th>Base Serial</th>
+                                    <th>Roover Serial</th>
+                                    <th>Data Logger Serial</th>
+                                    <th>Radio Serial</th>
+                                    <th>Chief Surveyor</th>
+                                    <th>Project</th>
+                                    <th>Status</th> 
+                                    <th>Date Receiving</th>
+                                    <th>Condition</th>
+                                    
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for info in data %}
+                                <tr>
+                                    <form action="{% url 'store' %}" method="post">
+                                        {% csrf_token %}
+                                        <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
+                                        {% if is_admin %}
+                                        <td>{{ info.date_of_receiving_from_supplier }}</td>
+                                        {% else %}
+                                        <td>{{ info.date_receiving_from_department }}</td>
+                                        {% endif %}
+                                        <td>{{ info.supplier }}</td>
+                                        <td>{{ info.base_serial }}</td>
+                                        <td>{{ info.roover_serial }}</td>
+                                        <td>{{ info.data_logger_serial }}</td>
+                                        <td>{{ info.radio_serial }}</td>
+                                        <td>
+                                            <select name="id" class="form-select form-select-sm">
+                                                {% for users in user %}
+                                                <option value="{{ users.id }}">{{ users.username }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="hidden" value="{{ info.id }}" name="equipment_id">
+                                        </td>
+                                        <td>
+                                            <select name="project" class="form-select form-select-sm">
+                                                <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
+                                                <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
+                                                {{ info.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                        </td> 
+                                        <td>
+                                            <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
+                                                {{ info.condition }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-paper-plane"></i> Release
+                                            </button>
+                                        </td>
+                                    </form>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-toolbox me-2"></i>Accessories in Store
+                </button>
+                <div class="dropdown-menu p-3" aria-labelledby="accessoriesDropdown" style="width: 95vw; max-height: 70vh;">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Equipment</th>
+                                    <th>Serial Number</th>
+                                    <th>Condition</th>
+                                    <th>Status</th>
+                                    <th>Change Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for accessory in accessories %}
+                                    {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' %}
+                                    <tr>
+                                        <form action="{% url 'admin_release_accessory' %}" method="post">
+                                            {% csrf_token %}
+                                            <td>{{ accessory.name }}</td>
+                                            <td>{{ accessory.equipment }}</td>
+                                            <td>{{ accessory.serial_number }}</td>
+                                            <td>
+                                                <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                  {{accessory.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {{ accessory.return_status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <select  name="condition" id="condition">
+                                                    <option value="" disabled selected hidden>{{ accessory.status }}</option>
+                                                    <option value="Good">Good</option>
+                                                    <option value="Bad">Bad</option>
+                                                  </select>
+                                            </td>
+                                            <td>
+                                                <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
+                                                
+                                                
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-paper-plane"></i> Save
+                                                </button>
+
+                                            </td>
+                                        </form>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Accessories Dropdown -->
-        <div class="dropdown-container">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                <i class="fas fa-toolbox me-2"></i>Accessories in Store
-            </button>
-            <div class="dropdown-menu p-3" style="width: 95vw; max-height: 70vh;">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Name</th>
-                                <th>Equipment</th>
-                                <th>Serial Number</th>
-                                <th>Condition</th>
-                                <th>Status</th>
-                                <th>Change Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for accessory in accessories %}
-                                {% if accessory.return_status == 'Returned' %}
-                                <tr>
-                                    <form action="{% url 'admin_release_accessory' %}" method="post">
-                                        {% csrf_token %}
-                                        <td>{{ accessory.name }}</td>
-                                        <td>{{ accessory.equipment }}</td>
-                                        <td>{{ accessory.serial_number }}</td>
-                                    
-                                        <td>
-                                            <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
-                                              {{accessory.status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <select  name="condition" id="condition">
-                                                <option value="" disabled selected hidden>{{ accessory.status }}</option>
-                                                <option value="Good">Good</option>
-                                                <option value="Bad">Bad</option>
-                                              </select>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
-                                                {{ accessory.return_status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                           
-                                            <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
-                                            
-                                            
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-paper-plane"></i> Save
-                                            </button>
-
-                                        </td>
-                                    </form>
-                                </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    
+            
+        
     </div>
 
     <style>

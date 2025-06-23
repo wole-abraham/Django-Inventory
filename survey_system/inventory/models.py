@@ -73,16 +73,16 @@ class EquipmentsInSurvey(models.Model):
     supplier = models.CharField(max_length=20, choices=supplier_name)
     owner = models.CharField(max_length=20, choices=owner_choice)
     base_serial = models.CharField(max_length=100, null=True, blank=True)
-    roover_serial = models.CharField(max_length=100)
+    roover_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Roover Serial Number")
     condition = models.CharField(max_length=20, choices=[("New", "New"), ("Second Hand", "Second Hand")], default="New")
-    data_logger_serial = models.CharField(max_length=100)
-    radio_serial = models.CharField(max_length=100)
+    data_logger_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Data Logger Serial Number")
+    radio_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Radio Serial Number")
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    surveyor_responsible = models.CharField(max_length=100, null=True)
-    project = models.CharField(max_length=20, blank=True, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto')])
+    surveyor_responsible = models.CharField(max_length=100, null=True, blank=True, help_text="Name of the surveyor responsible for the equipment")
+    project = models.CharField(max_length=20, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto')], blank=True, null=True, help_text="Project Name")
     section = models.CharField(max_length=100, null=True, blank=True)
-    date_receiving_from_department = models.DateField()
-    status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning'), ('Delivering', 'Delivering')], max_length=100, default='In Store')
+    date_receiving_from_department = models.DateField(blank=True, null=True, help_text="Date when the equipment was received from the department")
+    status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning'), ('Delivering', 'Delivering')], max_length=100, default='In Store', blank=True, null=True, help_text="Current status of the equipment")
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
 
     def __str__(self):
@@ -133,7 +133,7 @@ class Accessory(models.Model):
     ]
 
     name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
-    serial_number = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Unique serial number for the accessory")
+    serial_number = models.CharField(max_length=50, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)

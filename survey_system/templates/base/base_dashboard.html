@@ -289,7 +289,22 @@
             toggleBaseSerial();
         }
     });
-    </script>
+    
+
+document.addEventListener('DOMContentLoaded', function() {
+    const addMoreBtn = document.getElementById('add-more-accessory');
+    const formsetDiv = document.getElementById('accessory-formset');
+    if (!addMoreBtn || !formsetDiv) return;
+    let totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    addMoreBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const currentFormCount = parseInt(totalForms.value);
+        const emptyFormHtml = formsetDiv.children[0].outerHTML.replace(/form-0/g, `form-${currentFormCount}`);
+        formsetDiv.insertAdjacentHTML('beforeend', emptyFormHtml);
+        totalForms.value = currentFormCount + 1;
+    });
+});
+
 </script>
 </body>
 </html>

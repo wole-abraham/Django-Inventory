@@ -14,6 +14,7 @@ from .models import EquipmentsInSurvey, Accessory
 from django.utils import timezone
 from .models import EquipmentHistory, AccessoryHistory
 from django.db.models import Q
+from django.forms import inlineformset_factory
 
 from .forms import Survey, AccessoryForm, AccessoryNoEquipmentForm
 from .forms import EquipmentEditForm
@@ -33,7 +34,16 @@ def add_equipment(request):
     if request.method == "POST":
         form = addEquipmentForm(request.POST)
         if form.is_valid():
-            form.save()
+            equipment = form.save()
+            # Create new accessories for each selected type
+            accessory_types = form.cleaned_data.get('accessory_types', [])
+            for acc_type in accessory_types:
+                Accessory.objects.create(
+                    name=acc_type,
+                    serial_number = equipment.roover_serial,  # Assuming you want to use the roover serial number as a base
+                    equipment = equipment,
+                    return_status='In Store',  # Set initial status to 'In Store'
+                )
             return redirect('store')
     else:
         form = addEquipmentForm()
@@ -273,7 +283,7 @@ def accessory(request, id):
 
 def equipment_detail(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
-    active_accessories = equipment.accessories.filter(return_status='In Use')
+    active_accessories = equipment.accessories.filter(return_status__in=['In Use', "In Store", "Returning"])
     returned_accessories = equipment.accessories.filter(return_status__in=['Returned', 'Returning'])
     
     return render(request, 'equipments/equipments_detail.html', {
