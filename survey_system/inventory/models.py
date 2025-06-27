@@ -75,10 +75,9 @@ class EquipmentsInSurvey(models.Model):
     base_serial = models.CharField(max_length=100, null=True, blank=True)
     roover_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Roover Serial Number")
     condition = models.CharField(max_length=20, choices=[("New", "New"), ("Second Hand", "Second Hand")], default="New")
-    data_logger_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Data Logger Serial Number")
-    radio_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Radio Serial Number")
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True, help_text="Name of the surveyor responsible for the equipment")
+    quantity = models.PositiveBigIntegerField(default=1, help_text="Number of Quantity")
     project = models.CharField(max_length=20, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto')], blank=True, null=True, help_text="Project Name")
     section = models.CharField(max_length=100, null=True, blank=True)
     date_receiving_from_department = models.DateField(blank=True, null=True, help_text="Date when the equipment was received from the department")
@@ -101,7 +100,6 @@ class Accessory(models.Model):
     ACCESSORY_TYPES = (
         ("tripod", "Tripod"),
         ("levelling_staff", "Levelling Staff"),
-        ("Data Logger", "Data Logger"),
         ("GNSS Battery", "GNSS Battery"),
         ("Pole", "Pole"),
         ("Mini Prism", "Mini Prism"),
@@ -115,6 +113,8 @@ class Accessory(models.Model):
         ("powerbank", "Powerbank"),
         ("tribach", "Tribach"),
         ("external_radio_antenna", "External Radio Antenna"),
+        ("Data Lpgger", "Data Logger"),
+        ("Radio Serial", "Radio Serial"),
     )
 
     STATUS_CHOICES = [

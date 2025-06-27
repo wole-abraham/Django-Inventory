@@ -26,4 +26,5 @@ urlpatterns = [
     path('delivery/', views.delivery, name='delivery'),
     path('cancel-delivery/<int:id>', views.cancel_delivery, name='cancel_delivery'),
     path('receive-delivery/<int:id>', views.delivery_received, name='receive_delivery'),
+    path('update-accessory-quantities/', views.update_accessory_quantities, name='update_accessory_quantities'),
 ]

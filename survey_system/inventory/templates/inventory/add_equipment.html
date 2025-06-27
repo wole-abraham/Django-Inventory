@@ -2,6 +2,7 @@
  {% extends 'base/base_dashboard.html' %} 
  {% load static %}
  {% load widget_tweaks %}
+ {% load form_extras %}
 {% block content %}
      <style>
         body {
@@ -78,7 +79,30 @@
         <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
             {% for field in form %}
-                {% if field.name == 'base_serial' %}
+                {% if field.name == 'accessory_types' %}
+                <div class="mb-4">
+                    <label class="form-label">{{ field.label }}</label>
+                    <div>
+                        {% for key, label in form.fields.accessory_types.choices %}
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}">
+                                <label for="id_accessory_types_{{ forloop.counter0 }}" style="margin: 0 8px 0 4px;">{{ label }}</label>
+                                {% with field_name='quantity_'|add:key %}
+                                    {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:80px;display:inline-block;margin-left:10px;" data-quantity-for="{{ key }}" %}
+                                {% endwith %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% elif field.name|slice:":9" == "quantity_" %}
+                    {# skip rendering quantity fields here #}
+                {% elif field.name == 'base_serial' %}
                 <div class="mb-4" id="base_serial_field">
                     <label class="form-label">{{ field.label }}</label>
                     {{ field }}
@@ -99,19 +123,6 @@
                             if (nameField) nameField.id = 'id_equipment_type';
                         });
                     </script>
-                    {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-                {% elif field.name == 'accessory_types' %}
-                <div class="mb-4">
-                    <label class="form-label">{{ field.label }}</label>
-                    <div class="form-check">
-                        {{ field }}
-                    </div>
                     {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
                     {% endif %}

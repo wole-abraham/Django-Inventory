@@ -21,6 +21,7 @@ from .forms import EquipmentEditForm
 from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
 from .forms import addEquipmentForm
+from .forms import AccessoryQuantityForm
 
 # def filter_equipment(request):
 #     equipment_type = request.GET.get('equipment_type')
@@ -35,15 +36,17 @@ def add_equipment(request):
         form = addEquipmentForm(request.POST)
         if form.is_valid():
             equipment = form.save()
-            # Create new accessories for each selected type
+            # Create new accessories for each selected type with specified quantity
             accessory_types = form.cleaned_data.get('accessory_types', [])
             for acc_type in accessory_types:
-                Accessory.objects.create(
-                    name=acc_type,
-                    serial_number = equipment.roover_serial,  # Assuming you want to use the roover serial number as a base
-                    equipment = equipment,
-                    return_status='In Store',  # Set initial status to 'In Store'
-                )
+                quantity = form.cleaned_data.get(f'quantity_{acc_type}', 1)
+                for _ in range(quantity):
+                    Accessory.objects.create(
+                        name=acc_type,
+                        serial_number=equipment.roover_serial,  # You may want to adjust this logic
+                        equipment=equipment,
+                        return_status='In Store',
+                    )
             return redirect('store')
     else:
         form = addEquipmentForm()
@@ -52,6 +55,8 @@ def add_equipment(request):
 
 @login_required
 def request_equipment(request):
+    if request.user.is_superuser:
+        return redirect('store')  # Redirect superusers to store page
     if request.method == 'POST':
         surveyor = request.POST.get('surveyor_res')
         section = request.POST.get('section')
@@ -507,3 +512,19 @@ def add_accessory(request):
     else:
         form = AccessoryNoEquipmentForm()
     return render(request, 'inventory/add_accessory.html', {'form': form})
+def update_accessory_quantities(request):
+    accessories = Accessory.objects.all()
+    if request.method == 'POST':
+        form = AccessoryQuantityForm(request.POST, accessories=accessories)
+        if form.is_valid():
+            for accessory in accessories:
+                if form.cleaned_data.get(f'accessory_{accessory.id}'):
+                    quantity = form.cleaned_data.get(f'quantity_{accessory.id}')
+                    if quantity is not None:
+                        accessory.quantity = quantity
+                        accessory.save()
+            return redirect('dashboard')  # Change 'dashboard' to your desired success URL
+    else:
+        form = AccessoryQuantityForm(accessories=accessories)
+    return render(request, 'inventory/update_accessory_quantities.html', {'form': form, 'accessories': accessories})
+

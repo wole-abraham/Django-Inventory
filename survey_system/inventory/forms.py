@@ -22,7 +22,7 @@ class AccessoryForm(forms.ModelForm):
         
         # Show only accessories that are not assigned to any equipment and are in store
         self.fields['accessory'] = forms.ModelChoiceField(
-            queryset=Accessory.objects.filter(equipment=None, return_status="Returned"),
+            queryset = Accessory.objects.filter(equipment=None, return_status="Returned"),
             empty_label="Select Accessory",
             widget=forms.Select(attrs={
                 'class': 'form-select',
@@ -90,8 +90,7 @@ class EquipmentEditForm(forms.ModelForm):
         model = EquipmentsInSurvey
         fields = [
             'name', 'date_of_receiving_from_supplier', 'supplier', 
-            'base_serial', 'roover_serial', 'data_logger_serial', 
-            'radio_serial', 'project', 'section', 'date_receiving_from_department'
+            'base_serial', 'roover_serial', 'project', 'section', 'date_receiving_from_department'
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
@@ -167,6 +166,11 @@ class addEquipmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if 'chief_surveyor' in self.fields:
             self.fields['chief_surveyor'].queryset = User.objects.filter(is_superuser=False)
+        # Add a quantity field for each accessory type
+        for key, label in Accessory.ACCESSORY_TYPES:
+            self.fields[f'quantity_{key}'] = forms.IntegerField(
+                label=f"Quantity for {label}", min_value=1, initial=1, required=False
+            )
     class Meta:
         model = EquipmentsInSurvey
         fields = [
@@ -177,9 +181,20 @@ class addEquipmentForm(forms.ModelForm):
             'base_serial',
             'roover_serial',
             'condition',
-            'data_logger_serial',
-            'radio_serial',
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class AccessoryQuantityForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        accessories = kwargs.pop('accessories')
+        super().__init__(*args, **kwargs)
+        for accessory in accessories:
+            self.fields[f'accessory_{accessory.id}'] = forms.BooleanField(
+                label=accessory.name, required=False
+            )
+            self.fields[f'quantity_{accessory.id}'] = forms.IntegerField(
+                label='Quantity', min_value=1, initial=accessory.quantity, required=False
+            )
+

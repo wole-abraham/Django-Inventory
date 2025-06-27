@@ -240,9 +240,9 @@
                     {% endif %}
 
                     <li class="nav-item">
-                        <form method="POST" action="{% url 'logout' %}" class="d-inline">
+                        <form method="POST" action="{% url 'logout' %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn logout-btn">
+                            <button type="submit" class="btn nav-btn">
                                 <i class="fas fa-sign-out-alt me-2"></i>Logout
                             </button>
                         </form>
