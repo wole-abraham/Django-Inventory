@@ -114,7 +114,6 @@ class Accessory(models.Model):
         ("tribach", "Tribach"),
         ("external_radio_antenna", "External Radio Antenna"),
         ("Data Lpgger", "Data Logger"),
-        ("Radio Serial", "Radio Serial"),
     )
 
     STATUS_CHOICES = [
