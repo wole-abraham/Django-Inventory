@@ -142,17 +142,17 @@ class addEquipmentForm(forms.ModelForm):
     accessory_types = forms.MultipleChoiceField(
         choices=Accessory.ACCESSORY_TYPES,
         required=False,
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         label="Select Accessory Types to Create"
     )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'chief_surveyor' in self.fields:
             self.fields['chief_surveyor'].queryset = User.objects.filter(is_superuser=False)
-        # Add a quantity field for each accessory type
+        # Add a quantity field for each accessory type, default 0
         for key, label in Accessory.ACCESSORY_TYPES:
             self.fields[f'quantity_{key}'] = forms.IntegerField(
-                label=f"Quantity for {label}", min_value=1, initial=1, required=False
+                label=f"Quantity for {label}", min_value=0, initial=0, required=False
             )
     class Meta:
         model = EquipmentsInSurvey
