@@ -19,49 +19,32 @@ class AccessoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         equipment = kwargs.pop('equipment', None)
         super().__init__(*args, **kwargs)
-        
-        # Show only accessories that are not assigned to any equipment and are in store
-        self.fields['accessory'] = forms.ModelChoiceField(
-            queryset = Accessory.objects.filter(equipment=None, return_status="Returned"),
-            empty_label="Select Accessory",
-            widget=forms.Select(attrs={
-                'class': 'form-select',
-            })
+        # Only show type selection
+        self.fields['name'] = forms.ChoiceField(
+            choices=Accessory.ACCESSORY_TYPES,
+            label='Accessory Type',
+            widget=forms.Select(attrs={'class': 'form-select'})
         )
-        
-        # Custom label to show name and serial number
-        def label_from_instance(obj):
-            if obj.serial_number:
-                return f"{obj.name} - SN: {obj.serial_number}"
-            else:
-                return f"{obj.name} - SN: Not assigned"
-        
-        self.fields['accessory'].label_from_instance = label_from_instance
-        
         # Remove unwanted fields if present
-        for field in ['equipment', 'comment', 'image', 'name', 'serial_number']:
+        for field in ['equipment', 'comment', 'image', 'serial_number']:
             if field in self.fields:
                 self.fields.pop(field)
-        
-        # Store equipment for later use in save method
         self.equipment = equipment
 
     class Meta:
         model = Accessory
-        fields = []  # We'll handle the accessory selection manually
+        fields = ['name']
 
     def save(self, commit=True):
-        # Get the selected accessory
-        selected_accessory = self.cleaned_data['accessory']
-        
-        # Assign the accessory to the equipment
-        selected_accessory.equipment = self.equipment
-        selected_accessory.return_status = 'In Use'
-        
+        accessory = Accessory(
+            name=self.cleaned_data['name'],
+            serial_number=self.equipment.base_serial if self.equipment else None,
+            equipment=self.equipment,
+            return_status='In Store',
+        )
         if commit:
-            selected_accessory.save()
-        
-        return selected_accessory
+            accessory.save()
+        return accessory
 
 class AccessoryNoEquipmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
