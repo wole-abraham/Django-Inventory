@@ -76,7 +76,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'survey_system.wsgi.application'
 
 
+<<<<<<< HEAD
 # # Database
+=======
+# Database
+>>>>>>> 9d70b4b718dc9780c8782c8b0845231d3a4a6091
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
