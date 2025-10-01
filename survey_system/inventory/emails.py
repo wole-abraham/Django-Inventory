@@ -88,7 +88,7 @@ def returning_equipment_email(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -206,7 +206,7 @@ def returned_equipment_email(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -325,7 +325,7 @@ def released_equipment_email(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -444,7 +444,7 @@ def released_equipment_field_email(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -567,7 +567,7 @@ def delivery_email(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -690,7 +690,7 @@ def delivery_cancelled(subject, instance):
       </tr>
       <tr>
         <td class="label">Base Serial:</td>
-        <td class="value">{equipment.base_serial}</td>
+        <td class="value">{equipment.serial_number}</td>
       </tr>
       <tr>
         <td class="label">Section:</td>
@@ -813,7 +813,7 @@ def received_equipment(subject, instance):
     </tr>
     <tr>
     <td class="label">Base Serial:</td>
-    <td class="value">{equipment.base_serial}</td>
+    <td class="value">{equipment.serial_number}</td>
     </tr>
     <tr>
     <td class="label">Section:</td>

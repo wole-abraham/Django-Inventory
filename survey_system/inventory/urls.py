@@ -27,4 +27,11 @@ urlpatterns = [
     path('cancel-delivery/<int:id>', views.cancel_delivery, name='cancel_delivery'),
     path('receive-delivery/<int:id>', views.delivery_received, name='receive_delivery'),
     path('update-accessory-quantities/', views.update_accessory_quantities, name='update_accessory_quantities'),
+    
+    # Personnel Management URLs
+    path('personnel/', views.personnel_list, name='personnel_list'),
+    path('add-personnel/', views.add_personnel, name='add_personnel'),
+    path('add-chainman/', views.add_chainman, name='add_chainman'),
+    path('assign-chainman/', views.assign_chainman, name='assign_chainman'),
+    path('unassign-chainman/<int:chainman_id>/', views.unassign_chainman, name='unassign_chainman'),
 ]

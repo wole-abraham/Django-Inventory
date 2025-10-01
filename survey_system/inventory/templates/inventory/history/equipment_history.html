@@ -18,7 +18,7 @@
                 <div class="card-body">
                     <h5 class="card-title">{{ equipment.name }}</h5>
                     <p class="card-text">
-                        <strong>Serial Number:</strong> {{ equipment.base_serial }}<br>
+                        <strong>Serial Number:</strong> {{ equipment.serial_number }}<br>
                         <strong>Current Status:</strong> 
                         <span class="badge {% if equipment.status == 'In Store' %}bg-success{% elif equipment.status == 'In Field' %}bg-primary{% else %}bg-warning{% endif %}">
                             {{ equipment.status }}

@@ -212,6 +212,12 @@
                                 <i class="fas fa-truck me-2"></i>Delivery
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'personnel_list' %}active{% endif %}" 
+                               href="{% url 'personnel_list' %}">
+                                <i class="fas fa-users me-2"></i>Personnel
+                            </a>
+                        </li>
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'request_equipment' %}active{% endif %}" 
@@ -269,26 +275,7 @@
 <!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const equipmentType = document.getElementById('id_equipment_type');
-        const baseSerialField = document.getElementById('base_serial_field');
-        const showBaseSerial = [
-            'GNSS base',
-            'GNSS base-roover',
-            
-        ];
-        function toggleBaseSerial() {
-            if (!equipmentType || !baseSerialField) return;
-            // Compare case-insensitively and trim
-            const selected = equipmentType.options[equipmentType.selectedIndex].text.trim().toLowerCase();
-            const shouldShow = showBaseSerial.some(type => type.toLowerCase() === selected);
-            baseSerialField.style.display = shouldShow ? '' : 'none';
-        }
-        if (equipmentType) {
-            equipmentType.addEventListener('change', toggleBaseSerial);
-            toggleBaseSerial();
-        }
-    });
+    // Equipment form JavaScript removed - now using single serial_number field
     
 
 document.addEventListener('DOMContentLoaded', function() {

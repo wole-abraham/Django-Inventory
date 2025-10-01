@@ -69,6 +69,44 @@
         .text-danger {
             font-size: 14px;
         }
+
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1d3557;
+        }
+
+        .form-section h5 {
+            color: #1d3557;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .accessory-category {
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .accessory-category h6 {
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .quantity-field {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -76,36 +114,22 @@
 <div class="container">
     <div class="form-wrapper">
         <h2>Add Survey Equipment</h2>
+        <p class="text-muted mb-4">Fill in the equipment details to match your inventory records. All fields marked with * are required.</p>
         <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
+            
+            <!-- Equipment Information Section -->
+            <div class="form-section">
+                <h5><i class="fas fa-tools me-2"></i>Equipment Information</h5>
             {% for field in form %}
                 {% if field.name == 'accessory_types' %}
-                <div class="mb-4">
-                    <label class="form-label">{{ field.label }}</label>
-                    <div>
-                        {% for key, label in form.fields.accessory_types.choices %}
-                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                                <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}">
-                                <label for="id_accessory_types_{{ forloop.counter0 }}" style="margin: 0 8px 0 4px;">{{ label }}</label>
-                                {% with field_name='quantity_'|add:key %}
-                                    {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:80px;display:inline-block;margin-left:10px;" data-quantity-for="{{ key }}" %}
-                                {% endwith %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
+                    {# skip rendering accessory_types here - moved to separate section #}
                 {% elif field.name|slice:":9" == "quantity_" %}
                     {# skip rendering quantity fields here #}
-                {% elif field.name == 'base_serial' %}
-                <div class="mb-4" id="base_serial_field">
-                    <label class="form-label">{{ field.label }}</label>
-                    {{ field }}
+                {% elif field.name == 'serial_number' %}
+                <div class="mb-4">
+                    <label class="form-label required-field">{{ field.label }}</label>
+                    {{ field|add_class:'form-control' }}
                     {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
                     {% endif %}
@@ -115,7 +139,7 @@
                 </div>
                 {% elif field.name == 'name' %}
                 <div class="mb-4">
-                    <label class="form-label">{{ field.label }}</label>
+                    <label class="form-label required-field">{{ field.label }}</label>
                     {{ field|add_class:'form-control' }}
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
@@ -132,7 +156,7 @@
                 </div>
                 {% else %}
                 <div class="mb-4">
-                    <label class="form-label">{{ field.label }}</label>
+                    <label class="form-label {% if field.field.required %}required-field{% endif %}">{{ field.label }}</label>
                     {{ field }}
                     {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
@@ -143,7 +167,111 @@
                 </div>
                 {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary w-100">Save Equipment</button>
+            </div>
+            
+            <!-- Accessories Section -->
+            <div class="form-section">
+                <h5><i class="fas fa-toolbox me-2"></i>Accessories (Optional)</h5>
+                <p class="text-muted">Select accessory types to create along with this equipment. You can specify quantities for each type.</p>
+                {% for field in form %}
+                    {% if field.name == 'accessory_types' %}
+                    <div class="mb-4">
+                        <label class="form-label">{{ field.label }}</label>
+                        
+                        <!-- GPS AND ROVER ACCESSORIES -->
+                        <div class="accessory-category mb-3">
+                            <h6 class="text-primary mb-2"><i class="fas fa-satellite-dish me-1"></i>GPS AND ROVER ACCESSORIES</h6>
+                            <div class="row">
+                                {% for key, label in form.fields.accessory_types.choices %}
+                                    {% if key == "tracking_rod" or key == "tripod" or key == "external_radio" or key == "car_battery" or key == "base_pole" or key == "tribrach" %}
+                                    <div class="col-md-6 mb-2">
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
+                                            <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
+                                            {% with field_name='quantity_'|add:key %}
+                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- TOTAL STATION ACCESSORIES -->
+                        <div class="accessory-category mb-3">
+                            <h6 class="text-primary mb-2"><i class="fas fa-crosshairs me-1"></i>TOTAL STATION ACCESSORIES</h6>
+                            <div class="row">
+                                {% for key, label in form.fields.accessory_types.choices %}
+                                    {% if key == "reflector" %}
+                                    <div class="col-md-6 mb-2">
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
+                                            <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
+                                            {% with field_name='quantity_'|add:key %}
+                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- LEVELLING INSTRUMENTS ACCESSORIES -->
+                        <div class="accessory-category mb-3">
+                            <h6 class="text-primary mb-2"><i class="fas fa-ruler-vertical me-1"></i>LEVELLING INSTRUMENTS ACCESSORIES</h6>
+                            <div class="row">
+                                {% for key, label in form.fields.accessory_types.choices %}
+                                    {% if key == "levelling_staff" %}
+                                    <div class="col-md-6 mb-2">
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
+                                            <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
+                                            {% with field_name='quantity_'|add:key %}
+                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- ADDITIONAL ACCESSORIES -->
+                        <div class="accessory-category mb-3">
+                            <h6 class="text-primary mb-2"><i class="fas fa-plus-circle me-1"></i>ADDITIONAL ACCESSORIES</h6>
+                            <div class="row">
+                                {% for key, label in form.fields.accessory_types.choices %}
+                                    {% if key != "tracking_rod" and key != "tripod" and key != "external_radio" and key != "car_battery" and key != "base_pole" and key != "tribrach" and key != "reflector" and key != "levelling_staff" %}
+                                    <div class="col-md-6 mb-2">
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
+                                            <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
+                                            {% with field_name='quantity_'|add:key %}
+                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-save me-2"></i>Save Equipment
+            </button>
         </form>
     </div>
 </div>

@@ -2,178 +2,224 @@
 
     {% block content %}
     <div class="container-fluid mt-4">
-        <!-- Equipment Dropdown -->
-        <div class="dropdown-container mb-4 ">
-            
-            {% if is_admin %}
-            <a class="btn btn-danger" href="{% url 'add_equipment' %}">add equipment</a>
-          
-            {% endif %}
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-primary dropdown-toggle" type="button"  id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Admin Add Equipment Button -->
+        {% if is_admin %}
+        <div class="mb-3">
+            <a class="btn btn-danger" href="{% url 'add_equipment' %}">
+                <i class="fas fa-plus me-2"></i>Add Equipment
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mb-4" id="storeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button" role="tab" aria-controls="equipment" aria-selected="true">
                     <i class="fas fa-tools me-2"></i>Equipment in Store
                 </button>
-                <div class="dropdown-menu p-3" aria-labelledby="equipmentDropdown" style="width: 95vw; max-height: 70vh;">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered align-middle mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Name</th>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="accessories-tab" data-bs-toggle="tab" data-bs-target="#accessories" type="button" role="tab" aria-controls="accessories" aria-selected="false">
+                    <i class="fas fa-toolbox me-2"></i>Accessories in Store
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="storeTabsContent">
+            <!-- Equipment Tab -->
+            <div class="tab-pane fade show active" id="equipment" role="tabpanel" aria-labelledby="equipment-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                {% if is_admin %}
+                                <th>Date of Receiving (Supplier)</th>
+                                {% else %}
+                                <th>Date of Receiving (Department)</th>
+                                {% endif %}
+                                <th>Supplier</th>
+                                <th>Serial Number</th>
+                                <th>Chief Surveyor</th>
+                                <th>Project</th>
+                                <th>Status</th> 
+                                <th>Date Receiving</th>
+                                <th>Condition</th>
+                                
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for info in data %}
+                            <tr>
+                                <form action="{% url 'store' %}" method="post">
+                                    {% csrf_token %}
+                                    <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
                                     {% if is_admin %}
-                                    <th>Date of Receiving (Supplier)</th>
+                                    <td>{{ info.date_of_receiving_from_supplier }}</td>
                                     {% else %}
-                                    <th>Date of Receiving (Department)</th>
+                                    <td>{{ info.date_receiving_from_department }}</td>
                                     {% endif %}
-                                    <th>Supplier</th>
-                                    <th>Base Serial</th>
-                                    <th>Roover Serial</th>
-                                    <th>Chief Surveyor</th>
-                                    <th>Project</th>
-                                    <th>Status</th> 
-                                    <th>Date Receiving</th>
-                                    <th>Condition</th>
+                                    <td>{{ info.supplier }}</td>
+                                    <td>{{ info.serial_number }}</td>
                                     
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for info in data %}
+                                    <td>
+                                        <select name="id" class="form-select form-select-sm">
+                                            {% for users in user %}
+                                            <option value="{{ users.id }}">{{ users.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="hidden" value="{{ info.id }}" name="equipment_id">
+                                    </td>
+                                    <td>
+                                        <select name="project" class="form-select form-select-sm">
+                                            <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
+                                            <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
+                                            {{ info.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                    </td> 
+                                    <td>
+                                        <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
+                                            {{ info.condition }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-paper-plane"></i> Release
+                                        </button>
+                                    </td>
+                                </form>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Accessories Tab -->
+            <div class="tab-pane fade" id="accessories" role="tabpanel" aria-labelledby="accessories-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Equipment</th>
+                                <th>Serial Number</th>
+                                <th>Condition</th>
+                                <th>Status</th>
+                                <th>Change Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for accessory in accessories %}
+                                {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' %}
                                 <tr>
-                                    <form action="{% url 'store' %}" method="post">
+                                    <form action="{% url 'admin_release_accessory' %}" method="post">
                                         {% csrf_token %}
-                                        <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
-                                        {% if is_admin %}
-                                        <td>{{ info.date_of_receiving_from_supplier }}</td>
-                                        {% else %}
-                                        <td>{{ info.date_receiving_from_department }}</td>
-                                        {% endif %}
-                                        <td>{{ info.supplier }}</td>
-                                        <td>{{ info.base_serial }}</td>
-                                        <td>{{ info.roover_serial }}</td>
-                                        
+                                        <td>{{ accessory.name }}</td>
+                                        <td>{{ accessory.equipment }}</td>
+                                        <td>{{ accessory.serial_number }}</td>
                                         <td>
-                                            <select name="id" class="form-select form-select-sm">
-                                                {% for users in user %}
-                                                <option value="{{ users.id }}">{{ users.username }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <input type="hidden" value="{{ info.id }}" name="equipment_id">
-                                        </td>
-                                        <td>
-                                            <select name="project" class="form-select form-select-sm">
-                                                <option value="Coastal Road" {% if info.project == "Coastal Road" %}selected{% endif %}>Coastal Road</option>
-                                                <option value="Sokoto" {% if info.project == "Sokoto" %}selected{% endif %}>Sokoto</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if info.status == 'Available' %} bg-success {% else %} bg-danger {% endif %}">
-                                                {{ info.status }}
+                                            <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                              {{accessory.status }}
                                             </span>
                                         </td>
                                         <td>
-                                            <input type="date" class="form-control form-control-sm" name="date_receiving" required>
-                                        </td> 
-                                        <td>
-                                            <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
-                                                {{ info.condition }}
+                                            <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ accessory.return_status }}
                                             </span>
                                         </td>
                                         <td>
+                                            <select  name="condition" id="condition">
+                                                <option value="" disabled selected hidden>{{ accessory.status }}</option>
+                                                <option value="Good">Good</option>
+                                                <option value="Bad">Bad</option>
+                                              </select>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
+                                            
+                                            
                                             <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-paper-plane"></i> Release
+                                                <i class="fas fa-paper-plane"></i> Save
                                             </button>
+
                                         </td>
                                     </form>
                                 </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-primary dropdown-toggle" type="button" id="accessoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-toolbox me-2"></i>Accessories in Store
-                </button>
-                <div class="dropdown-menu p-3" aria-labelledby="accessoriesDropdown" style="width: 95vw; max-height: 70vh;">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered align-middle mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Equipment</th>
-                                    <th>Serial Number</th>
-                                    <th>Condition</th>
-                                    <th>Status</th>
-                                    <th>Change Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for accessory in accessories %}
-                                    {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' %}
-                                    <tr>
-                                        <form action="{% url 'admin_release_accessory' %}" method="post">
-                                            {% csrf_token %}
-                                            <td>{{ accessory.name }}</td>
-                                            <td>{{ accessory.equipment }}</td>
-                                            <td>{{ accessory.serial_number }}</td>
-                                            <td>
-                                                <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
-                                                  {{accessory.status }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
-                                                    {{ accessory.return_status }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <select  name="condition" id="condition">
-                                                    <option value="" disabled selected hidden>{{ accessory.status }}</option>
-                                                    <option value="Good">Good</option>
-                                                    <option value="Bad">Bad</option>
-                                                  </select>
-                                            </td>
-                                            <td>
-                                                <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
-                                                
-                                                
-                                                <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-paper-plane"></i> Save
-                                                </button>
-
-                                            </td>
-                                        </form>
-                                    </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        <!-- Accessories Dropdown -->
-    
-            
-        
     </div>
 
     <style>
-        .dropdown-container {
-            position: relative;
+        /* Ensure tabs are visible and properly styled */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6 !important;
+            margin-bottom: 0 !important;
+            background-color: #f8f9fa;
+            padding: 0.5rem 0.5rem 0 0.5rem;
+            border-radius: 0.375rem 0.375rem 0 0;
         }
         
-        .dropdown-menu {
-            margin-top: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        .nav-tabs .nav-link {
+            border: 1px solid transparent !important;
+            border-top-left-radius: 0.375rem !important;
+            border-top-right-radius: 0.375rem !important;
+            color: #6c757d !important;
+            font-weight: 500 !important;
+            background-color: transparent !important;
+            margin-right: 0.25rem !important;
+            padding: 0.75rem 1.5rem !important;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef #e9ecef #dee2e6 !important;
+            color: #495057 !important;
+            background-color: #e9ecef !important;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #495057 !important;
+            background-color: #fff !important;
+            border-color: #dee2e6 #dee2e6 #fff !important;
+            border-bottom: 2px solid #007bff !important;
+            font-weight: 600 !important;
+        }
+        
+        .tab-content {
+            border: 1px solid #dee2e6 !important;
+            border-top: none !important;
+            border-radius: 0 0 0.375rem 0.375rem !important;
+            padding: 1.5rem !important;
+            background-color: #fff !important;
+            min-height: 400px;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block !important;
         }
         
         .table-responsive {
             overflow-y: auto;
-            max-height: calc(70vh - 2rem);
+            max-height: calc(70vh - 8rem);
         }
         
         .table th {
@@ -213,12 +259,70 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Prevent dropdown from closing when clicking inside
-        document.querySelectorAll('.dropdown-menu').forEach(function(dropdown) {
-            dropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
+        console.log('Initializing store tabs...');
+        
+        // Simple tab functionality as fallback
+        function initTabs() {
+            const tabButtons = document.querySelectorAll('#storeTabs button[data-bs-toggle="tab"]');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            console.log('Found tab buttons:', tabButtons.length);
+            console.log('Found tab panes:', tabPanes.length);
+            
+            tabButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all buttons and panes
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active', 'show');
+                        pane.style.display = 'none';
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Show corresponding tab pane
+                    const targetId = this.getAttribute('data-bs-target');
+                    const targetPane = document.querySelector(targetId);
+                    if (targetPane) {
+                        targetPane.classList.add('active', 'show');
+                        targetPane.style.display = 'block';
+                        console.log('Showing tab:', targetId);
+                    }
+                });
             });
-        });
+            
+            // Show first tab by default
+            if (tabButtons.length > 0 && tabPanes.length > 0) {
+                tabButtons[0].classList.add('active');
+                tabPanes[0].classList.add('active', 'show');
+                tabPanes[0].style.display = 'block';
+                console.log('Default tab activated');
+            }
+        }
+        
+        // Try Bootstrap first, then fallback
+        if (typeof bootstrap !== 'undefined') {
+            console.log('Bootstrap is loaded, using Bootstrap tabs');
+            try {
+                const tabList = [].slice.call(document.querySelectorAll('#storeTabs button[data-bs-toggle="tab"]'));
+                tabList.forEach(function (tabTriggerEl) {
+                    const tabTrigger = new bootstrap.Tab(tabTriggerEl);
+                    tabTriggerEl.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        tabTrigger.show();
+                    });
+                });
+            } catch (error) {
+                console.log('Bootstrap tabs failed, using fallback:', error);
+                initTabs();
+            }
+        } else {
+            console.log('Bootstrap not available, using fallback tabs');
+            initTabs();
+        }
     });
     </script>
     {% endblock %}

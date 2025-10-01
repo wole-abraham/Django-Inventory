@@ -10,7 +10,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import EquipmentsInSurvey, Accessory
+from .models import EquipmentsInSurvey, Accessory, Personnel, Chainman
 from django.utils import timezone
 from .models import EquipmentHistory, AccessoryHistory
 from django.db.models import Q
@@ -22,6 +22,7 @@ from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
 from .forms import addEquipmentForm
 from .forms import AccessoryQuantityForm
+from .forms import PersonnelForm, ChainmanForm, AssignChainmanForm
 
 # def filter_equipment(request):
 #     equipment_type = request.GET.get('equipment_type')
@@ -43,7 +44,7 @@ def add_equipment(request):
                 for _ in range(quantity):
                     Accessory.objects.create(
                         name=acc_type,
-                        serial_number=equipment.roover_serial,  # You may want to adjust this logic
+                        serial_number=equipment.serial_number,  # Use the equipment's serial number
                         equipment=equipment,
                         return_status='In Store',
                     )
@@ -527,4 +528,103 @@ def update_accessory_quantities(request):
     else:
         form = AccessoryQuantityForm(accessories=accessories)
     return render(request, 'inventory/update_accessory_quantities.html', {'form': form, 'accessories': accessories})
+
+
+# Personnel Management Views
+@login_required
+def personnel_list(request):
+    """View to display all personnel and their assigned chainmen"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('dashboard')
+    
+    personnel = Personnel.objects.filter(is_active=True).prefetch_related('chainmen')
+    unassigned_chainmen = Chainman.objects.filter(assigned_to__isnull=True, is_active=True)
+    
+    context = {
+        'personnel': personnel,
+        'unassigned_chainmen': unassigned_chainmen,
+        'is_admin': request.user.is_superuser
+    }
+    return render(request, 'inventory/personnel.html', context)
+
+
+@login_required
+def add_personnel(request):
+    """View to add new personnel"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = PersonnelForm(request.POST)
+        if form.is_valid():
+            personnel = form.save(commit=False)
+            # You might want to create a User account here or link to existing user
+            personnel.save()
+            messages.success(request, f'Personnel {personnel} added successfully.')
+            return redirect('personnel_list')
+    else:
+        form = PersonnelForm()
+    
+    return render(request, 'inventory/add_personnel.html', {'form': form})
+
+
+@login_required
+def add_chainman(request):
+    """View to add new chainman"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = ChainmanForm(request.POST)
+        if form.is_valid():
+            chainman = form.save()
+            messages.success(request, f'Chainman {chainman} added successfully.')
+            return redirect('personnel_list')
+    else:
+        form = ChainmanForm()
+    
+    return render(request, 'inventory/add_chainman.html', {'form': form})
+
+
+@login_required
+def assign_chainman(request):
+    """View to assign chainmen to personnel"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = AssignChainmanForm(request.POST)
+        if form.is_valid():
+            chainman = form.cleaned_data['chainman']
+            personnel = form.cleaned_data['personnel']
+            
+            chainman.assigned_to = personnel
+            chainman.save()
+            
+            messages.success(request, f'{chainman} assigned to {personnel} successfully.')
+            return redirect('personnel_list')
+    else:
+        form = AssignChainmanForm()
+    
+    return render(request, 'inventory/assign_chainman.html', {'form': form})
+
+
+@login_required
+def unassign_chainman(request, chainman_id):
+    """View to unassign chainman from personnel"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('dashboard')
+    
+    chainman = get_object_or_404(Chainman, id=chainman_id)
+    personnel_name = chainman.assigned_to
+    chainman.assigned_to = None
+    chainman.save()
+    
+    messages.success(request, f'{chainman} unassigned from {personnel_name} successfully.')
+    return redirect('personnel_list')
 

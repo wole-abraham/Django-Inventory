@@ -1,8 +1,7 @@
 from django.contrib import admin
+from .models import EquipmentsInSurvey, Accessory, Personnel, Chainman
 
 # Register your models here.
-
-from .models import  EquipmentsInSurvey, Accessory
 
 # @admin.register(Equipment)
 # class EquipmentAdmin(admin.ModelAdmin):
@@ -17,8 +16,20 @@ from .models import  EquipmentsInSurvey, Accessory
 #     search_fields = ('user__username', 'first_name', 'last_name')  # Enable search by user, first and last name
 @admin.register(EquipmentsInSurvey)
 class EquipmentInSurveyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'base_serial',)  # Show user details
+    list_display = ('name', 'serial_number',)  # Show user details
     
 @admin.register(Accessory)
 class EquipmentInSurveyAdmin(admin.ModelAdmin):
     list_display = [field.name for field in Accessory._meta.fields]
+
+@admin.register(Personnel)
+class PersonnelAdmin(admin.ModelAdmin):
+    list_display = ('user', 'employee_id', 'position', 'department', 'is_active')
+    search_fields = ('user__username', 'employee_id', 'position', 'department')
+    list_filter = ('department', 'is_active')
+
+@admin.register(Chainman)
+class ChainmanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'employee_id', 'assigned_to', 'is_active')
+    search_fields = ('name', 'employee_id')
+    list_filter = ('assigned_to', 'is_active')

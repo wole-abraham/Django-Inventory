@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import EquipmentsInSurvey, Accessory
+from .models import EquipmentsInSurvey, Accessory, Personnel, Chainman
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -38,7 +38,7 @@ class AccessoryForm(forms.ModelForm):
     def save(self, commit=True):
         accessory = Accessory(
             name=self.cleaned_data['name'],
-            serial_number=self.equipment.base_serial if self.equipment else None,
+            serial_number=self.equipment.serial_number if self.equipment else None,
             equipment=self.equipment,
             return_status='In Store',
         )
@@ -73,7 +73,7 @@ class EquipmentEditForm(forms.ModelForm):
         model = EquipmentsInSurvey
         fields = [
             'name', 'date_of_receiving_from_supplier', 'supplier', 
-            'base_serial', 'roover_serial', 'project', 'section', 'date_receiving_from_department'
+            'serial_number', 'project', 'section', 'date_receiving_from_department'
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
@@ -161,12 +161,12 @@ class addEquipmentForm(forms.ModelForm):
             'owner',
             'date_of_receiving_from_supplier',
             'supplier',
-            'base_serial',
-            'roover_serial',
+            'serial_number',
             'condition',
         ]
         widgets = {
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
+            'serial_number': forms.TextInput(attrs={'required': True}),
         }
 
 class AccessoryQuantityForm(forms.Form):
@@ -180,4 +180,58 @@ class AccessoryQuantityForm(forms.Form):
             self.fields[f'quantity_{accessory.id}'] = forms.IntegerField(
                 label='Quantity', min_value=1, initial=accessory.quantity, required=False
             )
+
+
+class PersonnelForm(forms.ModelForm):
+    """Form for creating/editing personnel"""
+    class Meta:
+        model = Personnel
+        fields = ['user', 'employee_id', 'position', 'department', 'phone_number', 'is_active']
+        widgets = {
+            'phone_number': forms.TextInput(attrs={'type': 'tel', 'class': 'form-control'}),
+            'user': forms.Select(attrs={'class': 'form-select'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter out admin users (superusers)
+        self.fields['user'].queryset = User.objects.filter(is_superuser=False)
+        self.fields['user'].empty_label = "Select User"
+
+
+class ChainmanForm(forms.ModelForm):
+    """Form for creating/editing chainmen"""
+    class Meta:
+        model = Chainman
+        fields = ['name', 'employee_id', 'phone_number', 'assigned_to', 'is_active']
+        widgets = {
+            'phone_number': forms.TextInput(attrs={'type': 'tel', 'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['assigned_to'].queryset = Personnel.objects.filter(is_active=True)
+        self.fields['assigned_to'].empty_label = "Select Personnel (Optional)"
+
+
+class AssignChainmanForm(forms.Form):
+    """Form for assigning chainmen to personnel"""
+    chainman = forms.ModelChoiceField(
+        queryset=Chainman.objects.filter(assigned_to__isnull=True, is_active=True),
+        empty_label="Select Chainman to Assign",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    personnel = forms.ModelChoiceField(
+        queryset=Personnel.objects.filter(is_active=True),
+        empty_label="Select Personnel",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 

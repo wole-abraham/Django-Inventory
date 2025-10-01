@@ -42,39 +42,43 @@ from django.dispatch import receiver
 
 
 
+
+
 class EquipmentsInSurvey(models.Model):
 
     EQUIPMENT_CHOICES = [
-        ('GNSS base-roover', 'GNSS base-roover'),
-        ('GNSS roover', 'GNSS roover'),
-        ('GNSS base', 'GNSS base'),
+        ('GPS Receiver (Base)', 'GPS Receiver (Base)'),
+        ('GPS Receiver (Rover)', 'GPS Receiver (Rover)'),
+        ('Data logger', 'Data logger'),
+        ('External Radio', "External Radio"),
         ('Total Station', "Total Station"),
-        ('Level Instruments', "Level Instrument"),
-        ('Drone', 'Drone'),
+        ('Levelling Instrument', 'Levelling Instrument'),
         ('Eco Sounder', 'Eco Sounder'),
-        ('Machine Control', 'Machine Control'),
-        ('3d Scanner', '3d Scanner')
     ]
 
     supplier_name = [
-        ('Hi Target', 'Hi Targer'),
-        ('TopCon', 'TopCon'),
+        ('Hi Target V200', 'Hi Target V200'),
+        ('Hi Target', 'Hi Target'),
+        ('Topcon', 'Topcon'),
+        ('Topcon OS-200 Series', 'Topcon OS-200 Series'),
+        ('Topcon OS 103', 'Topcon OS 103'),
+        ('Topcon Hiper VR', 'Topcon Hiper VR'),
         ('Leica', 'Leica'),
+        ('Leica NA730 plus', 'Leica NA730 plus'),
         ('Sokkia', 'Sokkia')
     ]
     
     owner_choice = [
-        ('Company', "Company"),
+        ('Hi-Tech', "Hi-Tech"),
         ("Sub-Contractor", "Sub-Contractor")
     ]
 
     name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
-    supplier = models.CharField(max_length=20, choices=supplier_name)
+    supplier = models.CharField(max_length=50, choices=supplier_name)
     owner = models.CharField(max_length=20, choices=owner_choice)
-    base_serial = models.CharField(max_length=100, null=True, blank=True)
-    roover_serial = models.CharField(max_length=100, null=True, blank=True, help_text="Roover Serial Number")
-    condition = models.CharField(max_length=20, choices=[("New", "New"), ("Second Hand", "Second Hand")], default="New")
+    serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
+    condition = models.CharField(max_length=20, choices=[("Good", "Good"), ("New", "New"), ("Second Hand", "Second Hand"), ("Needs Repair", "Needs Repair")], default="Good")
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True, help_text="Name of the surveyor responsible for the equipment")
     quantity = models.PositiveBigIntegerField(default=1, help_text="Number of Quantity")
@@ -85,9 +89,39 @@ class EquipmentsInSurvey(models.Model):
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
 
     def __str__(self):
-        return f'{self.base_serial}'
+        return f'{self.serial_number}'
     def __repr__(self):
-        return f'{self.base_serial}'
+        return f'{self.serial_number}'
+
+
+class Personnel(models.Model):
+    """Model for personnel (surveyors, engineers, etc.)"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='personnel_profile')
+    employee_id = models.CharField(max_length=20, unique=True, help_text="Employee ID")
+    position = models.CharField(max_length=100, help_text="Job Position")
+    department = models.CharField(max_length=100, help_text="Department")
+    phone_number = models.CharField(max_length=15, blank=True, null=True, help_text="Phone Number")
+    date_joined = models.DateField(auto_now_add=True, help_text="Date Joined")
+    is_active = models.BooleanField(default=True, help_text="Active Status")
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.employee_id})"
+    
+    def get_assigned_chainmen(self):
+        return self.chainmen.all()
+
+
+class Chainman(models.Model):
+    """Model for chainmen assigned to personnel"""
+    name = models.CharField(max_length=100, help_text="Full Name")
+    employee_id = models.CharField(max_length=20, unique=True, help_text="Employee ID")
+    phone_number = models.CharField(max_length=15, blank=True, null=True, help_text="Phone Number")
+    assigned_to = models.ForeignKey(Personnel, on_delete=models.SET_NULL, null=True, blank=True, related_name='chainmen', help_text="Assigned Personnel")
+    date_assigned = models.DateField(auto_now_add=True, help_text="Date Assigned")
+    is_active = models.BooleanField(default=True, help_text="Active Status")
+    
+    def __str__(self):
+        return f"{self.name} ({self.employee_id})"
  
 # class SurveyorEngineer(models.Model):
 #     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -98,22 +132,32 @@ class EquipmentsInSurvey(models.Model):
     
 class Accessory(models.Model):
     ACCESSORY_TYPES = (
+        # GPS AND ROVER ACCESSORIES
+        ("tracking_rod", "Tracking Rod"),
         ("tripod", "Tripod"),
-        ("levelling_staff", "Levelling Staff"),
+        ("external_radio", "External Radio"),
+        ("car_battery", "Car battery"),
+        ("base_pole", "Base pole"),
+        ("tribrach", "Tribrach"),
+        
+        # TOTAL STATION ACCESSORIES
+        ("reflector", "Reflector"),
+        
+        # LEVELLING INSTRUMENTS ACCESSORIES
+        ("levelling_staff", "Levelling staff"),
+        
+        # ADDITIONAL ACCESSORIES
         ("GNSS Battery", "GNSS Battery"),
         ("Pole", "Pole"),
         ("Mini Prism", "Mini Prism"),
         ("Sheet", "Sheet"),
         ("Total Station prism", "Total Station Prism"),
         ("Radio", "Radio"),
-        ("tracking_rod", "Tracking Rod"),
-        ("reflector", "Reflector"),
         ("gps_extension_bar", "GPS Extension Bar"),
         ("bar_port", "Bar Port"),
         ("powerbank", "Powerbank"),
-        ("tribach", "Tribach"),
         ("external_radio_antenna", "External Radio Antenna"),
-        ("Data Lpgger", "Data Logger"),
+        ("Data Logger", "Data Logger"),
     )
 
     STATUS_CHOICES = [
@@ -199,3 +243,5 @@ class AccessoryHistory(models.Model):
 
     def __str__(self):
         return f"{self.accessory.name} - {self.action} by {self.changed_by} at {self.changed_at}"
+
+
