@@ -146,7 +146,11 @@ class addEquipmentForm(forms.ModelForm):
         # Add a quantity field for each accessory type, default 0
         for key, label in Accessory.ACCESSORY_TYPES:
             self.fields[f'quantity_{key}'] = forms.IntegerField(
-                label=f"Quantity for {label}", min_value=0, initial=0, required=False
+                label=f"Quantity for {label}", 
+                min_value=0, 
+                initial=0, 
+                required=False,
+                widget=forms.NumberInput(attrs={'class': 'form-control'})
             )
     class Meta:
         model = EquipmentsInSurvey
@@ -159,8 +163,12 @@ class addEquipmentForm(forms.ModelForm):
             'condition',
         ]
         widgets = {
-            'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date'}),
-            'serial_number': forms.TextInput(attrs={'required': True}),
+            'name': forms.Select(attrs={'class': 'form-select', 'required': True}),
+            'owner': forms.Select(attrs={'class': 'form-select'}),
+            'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'serial_number': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'condition': forms.Select(attrs={'class': 'form-select'}),
         }
 
 class AccessoryQuantityForm(forms.Form):

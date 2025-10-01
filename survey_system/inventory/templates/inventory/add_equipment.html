@@ -1,7 +1,6 @@
 <!-- templates/add_equipment.html -->
  {% extends 'base/base_dashboard.html' %} 
  {% load static %}
- {% load widget_tweaks %}
  {% load form_extras %}
 {% block content %}
      <style>
@@ -129,7 +128,7 @@
                 {% elif field.name == 'serial_number' %}
                 <div class="mb-4">
                     <label class="form-label required-field">{{ field.label }}</label>
-                    {{ field|add_class:'form-control' }}
+                    {{ field }}
                     {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
                     {% endif %}
@@ -140,7 +139,7 @@
                 {% elif field.name == 'name' %}
                 <div class="mb-4">
                     <label class="form-label required-field">{{ field.label }}</label>
-                    {{ field|add_class:'form-control' }}
+                    {{ field }}
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             var nameField = document.getElementsByName('name')[0];
@@ -189,7 +188,9 @@
                                             <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
                                             <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
                                             {% with field_name='quantity_'|add:key %}
-                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                                <div style="display: inline-block; width: 60px; margin-left: 10px;">
+                                                    {{ form|get_field:field_name }}
+                                                </div>
                                             {% endwith %}
                                         </div>
                                     </div>
@@ -209,7 +210,9 @@
                                             <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
                                             <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
                                             {% with field_name='quantity_'|add:key %}
-                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                                <div style="display: inline-block; width: 60px; margin-left: 10px;">
+                                                    {{ form|get_field:field_name }}
+                                                </div>
                                             {% endwith %}
                                         </div>
                                     </div>
@@ -229,7 +232,9 @@
                                             <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
                                             <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
                                             {% with field_name='quantity_'|add:key %}
-                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                                <div style="display: inline-block; width: 60px; margin-left: 10px;">
+                                                    {{ form|get_field:field_name }}
+                                                </div>
                                             {% endwith %}
                                         </div>
                                     </div>
@@ -249,7 +254,9 @@
                                             <input type="checkbox" name="accessory_types" value="{{ key }}" id="id_accessory_types_{{ forloop.counter0 }}" data-quantity-toggle="{{ key }}" class="me-2">
                                             <label for="id_accessory_types_{{ forloop.counter0 }}" class="me-2">{{ label }}</label>
                                             {% with field_name='quantity_'|add:key %}
-                                                {% render_field form|get_field:field_name class+="form-control quantity-field" style="width:60px;display:inline-block;" data-quantity-for="{{ key }}" %}
+                                                <div style="display: inline-block; width: 60px; margin-left: 10px;">
+                                                    {{ form|get_field:field_name }}
+                                                </div>
                                             {% endwith %}
                                         </div>
                                     </div>
