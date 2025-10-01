@@ -8,6 +8,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('equipment/', views.equipment, name='equipment'),
     path('equipment/<int:id>/', views.equipment_detail, name='equipment_detail'),
+    path('equipment/<int:id>/delete/', views.delete_equipment, name='delete_equipment'),
     path('accessory_detail/<int:id>/', views.accessory_detail, name='accessory_detail'),
     path('equipment/<int:id>/edit/', views.edit_equipment, name='edit_equipment'),
     path('accessory/<int:id>/', views.accessory, name='accessory'),
@@ -34,4 +35,5 @@ urlpatterns = [
     path('add-chainman/', views.add_chainman, name='add_chainman'),
     path('assign-chainman/', views.assign_chainman, name='assign_chainman'),
     path('unassign-chainman/<int:chainman_id>/', views.unassign_chainman, name='unassign_chainman'),
+    path('bulk-return-equipment/', views.bulk_return_equipment, name='bulk_return_equipment'),
 ]

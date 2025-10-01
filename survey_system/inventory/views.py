@@ -66,22 +66,24 @@ def request_equipment(request):
         project = equipment.project
         date = equipment.date_receiving_from_department
 
-        # Update equipment status and requested_by field
+        # Update equipment status and assign to user
         equipment.status = 'In Field'
         equipment.section = section
         equipment.date_receiving_from_department = date
         equipment.project = project
         equipment.surveyor_responsible = surveyor
+        equipment.chief_surveyor = request.user
         
         equipment.save()
+        
         return redirect('profile')
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status='With Chief Surveyor')
-    # Only show accessories that are assigned to the user and not in use or returning
+    # Only show accessories that are assigned to the user and not in use or returning (exclude returned)
     accessories = Accessory.objects.filter(
-    Q(chief_surveyor=user, return_status='With Chief Surveyor') |
-    Q(equipment__chief_surveyor=user)
-)
+        Q(chief_surveyor=user, return_status='With Chief Surveyor') |
+        Q(equipment__chief_surveyor=user, return_status__in=['In Use', 'With Chief Surveyor'])
+    ).exclude(return_status='Returned')
     return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
 
 # @receiver(post_save, sender=User)
@@ -102,15 +104,16 @@ def request_equipment(request):
 def store(request):
     if request.method == 'POST':
         chief_id = request.POST.get('id')
-        equipment = request.POST.get('equipment_id')
+        equipment_id = request.POST.get('equipment_id')
         user = User.objects.filter(id=chief_id).first()
-        equipment = EquipmentsInSurvey.objects.filter(id=equipment).first()
+        equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
         equipment.section = request.POST.get("section")
         equipment.chief_surveyor = user
         equipment.delivery_status = "Delivering"
         equipment.status = "Delivering"
         equipment.date_receiving_from_department = request.POST.get("date_receiving") or timezone.now().date()  # Update the date
         equipment.save()
+        
         messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
         return redirect('store')
     users = User.objects.filter(is_superuser=False)
@@ -157,10 +160,6 @@ def return_equipment(request, id):
                 status = request.POST.get(f'accessory_{accessory_id}_status')
                 comment = request.POST.get(f'accessory_{accessory_id}_comment')
                 
-                # Handle image upload
-                if f'accessory_{accessory_id}_image' in request.FILES:
-                    image = request.FILES[f'accessory_{accessory_id}_image']
-                    accessory.image = image
                 
                 accessory.status = status
                 accessory.comment = comment
@@ -201,23 +200,74 @@ def login_view(request):
 
 @login_required
 def profile(request):
-    # Get all equipment where the user is the requester
-    # user_equipment = Equipment.objects.filter(requested_by=request.user)
-
     if request.method == 'POST':
-        equipment_id = request.POST.get('id')
-        equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
-
-        # Mark the equipment as returned by setting requested_by to None
-         # Remove the user from the equipment
-        equipment.save()
-
-        messages.success(request, 'Equipment returned successfully!')
+        # Handle equipment return with details
+        equipment_id = request.POST.get('equipment_id')
+        return_comment = request.POST.get('return_comment', '')
+        equipment_condition = request.POST.get('equipment_condition', 'Good')
+        
+        if equipment_id:
+            equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
+            if equipment:
+                # Mark the equipment as returned with details
+                equipment.status = 'Returning'
+                equipment.condition = equipment_condition
+                equipment.return_comment = return_comment
+                equipment.return_date = timezone.now()
+                equipment.save()
+                
+                messages.success(request, f'{equipment.name} return request submitted successfully!')
+            else:
+                messages.error(request, 'Equipment not found.')
+        else:
+            messages.error(request, 'No equipment selected for return.')
+        
         return redirect('profile')
+    
     user = request.user
     data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
-    accessories = Accessory.objects.filter(chief_surveyor=user, return_status="In Use")
-    return render(request, 'inventory/profile.html', {'data':data, 'accessories': accessories})
+    return render(request, 'inventory/profile.html', {'data':data})
+
+
+@login_required
+def bulk_return_equipment(request):
+    """View for bulk returning multiple equipment items"""
+    if request.method == 'POST':
+        equipment_ids = request.POST.getlist('equipment_ids')
+        return_comment = request.POST.get('bulk_return_comment', '')
+        equipment_condition = request.POST.get('bulk_equipment_condition', 'Good')
+        
+        if equipment_ids:
+            returned_count = 0
+            for equipment_id in equipment_ids:
+                equipment = EquipmentsInSurvey.objects.filter(
+                    id=equipment_id, 
+                    chief_surveyor=request.user, 
+                    status='In Field'
+                ).first()
+                
+                if equipment:
+                    equipment.status = 'Returning'
+                    equipment.condition = equipment_condition
+                    equipment.return_comment = return_comment
+                    equipment.return_date = timezone.now()
+                    equipment.save()
+                    
+                    returned_count += 1
+            
+            if returned_count > 0:
+                messages.success(request, f'{returned_count} equipment item(s) return request(s) submitted successfully!')
+            else:
+                messages.error(request, 'No valid equipment found to return.')
+        else:
+            messages.error(request, 'No equipment selected for return.')
+        
+        return redirect('profile')
+    
+    # GET request - show bulk return form
+    user = request.user
+    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user, status__in=['In Field'])
+    return render(request, 'inventory/bulk_return_equipment.html', {'data': data})
 
 def create_user(request):
     if request.method == 'POST':
@@ -287,15 +337,91 @@ def accessory(request, id):
         'equipment': equipment
     })
 
+@login_required
 def equipment_detail(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
-    active_accessories = equipment.accessories.filter(return_status__in=['In Use', "In Store", "Returning"])
-    returned_accessories = equipment.accessories.filter(return_status__in=['Returned', 'Returning'])
+    
+    # Check if user has permission to view this equipment
+    if not request.user.is_superuser:
+        # Regular users can only see equipment they are assigned to or equipment in store
+        if equipment.chief_surveyor != request.user and equipment.status != 'In Store':
+            messages.error(request, 'You do not have permission to view this equipment.')
+            return redirect('profile')
+    
+    # Handle accessory return form submission
+    if request.method == 'POST' and 'return_accessories' in request.POST:
+        returned_count = 0
+        for key, value in request.POST.items():
+            if key.startswith('accessory_') and not key.endswith('_status') and not key.endswith('_comment'):
+                accessory_id = value
+                accessory = equipment.accessories.filter(id=accessory_id, chief_surveyor=request.user).first()
+                if accessory:
+                    # Update accessory status and comment
+                    status_key = f'accessory_{accessory_id}_status'
+                    comment_key = f'accessory_{accessory_id}_comment'
+                    
+                    accessory.status = request.POST.get(status_key, 'Good')
+                    accessory.comment = request.POST.get(comment_key, '')
+                    accessory.mark_as_returned(request.user)
+                    accessory.save()
+                    returned_count += 1
+        
+        if returned_count > 0:
+            messages.success(request, f'{returned_count} accessory(ies) returned successfully!')
+        else:
+            messages.warning(request, 'No accessories were selected for return.')
+        
+        return redirect('equipment_detail', id=equipment.id)
+    
+    # Show accessories assigned to this equipment
+    if not request.user.is_superuser:
+        # Regular users see accessories assigned to them for this equipment
+        active_accessories = equipment.accessories.filter(
+            return_status__in=['In Use', 'With Chief Surveyor'],
+            chief_surveyor=request.user
+        )
+        returned_accessories = equipment.accessories.filter(
+            return_status__in=['Returned', 'Returning'],
+            chief_surveyor=request.user
+        )
+    else:
+        # Admins can see all accessories for this equipment
+        active_accessories = equipment.accessories.filter(return_status__in=['In Use', "In Store", "With Chief Surveyor"])
+        returned_accessories = equipment.accessories.filter(return_status__in=['Returned', 'Returning'])
     
     return render(request, 'equipments/equipments_detail.html', {
         'equipment': equipment,
         'active_accessories': active_accessories,
         'returned_accessories': returned_accessories
+    })
+
+@login_required
+def delete_equipment(request, id):
+    """Delete equipment and all its accessories"""
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    
+    # Only allow superusers to delete equipment
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to delete equipment.')
+        return redirect('equipment_detail', id=id)
+    
+    if request.method == 'POST':
+        equipment_name = equipment.name
+        equipment_serial = equipment.serial_number
+        
+        # Delete all accessories first (they have foreign key to equipment)
+        accessories_count = equipment.accessories.count()
+        equipment.accessories.all().delete()
+        
+        # Delete the equipment
+        equipment.delete()
+        
+        messages.success(request, f'Equipment "{equipment_name}" (Serial: {equipment_serial}) and its {accessories_count} accessories have been deleted successfully.')
+        return redirect('store')
+    
+    # GET request - show confirmation
+    return render(request, 'equipments/delete_equipment.html', {
+        'equipment': equipment
     })
 def accessory_detail(request, id):
     equipment = get_object_or_404(Accessory, id=id)
@@ -348,6 +474,7 @@ def store_returning(request):
             equipment_id = request.POST.get('id')
             equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
             equipment.status = 'In Store'
+            equipment.chief_surveyor = None  # Clear the chief surveyor assignment
             equipment.save()
             messages.success(request, f'{equipment.name} has been marked as In Store.')
             return redirect('store_returning')
@@ -388,10 +515,6 @@ def return_accessory(request, id):
     accessory = get_object_or_404(Accessory, id=id)
     
     if request.method == 'POST':
-        # Handle image upload
-        if 'image' in request.FILES:
-            accessory.image = request.FILES['image']
-        
         # Update status and comment
         accessory.status = request.POST.get('status')
         accessory.comment = request.POST.get('comment', '')
@@ -420,7 +543,7 @@ def release_accessory(request):
         accessory.return_status = 'In Use'
         accessory.save()
         messages.success(request, f'Accessory {accessory.name} has been released to {surveyor_responsible}.')
-        return redirect('request_equipment')
+        return redirect('profile')
 
 def admin_release_accessory(request):
     if request.method == 'POST':
@@ -490,13 +613,16 @@ def cancel_delivery(request, id):
     eq = EquipmentsInSurvey.objects.filter(id=id).first()
     eq.delivery_status = "Cancelled"
     eq.status = "In Store"
+    eq.chief_surveyor = None  # Remove assignment
     eq.save()
+    
     return redirect('store')
 def delivery_received(request, id):
     eq = EquipmentsInSurvey.objects.filter(id=id).first()
-    eq.delivery_status = "Received"
+    eq.delivery_status = "Delivered"
     eq.status = "With Chief Surveyor"
     eq.save()
+    
     return redirect('profile')
 
 @login_required
@@ -524,7 +650,7 @@ def update_accessory_quantities(request):
                     if quantity is not None:
                         accessory.quantity = quantity
                         accessory.save()
-            return redirect('dashboard')  # Change 'dashboard' to your desired success URL
+            return redirect('store')  # Redirect to store after bulk accessory creation
     else:
         form = AccessoryQuantityForm(accessories=accessories)
     return render(request, 'inventory/update_accessory_quantities.html', {'form': form, 'accessories': accessories})
@@ -536,7 +662,7 @@ def personnel_list(request):
     """View to display all personnel and their assigned chainmen"""
     if not request.user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('dashboard')
+        return redirect('store')
     
     personnel = Personnel.objects.filter(is_active=True).prefetch_related('chainmen')
     unassigned_chainmen = Chainman.objects.filter(assigned_to__isnull=True, is_active=True)
@@ -554,7 +680,7 @@ def add_personnel(request):
     """View to add new personnel"""
     if not request.user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('dashboard')
+        return redirect('store')
     
     if request.method == 'POST':
         form = PersonnelForm(request.POST)
@@ -575,7 +701,7 @@ def add_chainman(request):
     """View to add new chainman"""
     if not request.user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('dashboard')
+        return redirect('store')
     
     if request.method == 'POST':
         form = ChainmanForm(request.POST)
@@ -594,7 +720,7 @@ def assign_chainman(request):
     """View to assign chainmen to personnel"""
     if not request.user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('dashboard')
+        return redirect('store')
     
     if request.method == 'POST':
         form = AssignChainmanForm(request.POST)
@@ -618,7 +744,7 @@ def unassign_chainman(request, chainman_id):
     """View to unassign chainman from personnel"""
     if not request.user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('dashboard')
+        return redirect('store')
     
     chainman = get_object_or_404(Chainman, id=chainman_id)
     personnel_name = chainman.assigned_to

@@ -79,6 +79,12 @@ class EquipmentsInSurvey(models.Model):
     owner = models.CharField(max_length=20, choices=owner_choice)
     serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
     condition = models.CharField(max_length=20, choices=[("Good", "Good"), ("New", "New"), ("Second Hand", "Second Hand"), ("Needs Repair", "Needs Repair")], default="Good")
+    
+    # Choices for equipment condition after use (when returning)
+    CONDITION_AFTER_USE_CHOICES = [
+        ("Good", "Good"),
+        ("Need Repair", "Need Repair")
+    ]
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True, help_text="Name of the surveyor responsible for the equipment")
     quantity = models.PositiveBigIntegerField(default=1, help_text="Number of Quantity")
@@ -87,6 +93,8 @@ class EquipmentsInSurvey(models.Model):
     date_receiving_from_department = models.DateField(blank=True, null=True, help_text="Date when the equipment was received from the department")
     status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning'), ('Delivering', 'Delivering')], max_length=100, default='In Store', blank=True, null=True, help_text="Current status of the equipment")
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
+    return_comment = models.TextField(null=True, blank=True, help_text="Comment when equipment is returned")
+    return_date = models.DateTimeField(null=True, blank=True, help_text="Date when equipment was returned")
 
     def __str__(self):
         return f'{self.serial_number}'
@@ -181,9 +189,8 @@ class Accessory(models.Model):
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good', null=True, blank=True)
-    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='Returned', null=True, blank=True)
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Store', null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
-    image = models.ImageField(upload_to='accessory_images/', null=True, blank=True)
     date_returned = models.DateTimeField(null=True, blank=True)
     returned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='returned_accessories')
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)

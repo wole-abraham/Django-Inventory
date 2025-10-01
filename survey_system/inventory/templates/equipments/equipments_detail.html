@@ -164,15 +164,25 @@
 <div class="container">
     <div class="equipment-detail">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            {% if user.is_superuser %}
-            <a href="{% url 'store' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Equipment List
-            </a>
-            {% else %}
-            <a href="{% url 'request_equipment' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Equipment List
-            </a>
-            {% endif %}
+            <div class="d-flex gap-2">
+                {% if user.is_superuser %}
+                <a href="{% url 'store' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Equipment List
+                </a>
+                {% else %}
+                <a href="{% url 'request_equipment' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Equipment List
+                </a>
+                {% endif %}
+                {% if user.is_superuser %}
+                <a href="{% url 'edit_equipment' equipment.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit me-2"></i>Edit Equipment
+                </a>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-trash me-2"></i>Delete Equipment
+                </button>
+                {% endif %}
+            </div>
             <h1 class="page-title mb-0">
                 <i class="fas fa-tools me-2"></i>{{ equipment.name }}
             </h1>
@@ -208,11 +218,18 @@
                 <h2 class="section-title mb-0">
                     <i class="fas fa-puzzle-piece me-2"></i>Accessories
                 </h2>
-                {% if user.is_superuser %}
-                <a href="{% url 'accessory' equipment.id %}" class="btn btn-primary add-accessory-btn">
-                    <i class="fas fa-plus me-2"></i>Add Accessory
-                </a>
-                {% endif %}
+                <div class="d-flex gap-2">
+                    {% if active_accessories and not user.is_superuser %}
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#returnAccessoriesModal">
+                        <i class="fas fa-undo me-2"></i>Return Accessories
+                    </button>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                    <a href="{% url 'accessory' equipment.id %}" class="btn btn-primary add-accessory-btn">
+                        <i class="fas fa-plus me-2"></i>Add Accessory
+                    </a>
+                    {% endif %}
+                </div>
             </div>
 
             {% if active_accessories %}
@@ -257,11 +274,6 @@
                                             </a>
                                         </div>
                                     </div>
-                                    {% if accessory.image %}
-                                        <div class="mt-3">
-                                            <img src="{{ accessory.image.url }}" alt="{{ accessory.name }}" class="img-fluid rounded" style="max-height: 200px;">
-                                        </div>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -300,11 +312,6 @@
                                             {{ accessory.return_status }}
                                         </span>
                                     </p>
-                                    {% if accessory.image %}
-                                        <div class="mt-3">
-                                            <img src="{{ accessory.image.url }}" alt="{{ accessory.name }}" class="img-fluid rounded" style="max-height: 200px;">
-                                        </div>
-                                    {% endif %}
                                     {% if accessory.comment %}
                                         <p class="card-text"><small class="text-muted">{{ accessory.comment }}</small></p>
                                     {% endif %}
@@ -325,4 +332,117 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+{% if user.is_superuser %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Equipment Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone!
+                </div>
+                
+                <p>Are you sure you want to delete this equipment?</p>
+                
+                <div class="equipment-details bg-light p-3 rounded">
+                    <h6><strong>Equipment Details:</strong></h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Name:</strong> {{ equipment.name }}</li>
+                        <li><strong>Serial Number:</strong> {{ equipment.serial_number }}</li>
+                        <li><strong>Status:</strong> {{ equipment.status }}</li>
+                        <li><strong>Project:</strong> {{ equipment.project|default:"Not assigned" }}</li>
+                        <li><strong>Accessories:</strong> {{ equipment.accessories.count }} attached</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-3">
+                    <p class="text-danger mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>Note:</strong> All accessories attached to this equipment will also be deleted.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form method="post" action="{% url 'delete_equipment' equipment.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Equipment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Return Accessories Modal -->
+{% if active_accessories and not user.is_superuser %}
+<div class="modal fade" id="returnAccessoriesModal" tabindex="-1" aria-labelledby="returnAccessoriesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="returnAccessoriesModalLabel">
+                    <i class="fas fa-undo me-2"></i>Return Accessories
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'equipment_detail' equipment.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Select the accessories you want to return:</p>
+                    
+                    {% for accessory in active_accessories %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accessory_{{ accessory.id }}" id="accessory_{{ accessory.id }}" value="{{ accessory.id }}">
+                                <label class="form-check-label" for="accessory_{{ accessory.id }}">
+                                    <strong>{{ accessory.name }}</strong>
+                                    {% if accessory.serial_number %}
+                                        <small class="text-muted">(SN: {{ accessory.serial_number }})</small>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <label for="accessory_{{ accessory.id }}_status" class="form-label">Condition</label>
+                                    <select class="form-select" id="accessory_{{ accessory.id }}_status" name="accessory_{{ accessory.id }}_status">
+                                        <option value="Good">Good</option>
+                                        <option value="Need Repair">Need Repair</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="accessory_{{ accessory.id }}_comment" class="form-label">Comment</label>
+                                    <textarea class="form-control" id="accessory_{{ accessory.id }}_comment" name="accessory_{{ accessory.id }}_comment" rows="2" placeholder="Optional comment..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning" name="return_accessories">
+                        <i class="fas fa-undo me-2"></i>Return Selected Accessories
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

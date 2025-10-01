@@ -83,7 +83,7 @@ class EquipmentEditForm(forms.ModelForm):
 class AccessoryEditForm(forms.ModelForm):
     class Meta:
         model = Accessory
-        fields = ['status', 'comment', 'image']
+        fields = ['status', 'comment']
         widgets = {
             'status': forms.Select(attrs={
                 'class': 'form-select',
@@ -128,12 +128,6 @@ class AccessoryReturnForm(forms.Form):
                     label='Comments'
                 )
 
-                # Add image upload field
-                self.fields[f'accessory_{accessory.id}_image'] = forms.ImageField(
-                    required=False,
-                    widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-                    label='Upload Image'
-                )
                 
                 # Store accessory ID for easy access in template
                 self.fields[f'accessory_{accessory.id}'].accessory_id = accessory.id

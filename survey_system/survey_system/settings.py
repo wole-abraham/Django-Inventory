@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'inventory',
     'api',
     'rest_framework',
-    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

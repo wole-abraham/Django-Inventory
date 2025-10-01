@@ -107,6 +107,8 @@
                         <th>Serial Number</th>
                         <th>Chief Surveyor</th>
                         <th>Status</th>
+                        <th>Return Comment</th>
+                        <th>Return Date</th>
                         {% if is_admin %}
                         <th>Action</th>
                         {% endif %}
@@ -129,6 +131,22 @@
                             <span class="badge bg-warning">{{ item.status }}</span>
                         </td>
                         <td>
+                            {% if item.return_comment %}
+                                <span class="text-muted" title="{{ item.return_comment }}">
+                                    {{ item.return_comment|truncatechars:50 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">No comment</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.return_date %}
+                                {{ item.return_date|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if is_admin %}
                             <form method="post" action="{% url 'store_returning' %}" style="display: inline;">
                                 {% csrf_token %}
@@ -146,7 +164,6 @@
                             <span class="badge bg-info">Accessory</span>
                         </td>
                         <td>
-                            
                             {% if accessory.equipment.id %}
                             <a href="{% url 'equipment_detail' accessory.equipment.id %}" class="item-link">
                                 {{ accessory.name }} ({{ accessory.equipment.name }})
@@ -160,17 +177,33 @@
                         <td>{{ accessory.serial_number }}</td>
                         <td>{{ accessory.returned_by }}</td>
                         <td>
-                            <span class="badge bg-warning">{{ accessory.status }}</span>
+                            <span class="badge bg-warning">{{ accessory.return_status }}</span>
                         </td>
                         <td>
-                            {% if is_admin %}
+                            {% if accessory.comment %}
+                                <span class="text-muted" title="{{ accessory.comment }}">
+                                    {{ accessory.comment|truncatechars:50 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">No comment</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if accessory.date_returned %}
+                                {{ accessory.date_returned|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% if is_admin %}
+                        <td>
                             <form method="post" action="{% url 'store_returning' %}" style="display: inline;">
                                 {% csrf_token %}
                                 <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
                                 <button type="submit" class="btn btn-success btn-sm">Receive</button>
                             </form>
-                            {% endif %}
                         </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

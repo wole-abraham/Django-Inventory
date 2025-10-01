@@ -1,0 +1,181 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Bulk Return Equipment{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-undo me-2"></i>Bulk Return Equipment</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="bulkReturnForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <h5>Select Equipment to Return</h5>
+                            <p class="text-muted">Check the equipment items you want to return. You can select multiple items.</p>
+                            
+                            {% if data %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAll" class="form-check-input">
+                                                <label for="selectAll" class="form-check-label ms-2">All</label>
+                                            </th>
+                                            <th>Name</th>
+                                            <th>Serial Number</th>
+                                            <th>Current Condition</th>
+                                            <th>Project</th>
+                                            <th>Section</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in data %}
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="equipment_ids" value="{{ item.id }}" class="form-check-input equipment-checkbox">
+                                            </td>
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.serial_number }}</td>
+                                            <td>
+                                                <span class="badge {% if item.condition == 'Good' %}bg-success{% elif item.condition == 'Needs Repair' %}bg-warning{% else %}bg-info{% endif %}">
+                                                    {{ item.condition }}
+                                                </span>
+                                            </td>
+                                            <td>{{ item.project|default:"-" }}</td>
+                                            <td>{{ item.section|default:"-" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No equipment available for return.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if data %}
+                        <div class="mb-3">
+                            <label for="bulk_equipment_condition" class="form-label">Equipment Condition After Use</label>
+                            <select class="form-select" id="bulk_equipment_condition" name="bulk_equipment_condition" required>
+                                <option value="Good">Good</option>
+                                <option value="Need Repair">Need Repair</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bulk_return_comment" class="form-label">Return Comments</label>
+                            <textarea class="form-control" id="bulk_return_comment" name="bulk_return_comment" rows="4" placeholder="Please provide details about the equipment condition, any issues encountered, or other relevant information for all selected equipment..."></textarea>
+                            <div class="form-text">This comment will be applied to all selected equipment items.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'profile' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="submitBtn" disabled>
+                                <i class="fas fa-undo me-2"></i>Submit Return Request
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="d-flex justify-content-start">
+                            <a href="{% url 'profile' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const equipmentCheckboxes = document.querySelectorAll('.equipment-checkbox');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Select All functionality
+    selectAllCheckbox.addEventListener('change', function() {
+        equipmentCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSubmitButton();
+    });
+    
+    // Individual checkbox functionality
+    equipmentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+            updateSubmitButton();
+        });
+    });
+    
+    function updateSelectAllState() {
+        const checkedCount = document.querySelectorAll('.equipment-checkbox:checked').length;
+        const totalCount = equipmentCheckboxes.length;
+        
+        selectAllCheckbox.checked = checkedCount === totalCount;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+    }
+    
+    function updateSubmitButton() {
+        const checkedCount = document.querySelectorAll('.equipment-checkbox:checked').length;
+        submitBtn.disabled = checkedCount === 0;
+        submitBtn.textContent = checkedCount > 0 ? 
+            `Submit Return Request (${checkedCount} item${checkedCount > 1 ? 's' : ''})` : 
+            'Submit Return Request';
+    }
+    
+    // Form submission confirmation
+    document.getElementById('bulkReturnForm').addEventListener('submit', function(e) {
+        const checkedCount = document.querySelectorAll('.equipment-checkbox:checked').length;
+        if (checkedCount === 0) {
+            e.preventDefault();
+            alert('Please select at least one equipment item to return.');
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to return ${checkedCount} equipment item${checkedCount > 1 ? 's' : ''}?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table th {
+    border-top: none;
+}
+
+.form-check-input:indeterminate {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.alert {
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+}
+</style>
+{% endblock %}

@@ -15,65 +15,62 @@ def notify_surveyor(sender, instance, created, **kwargs):
             # Use select_related to ensure the chief_surveyor is loaded with the equipment
             equipment = EquipmentsInSurvey.objects.select_related('chief_surveyor').get(id=equipment.id)
     
-            if equipment.status == 'Returning':
-                subject = "Equipment Returning"
-                message = returning_equipment_email(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
-            
-            elif equipment.status == "In Store" and equipment.delivery_status == 'Cancelled':
-                subject = "Delivery Cancelled"
-                message = delivery_cancelled(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
-            elif equipment.status == "In Store":
-                subject = "Equipment Returned"
-                message = returned_equipment_email(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
-            elif equipment.delivery_status == "Delivering":
-                subject = "Equipment Delivery"
-                message = delivery_email(subject, equipment)
-                print("Delivering")
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
-            elif equipment.delivery_status == "Cancelled":
-                subject = "Delivery Cancelled"
-                message = delivery_cancelled(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
+            # Only send emails if chief_surveyor exists
+            if equipment.chief_surveyor:
+                if equipment.status == 'Returning':
+                    subject = "Equipment Returning"
+                    message = returning_equipment_email(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
                 
-            elif equipment.status == "In Field":
-                subject = "Equipment in Field"
-                message = released_equipment_field_email(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )
-                print(equipment.chief_surveyor.email)
-            elif equipment.delivery_status == "Received":
-                subject = "Equipment Received"
-                message = received_equipment(subject, equipment)
-                requests.post(
-                url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
-                , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
-            )  
-            print(equipment.chief_surveyor.email)
-                
-            requests.post(
-                url ='https://hook.eu2.make.com/svxxuei9ivon08wka4dwjih5l2tfrkcy'
-                , data= {"message": message, "subject": subject}
-            )
+                elif equipment.status == "In Store" and equipment.delivery_status == 'Cancelled':
+                    subject = "Delivery Cancelled"
+                    message = delivery_cancelled(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
+                elif equipment.status == "In Store":
+                    subject = "Equipment Returned"
+                    message = returned_equipment_email(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
+                elif equipment.delivery_status == "Delivering":
+                    subject = "Equipment Delivery"
+                    message = delivery_email(subject, equipment)
+                    print("Delivering")
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
+                elif equipment.delivery_status == "Cancelled":
+                    subject = "Delivery Cancelled"
+                    message = delivery_cancelled(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
+                    
+                elif equipment.status == "In Field":
+                    subject = "Equipment in Field"
+                    message = released_equipment_field_email(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )
+                    print(equipment.chief_surveyor.email)
+                elif equipment.delivery_status == "Delivered":
+                    subject = "Equipment Received"
+                    message = received_equipment(subject, equipment)
+                    requests.post(
+                    url ='https://hook.eu2.make.com/d0drijb4njtmsge28nttl8ktbg9uhwxg'
+                    , data= {"message": message, "subject": subject, "email": equipment.chief_surveyor.email}
+                )  
+                    print(equipment.chief_surveyor.email)
 
            
 
