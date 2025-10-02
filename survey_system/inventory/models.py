@@ -78,7 +78,7 @@ class EquipmentsInSurvey(models.Model):
     supplier = models.CharField(max_length=50, choices=supplier_name)
     owner = models.CharField(max_length=20, choices=owner_choice)
     serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
-    condition = models.CharField(max_length=20, choices=[("Good", "Good"), ("New", "New"), ("Second Hand", "Second Hand"), ("Needs Repair", "Needs Repair")], default="Good")
+    condition = models.CharField(max_length=20, choices=[("Good", "Good"), ("New", "New"), ("Second Hand", "Second Hand"), ("Needs Repair", "Needs Repair"), ("Needs Calibration", "Needs Calibration"),], default="Good")
     
     # Choices for equipment condition after use (when returning)
     CONDITION_AFTER_USE_CHOICES = [

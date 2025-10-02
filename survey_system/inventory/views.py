@@ -23,6 +23,10 @@ from .forms import AccessoryReturnForm
 from .forms import addEquipmentForm
 from .forms import AccessoryQuantityForm
 from .forms import PersonnelForm, ChainmanForm, AssignChainmanForm
+from .forms import CSVUploadForm
+import csv
+import io
+from datetime import datetime
 
 # def filter_equipment(request):
 #     equipment_type = request.GET.get('equipment_type')
@@ -121,7 +125,7 @@ def store(request):
     all = EquipmentsInSurvey.objects.all()
     accessories = Accessory.objects.all()
     return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all,
-                                                    'accessories': accessories})
+                                                    'accessories': accessories, 'is_admin': request.user.is_superuser})
 
 def store_all(request):
     data = EquipmentsInSurvey.objects.all()
@@ -753,4 +757,223 @@ def unassign_chainman(request, chainman_id):
     
     messages.success(request, f'{chainman} unassigned from {personnel_name} successfully.')
     return redirect('personnel_list')
+
+
+@login_required
+def upload_equipment_csv(request):
+    """View to upload CSV file and bulk create equipment"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('store')
+    
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = form.cleaned_data['csv_file']
+            
+            # Read and process CSV file
+            try:
+                # Decode the file content
+                file_data = csv_file.read().decode('utf-8')
+                csv_data = csv.reader(io.StringIO(file_data))
+                
+                created_count = 0
+                skipped_count = 0
+                error_count = 0
+                errors = []
+                skipped_items = []
+                
+                # Check header row first
+                header = next(csv_data, None)
+                if header is None:
+                    messages.error(request, 'CSV file is empty or invalid.')
+                    return render(request, 'inventory/upload_csv.html', {'form': form})
+                
+                # Validate header format (optional but recommended)
+                expected_headers = ['equipment', 'serial', 'manufacturer', 'condition']
+                if len(header) != 4:
+                    messages.error(request, f'Invalid CSV format. Expected exactly 4 columns: {", ".join(expected_headers)}. Found {len(header)} columns.')
+                    return render(request, 'inventory/upload_csv.html', {'form': form})
+                
+                # Check if CSV has any data rows
+                csv_rows = list(csv_data)
+                if not csv_rows:
+                    messages.error(request, 'CSV file contains no data rows.')
+                    return render(request, 'inventory/upload_csv.html', {'form': form})
+                
+                for row_num, row in enumerate(csv_rows, start=2):  # Start from row 2 (after header)
+                    try:
+                        # Strict validation: must have exactly 4 columns
+                        if len(row) != 4:
+                            errors.append(f"Row {row_num}: Invalid format. Expected exactly 4 columns (equipment, serial, manufacturer, condition), found {len(row)} columns")
+                            error_count += 1
+                            continue
+                        
+                        # Check for empty values in required columns
+                        if not all(cell.strip() for cell in row):
+                            empty_columns = [i+1 for i, cell in enumerate(row) if not cell.strip()]
+                            errors.append(f"Row {row_num}: Empty values found in column(s): {', '.join(map(str, empty_columns))}")
+                            error_count += 1
+                            continue
+                        
+                        # Map CSV columns to model fields
+                        # CSV format: equipment, serial, manufacturer, condition
+                        equipment_name = row[0].strip() if len(row) > 0 else ''
+                        serial_number = row[1].strip() if len(row) > 1 else ''
+                        manufacturer = row[2].strip() if len(row) > 2 else ''
+                        condition = row[3].strip() if len(row) > 3 else ''
+                        
+                        # Map equipment name to valid choices
+                        name_mapping = {
+                            'GNSS': 'GPS Receiver (Base)',
+                            'GPS': 'GPS Receiver (Base)', 
+                            'GPS Base': 'GPS Receiver (Base)',
+                            'GPS Receiver (Base)': 'GPS Receiver (Base)',
+                            'GPS Rover': 'GPS Receiver (Rover)',
+                            'GPS Receiver (Rover)': 'GPS Receiver (Rover)',
+                            'Total Station': 'Total Station',
+                            'Levelling Instrument': 'Levelling Instrument',
+                            'Level Instrument': 'Levelling Instrument',
+                            'Leveling Instrument': 'Levelling Instrument',
+                            'Data logger': 'Data logger',
+                            'Data Logger': 'Data logger',
+                            'External Radio': 'External Radio',
+                            'Radio': 'External Radio',
+                            'Eco Sounder': 'Eco Sounder',
+                        }
+                        
+                        # Map manufacturer/supplier name to valid choices
+                        supplier_mapping = {
+                            'Hi-Target': 'Hi Target',
+                            'Hi Target': 'Hi Target',
+                            'HiTarget': 'Hi Target',
+                            'Topcon': 'Topcon',
+                            'Topcon OS-200 Series': 'Topcon OS-200 Series',
+                            'Topcon OS 103': 'Topcon OS 103',
+                            'Topcon Hiper VR': 'Topcon Hiper VR',
+                            'Leica': 'Leica',
+                            'Leica NA730 plus': 'Leica NA730 plus',
+                            'Sokkia': 'Sokkia',
+                            'Hi Target V200': 'Hi Target V200',
+                        }
+                        
+                        # Map condition to valid choices
+                        condition_mapping = {
+                            'Good': 'Good',
+                            'good': 'Good',
+                            'GOOD': 'Good',
+                            'New': 'New',
+                            'new': 'New',
+                            'NEW': 'New',
+                            'Second Hand': 'Second Hand',
+                            'second hand': 'Second Hand',
+                            'Used': 'Second Hand',
+                            'used': 'Second Hand',
+                            'Needs Repair': 'Needs Repair',
+                            'needs repair': 'Needs Repair',
+                            'Repair': 'Needs Repair',
+                            'repair': 'Needs Repair',
+                            'Bad': 'Needs Repair',
+                            'bad': 'Needs Repair',
+                        }
+                        
+                        mapped_name = name_mapping.get(equipment_name, equipment_name)
+                        mapped_supplier = supplier_mapping.get(manufacturer, manufacturer)
+                        mapped_condition = condition_mapping.get(condition, 'Good')  # Default to Good if not found
+                        
+                        equipment_data = {
+                            'name': mapped_name,
+                            'supplier': mapped_supplier,
+                            'serial_number': serial_number,
+                            'owner': 'Hi-Tech',  # Default owner
+                            'condition': mapped_condition,
+                        }
+                        
+                        # Validate required fields
+                        if not equipment_data['name'] or not equipment_data['serial_number']:
+                            errors.append(f"Row {row_num}: Missing required fields (name or serial_number)")
+                            error_count += 1
+                            continue
+                        
+                        # Validate that the mapped name is in valid choices
+                        valid_equipment_names = [choice[0] for choice in EquipmentsInSurvey.EQUIPMENT_CHOICES]
+                        if equipment_data['name'] not in valid_equipment_names:
+                            errors.append(f"Row {row_num}: Invalid equipment name '{equipment_data['name']}'. Valid options: {', '.join(valid_equipment_names)}")
+                            error_count += 1
+                            continue
+                        
+                        # Validate that the mapped supplier is in valid choices
+                        valid_suppliers = [choice[0] for choice in EquipmentsInSurvey.supplier_name]
+                        if equipment_data['supplier'] not in valid_suppliers:
+                            errors.append(f"Row {row_num}: Invalid supplier '{equipment_data['supplier']}'. Valid options: {', '.join(valid_suppliers)}")
+                            error_count += 1
+                            continue
+                        
+                        # Check if equipment with this serial number already exists
+                        existing_equipment = EquipmentsInSurvey.objects.filter(serial_number=equipment_data['serial_number']).first()
+                        if existing_equipment:
+                            skipped_items.append(f"Serial: {equipment_data['serial_number']} ({equipment_data['name']})")
+                            skipped_count += 1
+                            continue
+                        
+                        # Create equipment
+                        equipment = EquipmentsInSurvey.objects.create(**equipment_data)
+                        created_count += 1
+                        
+                    except Exception as e:
+                        errors.append(f"Row {row_num}: {str(e)}")
+                        error_count += 1
+                
+                # Display results
+                total_processed = created_count + skipped_count + error_count
+                
+                # Show success message for created items
+                if created_count > 0:
+                    messages.success(request, f'Successfully created {created_count} new equipment items.')
+                
+                # Show info message for skipped items (existing equipment)
+                if skipped_count > 0:
+                    skipped_message = f'{skipped_count} items already exist and were skipped:\n' + '\n'.join(skipped_items[:10])
+                    if len(skipped_items) > 10:
+                        skipped_message += f'\n... and {len(skipped_items) - 10} more items.'
+                    messages.info(request, skipped_message)
+                
+                # Show error message for invalid rows
+                if error_count > 0:
+                    error_message = f'{error_count} rows had errors and were rejected:\n' + '\n'.join(errors[:10])
+                    if len(errors) > 10:
+                        error_message += f'\n... and {len(errors) - 10} more errors.'
+                    messages.error(request, error_message)
+                
+                # Show summary message
+                if total_processed > 0:
+                    summary_parts = []
+                    if created_count > 0:
+                        summary_parts.append(f'{created_count} created')
+                    if skipped_count > 0:
+                        summary_parts.append(f'{skipped_count} skipped (already exist)')
+                    if error_count > 0:
+                        summary_parts.append(f'{error_count} errors')
+                    
+                    summary_message = f'Processing complete: {", ".join(summary_parts)} out of {total_processed} total rows.'
+                    if error_count == 0:
+                        messages.success(request, summary_message)
+                    else:
+                        messages.warning(request, summary_message)
+                
+                # Redirect to store if any items were processed successfully (created or skipped)
+                if created_count > 0 or (skipped_count > 0 and error_count == 0):
+                    return redirect('store')
+                elif total_processed == 0:
+                    messages.warning(request, 'No equipment was processed. Please check your CSV format.')
+                
+                # Stay on upload page if there were only errors or no processing occurred
+                return render(request, 'inventory/upload_csv.html', {'form': form})
+                    
+            except Exception as e:
+                messages.error(request, f'Error processing CSV file: {str(e)}')
+    else:
+        form = CSVUploadForm()
+    
+    return render(request, 'inventory/upload_csv.html', {'form': form})
 

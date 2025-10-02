@@ -1,0 +1,139 @@
+{% extends 'base/base_dashboard.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload Equipment CSV
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Back Button -->
+                    <div class="mb-3">
+                        <a href="{% url 'store' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Store
+                        </a>
+                    </div>
+
+                    <!-- CSV Format Information -->
+                    <div class="alert alert-warning border-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>STRICT CSV Format Requirements:</h6>
+                        <p class="mb-2"><strong>Your CSV file MUST have exactly 4 columns in this exact order:</strong></p>
+                        <ol class="mb-2">
+                            <li><strong>Equipment</strong> - Equipment type (e.g., GNSS, Total Station, GPS Receiver (Base))</li>
+                            <li><strong>Serial</strong> - Equipment serial number (required, cannot be empty)</li>
+                            <li><strong>Manufacturer</strong> - Manufacturer/Supplier name (e.g., Hi Target, Topcon, Leica)</li>
+                            <li><strong>Condition</strong> - Equipment condition (Good, New, Second Hand, Needs Repair)</li>
+                        </ol>
+                        <div class="alert alert-danger mt-2 mb-0">
+                            <small><strong>⚠️ IMPORTANT:</strong> Any CSV file or row that doesn't follow this exact format will be rejected. All columns must have values.</small>
+                        </div>
+                    </div>
+
+                    <!-- Sample CSV Format -->
+                    <div class="alert alert-light border">
+                        <h6><i class="fas fa-file-csv me-2"></i>Sample CSV Format:</h6>
+                        <code>
+                            Equipment,Serial,Manufacturer,Condition<br>
+                            GNSS,VAXJ13847417,Hi Target,Good<br>
+                            Total Station,TS001234,Topcon,New<br>
+                            GPS Receiver (Rover),VAXJ13847888,Hi Target,Good<br>
+                        </code>
+                    </div>
+
+                    <!-- Upload Form -->
+                    <form method="post" enctype="multipart/form-data" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.csv_file.label_tag }}
+                            {{ form.csv_file }}
+                            {% if form.csv_file.help_text %}
+                                <div class="form-text">{{ form.csv_file.help_text }}</div>
+                            {% endif %}
+                            {% if form.csv_file.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.csv_file.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'store' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload me-2"></i>Upload and Process CSV
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Processing Information -->
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Processing Rules:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Format Validation:</strong> Files with wrong number of columns will be rejected entirely</li>
+                                <li><strong>Row Validation:</strong> Rows with missing values or wrong format will be rejected</li>
+                                <li><strong>Duplicate Handling:</strong> Equipment with existing serial numbers will be safely skipped</li>
+                                <li><strong>Reusable CSV:</strong> You can upload the same CSV multiple times - existing items won't be duplicated</li>
+                                <li><strong>Auto-Mapping:</strong> Equipment names and conditions will be normalized automatically</li>
+                                <li><strong>Default Values:</strong> New equipment gets status "In Store", owner "Hi-Tech"</li>
+                                <li><strong>Detailed Reporting:</strong> Shows created, skipped, and error counts with details</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-recycle me-2"></i>Reusable CSV Feature:</h6>
+                            <p class="mb-0">You can now safely upload the same CSV file multiple times! The system will:</p>
+                            <ul class="mt-2 mb-0">
+                                <li>✅ Create new equipment that doesn't exist</li>
+                                <li>⏭️ Skip equipment that already exists (by serial number)</li>
+                                <li>📊 Provide a detailed summary of what was processed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 0.5rem;
+    }
+    
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+        border-bottom: none;
+    }
+    
+    .form-control:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        display: block;
+        white-space: pre-line;
+    }
+</style>
+{% endblock %}

@@ -2,11 +2,14 @@
 
     {% block content %}
     <div class="container-fluid mt-4">
-        <!-- Admin Add Equipment Button -->
+        <!-- Admin Add Equipment Buttons -->
         {% if is_admin %}
         <div class="mb-3">
-            <a class="btn btn-danger" href="{% url 'add_equipment' %}">
+            <a class="btn btn-danger me-2" href="{% url 'add_equipment' %}">
                 <i class="fas fa-plus me-2"></i>Add Equipment
+            </a>
+            <a class="btn btn-success" href="{% url 'upload_equipment_csv' %}">
+                <i class="fas fa-upload me-2"></i>Upload CSV
             </a>
         </div>
         {% endif %}

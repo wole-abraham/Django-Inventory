@@ -237,3 +237,64 @@ class AssignChainmanForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
+
+class CSVUploadForm(forms.Form):
+    """Form for uploading CSV files to bulk add equipment"""
+    csv_file = forms.FileField(
+        label="CSV File",
+        help_text="Upload a CSV file with equipment data. Required columns: equipment, serial, manufacturer, condition",
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.csv',
+            'required': True
+        })
+    )
+    
+    def clean_csv_file(self):
+        import csv
+        import io
+        
+        csv_file = self.cleaned_data['csv_file']
+        
+        # Check file extension
+        if not csv_file.name.endswith('.csv'):
+            raise forms.ValidationError('File must be a CSV file.')
+        
+        # Check file size (limit to 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('File size must be less than 5MB.')
+        
+        # Validate CSV format
+        try:
+            # Read the file content for validation
+            csv_file.seek(0)  # Reset file pointer
+            file_content = csv_file.read().decode('utf-8')
+            csv_file.seek(0)  # Reset file pointer for later use
+            
+            # Parse CSV to check format
+            csv_reader = csv.reader(io.StringIO(file_content))
+            
+            # Check if file has content
+            try:
+                header = next(csv_reader)
+            except StopIteration:
+                raise forms.ValidationError('CSV file is empty.')
+            
+            # Validate header has exactly 4 columns
+            if len(header) != 4:
+                raise forms.ValidationError(f'CSV must have exactly 4 columns. Found {len(header)} columns. Expected: Equipment, Serial, Manufacturer, Condition')
+            
+            # Check if there's at least one data row
+            try:
+                first_row = next(csv_reader)
+                if len(first_row) != 4:
+                    raise forms.ValidationError(f'All rows must have exactly 4 columns. First data row has {len(first_row)} columns.')
+            except StopIteration:
+                raise forms.ValidationError('CSV file must contain at least one data row.')
+                
+        except UnicodeDecodeError:
+            raise forms.ValidationError('File must be a valid UTF-8 encoded CSV file.')
+        except Exception as e:
+            raise forms.ValidationError(f'Invalid CSV file format: {str(e)}')
+        
+        return csv_file
