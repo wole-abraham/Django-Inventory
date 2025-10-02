@@ -65,7 +65,7 @@ class EquipmentsInSurvey(models.Model):
 
     name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
-    supplier = models.CharField(max_length=100, help_text="Manufacturer/Model from CSV")
+    supplier_name = models.CharField(max_length=100, help_text="Manufacturer/Model from CSV")
     owner = models.CharField(max_length=20, choices=owner_choice)
     serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
     condition = models.CharField(max_length=50, help_text="Equipment condition from CSV", default="Good")
