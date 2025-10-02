@@ -790,7 +790,7 @@ def upload_equipment_csv(request):
                     return render(request, 'inventory/upload_csv.html', {'form': form})
                 
                 # Validate header format (optional but recommended)
-                expected_headers = ['equipment', 'serial', 'manufacturer', 'condition']
+                expected_headers = ['Instrument Name', 'Manufacturer/Model', 'Serial Number(s)', 'Condition']
                 if len(header) != 4:
                     messages.error(request, f'Invalid CSV format. Expected exactly 4 columns: {", ".join(expected_headers)}. Found {len(header)} columns.')
                     return render(request, 'inventory/upload_csv.html', {'form': form})
@@ -805,7 +805,7 @@ def upload_equipment_csv(request):
                     try:
                         # Strict validation: must have exactly 4 columns
                         if len(row) != 4:
-                            errors.append(f"Row {row_num}: Invalid format. Expected exactly 4 columns (equipment, serial, manufacturer, condition), found {len(row)} columns")
+                            errors.append(f"Row {row_num}: Invalid format. Expected exactly 4 columns (Instrument Name, Manufacturer/Model, Serial Number(s), Condition), found {len(row)} columns")
                             error_count += 1
                             continue
                         
@@ -817,10 +817,10 @@ def upload_equipment_csv(request):
                             continue
                         
                         # Map CSV columns to model fields
-                        # CSV format: equipment, serial, manufacturer, condition
+                        # CSV format: Instrument Name, Manufacturer/Model, Serial Number(s), Condition
                         equipment_name = row[0].strip() if len(row) > 0 else ''
-                        serial_number = row[1].strip() if len(row) > 1 else ''
-                        manufacturer = row[2].strip() if len(row) > 2 else ''
+                        manufacturer = row[1].strip() if len(row) > 1 else ''
+                        serial_number = row[2].strip() if len(row) > 2 else ''
                         condition = row[3].strip() if len(row) > 3 else ''
                         
                         # Map equipment name to valid choices
@@ -875,6 +875,10 @@ def upload_equipment_csv(request):
                             'repair': 'Needs Repair',
                             'Bad': 'Needs Repair',
                             'bad': 'Needs Repair',
+                            'Needs Calibration': 'Needs Calibration',
+                            'needs calibration': 'Needs Calibration',
+                            'Calibration': 'Needs Calibration',
+                            'calibration': 'Needs Calibration',
                         }
                         
                         mapped_name = name_mapping.get(equipment_name, equipment_name)
@@ -887,6 +891,7 @@ def upload_equipment_csv(request):
                             'serial_number': serial_number,
                             'owner': 'Hi-Tech',  # Default owner
                             'condition': mapped_condition,
+                            'quantity': 1,  # Default quantity to 1
                         }
                         
                         # Validate required fields
@@ -976,4 +981,27 @@ def upload_equipment_csv(request):
         form = CSVUploadForm()
     
     return render(request, 'inventory/upload_csv.html', {'form': form})
+
+
+def download_sample_csv(request):
+    """View to download a sample CSV file"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('store')
+    
+    from django.http import HttpResponse
+    
+    # Create sample CSV content
+    csv_content = """Instrument Name,Manufacturer/Model,Serial Number(s),Condition
+GPS Receiver (Base),Hi Target V200,VAXJ13847392,Good
+GPS Receiver (Rover),Topcon,ROV123456,New
+Total Station,Leica,TS789012,Good
+Levelling Instrument,Leica NA730 plus,LEI345678,Second Hand
+Data logger,Hi Target,DLG901234,Good
+External Radio,Topcon OS-200 Series,RAD567890,New
+Eco Sounder,Sokkia,ECO123456,Needs Calibration"""
+    
+    response = HttpResponse(csv_content, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="sample_equipment.csv"'
+    return response
 

@@ -242,7 +242,7 @@ class CSVUploadForm(forms.Form):
     """Form for uploading CSV files to bulk add equipment"""
     csv_file = forms.FileField(
         label="CSV File",
-        help_text="Upload a CSV file with equipment data. Required columns: equipment, serial, manufacturer, condition",
+        help_text="Upload a CSV file with equipment data. Required columns: Instrument Name, Manufacturer/Model, Serial Number(s), Condition",
         widget=forms.FileInput(attrs={
             'class': 'form-control',
             'accept': '.csv',
@@ -281,14 +281,44 @@ class CSVUploadForm(forms.Form):
                 raise forms.ValidationError('CSV file is empty.')
             
             # Validate header has exactly 4 columns
+            expected_headers = ['Instrument Name', 'Manufacturer/Model', 'Serial Number(s)', 'Condition']
             if len(header) != 4:
-                raise forms.ValidationError(f'CSV must have exactly 4 columns. Found {len(header)} columns. Expected: Equipment, Serial, Manufacturer, Condition')
+                raise forms.ValidationError(f'CSV must have exactly 4 columns. Found {len(header)} columns. Expected: {", ".join(expected_headers)}')
+            
+            # Check if headers match expected format
+            header_lower = [h.strip().lower() for h in header]
+            expected_lower = [h.lower() for h in expected_headers]
+            if header_lower != expected_lower:
+                raise forms.ValidationError(f'CSV headers must match exactly: {", ".join(expected_headers)}')
             
             # Check if there's at least one data row
             try:
                 first_row = next(csv_reader)
                 if len(first_row) != 4:
                     raise forms.ValidationError(f'All rows must have exactly 4 columns. First data row has {len(first_row)} columns.')
+                
+                # Validate first row data
+                instrument_name, manufacturer, serial, condition = first_row
+                
+                # Check if instrument name is valid (should be in EQUIPMENT_CHOICES)
+                valid_equipment = [choice[0] for choice in EquipmentsInSurvey.EQUIPMENT_CHOICES]
+                if instrument_name.strip() not in valid_equipment:
+                    raise forms.ValidationError(f'Invalid equipment type: "{instrument_name}". Valid options: {", ".join(valid_equipment)}')
+                
+                # Check if manufacturer is valid
+                valid_manufacturers = [choice[0] for choice in EquipmentsInSurvey.supplier_name]
+                if manufacturer.strip() not in valid_manufacturers:
+                    raise forms.ValidationError(f'Invalid manufacturer: "{manufacturer}". Valid options: {", ".join(valid_manufacturers)}')
+                
+                # Check if condition is valid
+                valid_conditions = ['Good', 'New', 'Second Hand', 'Needs Repair', 'Needs Calibration']
+                if condition.strip() not in valid_conditions:
+                    raise forms.ValidationError(f'Invalid condition: "{condition}". Valid options: {", ".join(valid_conditions)}')
+                
+                # Check if serial number is not empty
+                if not serial.strip():
+                    raise forms.ValidationError('Serial number cannot be empty.')
+                    
             except StopIteration:
                 raise forms.ValidationError('CSV file must contain at least one data row.')
                 

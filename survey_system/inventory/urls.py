@@ -37,4 +37,5 @@ urlpatterns = [
     path('unassign-chainman/<int:chainman_id>/', views.unassign_chainman, name='unassign_chainman'),
     path('bulk-return-equipment/', views.bulk_return_equipment, name='bulk_return_equipment'),
     path('upload-csv/', views.upload_equipment_csv, name='upload_equipment_csv'),
+    path('download-sample-csv/', views.download_sample_csv, name='download_sample_csv'),
 ]

@@ -1,100 +1,173 @@
 {% extends 'base/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Upload Equipment CSV{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-upload me-2"></i>Upload Equipment CSV
-                    </h4>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'store' %}">Store</a></li>
+                        <li class="breadcrumb-item active">Upload CSV</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">
+                    <i class="fas fa-file-csv me-2"></i>Upload Equipment CSV
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>CSV File Upload
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <!-- Back Button -->
-                    <div class="mb-3">
-                        <a href="{% url 'store' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Store
-                        </a>
-                    </div>
-
-                    <!-- CSV Format Information -->
-                    <div class="alert alert-warning border-warning">
-                        <h6><i class="fas fa-exclamation-triangle me-2"></i>STRICT CSV Format Requirements:</h6>
-                        <p class="mb-2"><strong>Your CSV file MUST have exactly 4 columns in this exact order:</strong></p>
-                        <ol class="mb-2">
-                            <li><strong>Equipment</strong> - Equipment type (e.g., GNSS, Total Station, GPS Receiver (Base))</li>
-                            <li><strong>Serial</strong> - Equipment serial number (required, cannot be empty)</li>
-                            <li><strong>Manufacturer</strong> - Manufacturer/Supplier name (e.g., Hi Target, Topcon, Leica)</li>
-                            <li><strong>Condition</strong> - Equipment condition (Good, New, Second Hand, Needs Repair)</li>
-                        </ol>
-                        <div class="alert alert-danger mt-2 mb-0">
-                            <small><strong>⚠️ IMPORTANT:</strong> Any CSV file or row that doesn't follow this exact format will be rejected. All columns must have values.</small>
-                        </div>
-                    </div>
-
-                    <!-- Sample CSV Format -->
-                    <div class="alert alert-light border">
-                        <h6><i class="fas fa-file-csv me-2"></i>Sample CSV Format:</h6>
-                        <code>
-                            Equipment,Serial,Manufacturer,Condition<br>
-                            GNSS,VAXJ13847417,Hi Target,Good<br>
-                            Total Station,TS001234,Topcon,New<br>
-                            GPS Receiver (Rover),VAXJ13847888,Hi Target,Good<br>
-                        </code>
-                    </div>
-
-                    <!-- Upload Form -->
-                    <form method="post" enctype="multipart/form-data" class="mt-4">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            {{ form.csv_file.label_tag }}
+                        <div class="mb-4">
+                            <label for="{{ form.csv_file.id_for_label }}" class="form-label">
+                                {{ form.csv_file.label }}
+                                <span class="text-danger">*</span>
+                            </label>
                             {{ form.csv_file }}
                             {% if form.csv_file.help_text %}
                                 <div class="form-text">{{ form.csv_file.help_text }}</div>
                             {% endif %}
-                            {% if form.csv_file.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.csv_file.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                            {% for error in form.csv_file.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'store' %}" class="btn btn-secondary me-md-2">Cancel</a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-upload me-2"></i>Upload and Process CSV
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Upload and Process
                             </button>
+                            <a href="{% url 'store' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Store
+                            </a>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Processing Information -->
-                    <div class="mt-4">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle me-2"></i>Processing Rules:</h6>
-                            <ul class="mb-0">
-                                <li><strong>Format Validation:</strong> Files with wrong number of columns will be rejected entirely</li>
-                                <li><strong>Row Validation:</strong> Rows with missing values or wrong format will be rejected</li>
-                                <li><strong>Duplicate Handling:</strong> Equipment with existing serial numbers will be safely skipped</li>
-                                <li><strong>Reusable CSV:</strong> You can upload the same CSV multiple times - existing items won't be duplicated</li>
-                                <li><strong>Auto-Mapping:</strong> Equipment names and conditions will be normalized automatically</li>
-                                <li><strong>Default Values:</strong> New equipment gets status "In Store", owner "Hi-Tech"</li>
-                                <li><strong>Detailed Reporting:</strong> Shows created, skipped, and error counts with details</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="alert alert-success">
-                            <h6><i class="fas fa-recycle me-2"></i>Reusable CSV Feature:</h6>
-                            <p class="mb-0">You can now safely upload the same CSV file multiple times! The system will:</p>
-                            <ul class="mt-2 mb-0">
-                                <li>✅ Create new equipment that doesn't exist</li>
-                                <li>⏭️ Skip equipment that already exists (by serial number)</li>
-                                <li>📊 Provide a detailed summary of what was processed</li>
-                            </ul>
-                        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>CSV Format Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">Required Columns (in order):</h6>
+                    <ol class="mb-3">
+                        <li><strong>Instrument Name</strong></li>
+                        <li><strong>Manufacturer/Model</strong></li>
+                        <li><strong>Serial Number(s)</strong></li>
+                        <li><strong>Condition</strong></li>
+                    </ol>
+
+                    <h6 class="text-primary mb-3">Valid Equipment Types:</h6>
+                    <ul class="small mb-3">
+                        <li>GPS Receiver (Base)</li>
+                        <li>GPS Receiver (Rover)</li>
+                        <li>Data logger</li>
+                        <li>External Radio</li>
+                        <li>Total Station</li>
+                        <li>Levelling Instrument</li>
+                        <li>Eco Sounder</li>
+                    </ul>
+
+                    <h6 class="text-primary mb-3">Valid Manufacturers:</h6>
+                    <ul class="small mb-3">
+                        <li>Hi Target V200</li>
+                        <li>Hi Target</li>
+                        <li>Topcon</li>
+                        <li>Topcon OS-200 Series</li>
+                        <li>Topcon OS 103</li>
+                        <li>Topcon Hiper VR</li>
+                        <li>Leica</li>
+                        <li>Leica NA730 plus</li>
+                        <li>Sokkia</li>
+                    </ul>
+
+                    <h6 class="text-primary mb-3">Valid Conditions:</h6>
+                    <ul class="small mb-3">
+                        <li>Good</li>
+                        <li>New</li>
+                        <li>Second Hand</li>
+                        <li>Needs Repair</li>
+                        <li>Needs Calibration</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-download me-2"></i>Sample CSV
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Download a sample CSV file to see the correct format:</p>
+                    <a href="{% url 'download_sample_csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-2"></i>Download Sample
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example CSV Content -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>Example CSV Content
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Instrument Name</th>
+                                    <th>Manufacturer/Model</th>
+                                    <th>Serial Number(s)</th>
+                                    <th>Condition</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>GPS Receiver (Base)</td>
+                                    <td>Hi Target V200</td>
+                                    <td>VAXJ13847392</td>
+                                    <td>Good</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Station</td>
+                                    <td>Topcon</td>
+                                    <td>TS123456</td>
+                                    <td>New</td>
+                                </tr>
+                                <tr>
+                                    <td>Levelling Instrument</td>
+                                    <td>Leica NA730 plus</td>
+                                    <td>LEI789012</td>
+                                    <td>Needs Calibration</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -103,37 +176,28 @@
 </div>
 
 <style>
-    .card {
-        border: none;
-        border-radius: 0.5rem;
-    }
-    
-    .card-header {
-        border-radius: 0.5rem 0.5rem 0 0 !important;
-        border-bottom: none;
-    }
-    
-    .form-control:focus {
-        border-color: #28a745;
-        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-    }
-    
-    .btn-success {
-        background-color: #28a745;
-        border-color: #28a745;
-    }
-    
-    .btn-success:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
-    }
-    
-    code {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        display: block;
-        white-space: pre-line;
-    }
+.required-field::after {
+    content: " *";
+    color: red;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
 </style>
 {% endblock %}
