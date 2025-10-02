@@ -907,12 +907,7 @@ def upload_equipment_csv(request):
                             error_count += 1
                             continue
                         
-                        # Validate that the mapped supplier is in valid choices
-                        valid_suppliers = [choice[0] for choice in EquipmentsInSurvey.supplier_name]
-                        if equipment_data['supplier'] not in valid_suppliers:
-                            errors.append(f"Row {row_num}: Invalid supplier '{equipment_data['supplier']}'. Valid options: {', '.join(valid_suppliers)}")
-                            error_count += 1
-                            continue
+                        # Supplier validation removed - now accepts any manufacturer/model from CSV
                         
                         # Check if equipment with this serial number already exists
                         existing_equipment = EquipmentsInSurvey.objects.filter(serial_number=equipment_data['serial_number']).first()

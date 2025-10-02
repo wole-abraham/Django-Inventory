@@ -305,15 +305,9 @@ class CSVUploadForm(forms.Form):
                 if instrument_name.strip() not in valid_equipment:
                     raise forms.ValidationError(f'Invalid equipment type: "{instrument_name}". Valid options: {", ".join(valid_equipment)}')
                 
-                # Check if manufacturer is valid
-                valid_manufacturers = [choice[0] for choice in EquipmentsInSurvey.supplier_name]
-                if manufacturer.strip() not in valid_manufacturers:
-                    raise forms.ValidationError(f'Invalid manufacturer: "{manufacturer}". Valid options: {", ".join(valid_manufacturers)}')
+                # Manufacturer validation removed - now accepts any manufacturer/model from CSV
                 
-                # Check if condition is valid
-                valid_conditions = ['Good', 'New', 'Second Hand', 'Needs Repair', 'Needs Calibration']
-                if condition.strip() not in valid_conditions:
-                    raise forms.ValidationError(f'Invalid condition: "{condition}". Valid options: {", ".join(valid_conditions)}')
+                # Condition validation removed - now accepts any condition from CSV
                 
                 # Check if serial number is not empty
                 if not serial.strip():
