@@ -56,17 +56,7 @@ class EquipmentsInSurvey(models.Model):
         ('Eco Sounder', 'Eco Sounder'),
     ]
 
-    supplier_name = [
-        ('Hi Target V200', 'Hi Target V200'),
-        ('Hi Target', 'Hi Target'),
-        ('Topcon', 'Topcon'),
-        ('Topcon OS-200 Series', 'Topcon OS-200 Series'),
-        ('Topcon OS 103', 'Topcon OS 103'),
-        ('Topcon Hiper VR', 'Topcon Hiper VR'),
-        ('Leica', 'Leica'),
-        ('Leica NA730 plus', 'Leica NA730 plus'),
-        ('Sokkia', 'Sokkia')
-    ]
+    # Removed supplier_name choices to allow any manufacturer/model from CSV
     
     owner_choice = [
         ('Hi-Tech', "Hi-Tech"),
@@ -75,10 +65,10 @@ class EquipmentsInSurvey(models.Model):
 
     name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
     date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
-    supplier = models.CharField(max_length=50, choices=supplier_name)
+    supplier = models.CharField(max_length=100, help_text="Manufacturer/Model from CSV")
     owner = models.CharField(max_length=20, choices=owner_choice)
     serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
-    condition = models.CharField(max_length=20, choices=[("Good", "Good"), ("New", "New"), ("Second Hand", "Second Hand"), ("Needs Repair", "Needs Repair"), ("Needs Calibration", "Needs Calibration"),], default="Good")
+    condition = models.CharField(max_length=50, help_text="Equipment condition from CSV", default="Good")
     
     # Choices for equipment condition after use (when returning)
     CONDITION_AFTER_USE_CHOICES = [
