@@ -45,7 +45,8 @@ urlpatterns = [
     path('store_all/', store_all, name='store_all'),
     path('store_field/', store_field, name='store_field'),
     path('return/<int:id>', views.return_equipment, name='return_equip'),
-    path('api/', include('api.urls'))
+    path('api/', include('api.urls')),
+    path('api/v1/', include('inventory.api_urls'))
 
 
 ]
