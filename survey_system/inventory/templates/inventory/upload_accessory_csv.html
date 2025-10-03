@@ -1,0 +1,212 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Upload Accessory CSV{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'store' %}">Store</a></li>
+                        <li class="breadcrumb-item active">Upload Accessory CSV</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">
+                    <i class="fas fa-file-csv me-2"></i>Upload Accessory CSV
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>CSV File Upload
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.csv_file.id_for_label }}" class="form-label">
+                                {{ form.csv_file.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.csv_file }}
+                            {% if form.csv_file.help_text %}
+                                <div class="form-text">{{ form.csv_file.help_text }}</div>
+                            {% endif %}
+                            {% for error in form.csv_file.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Upload and Process
+                            </button>
+                            <a href="{% url 'store' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Store
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>CSV Format Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">Required Columns (in order):</h6>
+                    <ol class="mb-3">
+                        <li><strong>Accessory Name</strong></li>
+                        <li><strong>manufacturer</strong></li>
+                        <li><strong>Condition</strong></li>
+                    </ol>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Any content is acceptable as long as headers are correct. Empty fields will use defaults.
+                    </div>
+
+                    <h6 class="text-primary mb-3">Example Accessory Names:</h6>
+                    <ul class="small mb-3">
+                        <li>Tripod</li>
+                        <li>Tracking Rod</li>
+                        <li>External Radio</li>
+                        <li>Reflector</li>
+                        <li>Levelling Staff</li>
+                        <li>GNSS Battery</li>
+                        <li>Pole</li>
+                        <li>Mini Prism</li>
+                        <li>Any custom accessory name</li>
+                    </ul>
+
+                    <h6 class="text-primary mb-3">Example Manufacturers:</h6>
+                    <ul class="small mb-3">
+                        <li>Hi Target</li>
+                        <li>Topcon</li>
+                        <li>Leica</li>
+                        <li>Sokkia</li>
+                        <li>Any manufacturer name</li>
+                    </ul>
+
+                    <h6 class="text-primary mb-3">Example Conditions:</h6>
+                    <ul class="small mb-3">
+                        <li>Good</li>
+                        <li>New</li>
+                        <li>Second Hand</li>
+                        <li>Needs Repair</li>
+                        <li>Bad</li>
+                        <li>Any condition description</li>
+                    </ul>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Any accessory name, manufacturer, and condition from your CSV will be accepted.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-download me-2"></i>Sample CSV
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Download a sample CSV file to see the correct format:</p>
+                    <a href="{% url 'download_sample_accessory_csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-2"></i>Download Sample
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example CSV Content -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>Example CSV Content
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Accessory Name</th>
+                                    <th>manufacturer</th>
+                                    <th>Condition</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Tripod</td>
+                                    <td>Hi Target</td>
+                                    <td>Good</td>
+                                </tr>
+                                <tr>
+                                    <td>Tracking Rod</td>
+                                    <td>Topcon</td>
+                                    <td>New</td>
+                                </tr>
+                                <tr>
+                                    <td>External Radio</td>
+                                    <td>Leica</td>
+                                    <td>Good</td>
+                                </tr>
+                                <tr>
+                                    <td>Reflector</td>
+                                    <td>Sokkia</td>
+                                    <td>Second Hand</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required-field::after {
+    content: " *";
+    color: red;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
+</style>
+{% endblock %}

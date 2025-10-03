@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.forms import inlineformset_factory
 
 from .forms import Survey, AccessoryForm, AccessoryNoEquipmentForm
-from .forms import EquipmentEditForm
+from .forms import EquipmentEditForm, CSVUploadForm, AccessoryCSVUploadForm
 from .forms import AccessoryEditForm
 from .forms import AccessoryReturnForm
 from .forms import addEquipmentForm
@@ -123,7 +123,7 @@ def store(request):
     users = User.objects.filter(is_superuser=False)
     data = EquipmentsInSurvey.objects.filter(status="In Store")
     all = EquipmentsInSurvey.objects.all()
-    accessories = Accessory.objects.all()
+    accessories = Accessory.objects.filter(return_status__in=['In Store', 'Returned'])
     return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all,
                                                     'accessories': accessories, 'is_admin': request.user.is_superuser})
 
@@ -998,5 +998,175 @@ Eco Sounder,Sokkia,ECO123456,Needs Calibration"""
     
     response = HttpResponse(csv_content, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="sample_equipment.csv"'
+    return response
+
+
+@login_required
+def upload_accessory_csv(request):
+    """View to upload CSV file and bulk create accessories"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('store')
+    
+    if request.method == 'POST':
+        form = AccessoryCSVUploadForm(request.POST, request.FILES)
+        print(f"Form is valid: {form.is_valid()}")
+        if not form.is_valid():
+            print(f"Form errors: {form.errors}")
+        if form.is_valid():
+            csv_file = form.cleaned_data['csv_file']
+            print(f"CSV file received: {csv_file.name}, size: {csv_file.size}")
+            
+            # Read and process CSV file
+            try:
+                # Reset file pointer to beginning (form validation might have read it)
+                csv_file.seek(0)
+                # Decode the file content
+                file_data = csv_file.read().decode('utf-8')
+                print(f"File data length: {len(file_data)}")
+                csv_data = csv.reader(io.StringIO(file_data))
+                
+                created_count = 0
+                skipped_count = 0
+                error_count = 0
+                errors = []
+                skipped_items = []
+                
+                # Check header row first
+                header = next(csv_data, None)
+                print(f"Header row: {header}")
+                if header is None:
+                    messages.error(request, 'CSV file is empty or invalid.')
+                    return render(request, 'inventory/upload_accessory_csv.html', {'form': form})
+                
+                # Validate header format
+                expected_headers = ['Accessory Name', 'manufacturer', 'Condition']
+                print(f"Expected headers: {expected_headers}")
+                print(f"Actual headers: {header}")
+                print(f"Header length: {len(header)}")
+                if len(header) != 3:
+                    messages.error(request, f'Invalid CSV format. Expected exactly 3 columns: {", ".join(expected_headers)}. Found {len(header)} columns.')
+                    return render(request, 'inventory/upload_accessory_csv.html', {'form': form})
+                
+                # Check if CSV has any data rows
+                csv_rows = list(csv_data)
+                print(f"Found {len(csv_rows)} data rows in CSV")
+                if not csv_rows:
+                    messages.error(request, 'CSV file contains no data rows.')
+                    return render(request, 'inventory/upload_accessory_csv.html', {'form': form})
+                
+                for row_num, row in enumerate(csv_rows, start=2):  # Start from 2 since header is row 1
+                    try:
+                        # Skip completely empty rows
+                        if not any(cell.strip() for cell in row):
+                            continue
+                            
+                        # Strict validation: must have exactly 3 columns
+                        if len(row) != 3:
+                            errors.append(f"Row {row_num}: Invalid format. Expected exactly 3 columns (Accessory Name, Manufacturer, Condition), found {len(row)} columns")
+                            error_count += 1
+                            continue
+                        
+                        # Skip only completely empty rows
+                        if not any(cell.strip() for cell in row):
+                            print(f"Skipped row {row_num}: completely empty row")
+                            continue
+                        
+                        # Map CSV columns to model fields - accept any content
+                        # CSV format: Accessory Name, Manufacturer, Condition
+                        accessory_name = row[0].strip() if row[0].strip() else f"Accessory_{row_num}"
+                        manufacturer = row[1].strip() if row[1].strip() else "Unknown"
+                        condition = row[2].strip() if row[2].strip() else "Good"
+                        
+                        # Create accessory data dictionary
+                        accessory_data = {
+                            'name': accessory_name,
+                            'manufacturer': manufacturer,
+                            'condition': condition,
+                            'status': 'Good',  # Default status
+                            'return_status': 'In Store',
+                        }
+                        print(f"Processing row {row_num}: {accessory_name} | {manufacturer} | {condition}")
+                        
+                        # Validate required fields
+                        if not accessory_data['name']:
+                            errors.append(f"Row {row_num}: Accessory name cannot be empty")
+                            error_count += 1
+                            continue
+                        
+                        # Create accessory
+                        accessory = Accessory.objects.create(**accessory_data)
+                        created_count += 1
+                        print(f"Created accessory: {accessory.name} - {accessory.manufacturer} - {accessory.condition}")
+                        
+                    except Exception as e:
+                        errors.append(f"Row {row_num}: {str(e)}")
+                        error_count += 1
+                
+                # Display results
+                total_processed = created_count + skipped_count + error_count
+                print(f"Final results: {created_count} created, {skipped_count} skipped, {error_count} errors")
+                
+                # Show success message for created items
+                if created_count > 0:
+                    messages.success(request, f'Successfully created {created_count} accessories from CSV.')
+                
+                # Show warning for skipped items
+                if skipped_count > 0:
+                    messages.warning(request, f'Skipped {skipped_count} accessories (already exist or invalid data).')
+                
+                # Show error details if any
+                if errors:
+                    error_message = f'Found {error_count} errors:\n' + '\n'.join(errors[:10])  # Show first 10 errors
+                    if len(errors) > 10:
+                        error_message += f'\n... and {len(errors) - 10} more errors.'
+                    messages.error(request, error_message)
+                
+                # Show summary
+                if total_processed > 0:
+                    summary_message = f'Processed {total_processed} rows: {created_count} created, {skipped_count} skipped, {error_count} errors.'
+                    if error_count == 0:
+                        messages.success(request, summary_message)
+                    else:
+                        messages.warning(request, summary_message)
+                
+                # Redirect to store if any items were processed successfully (created or skipped)
+                if created_count > 0 or (skipped_count > 0 and error_count == 0):
+                    return redirect('store')
+                elif total_processed == 0:
+                    messages.warning(request, 'No accessories were processed. Please check your CSV format.')
+                
+                # Stay on upload page if there were only errors or no processing occurred
+                return render(request, 'inventory/upload_accessory_csv.html', {'form': form})
+                    
+            except Exception as e:
+                messages.error(request, f'Error processing CSV file: {str(e)}')
+    else:
+        form = AccessoryCSVUploadForm()
+    
+    return render(request, 'inventory/upload_accessory_csv.html', {'form': form})
+
+
+def download_sample_accessory_csv(request):
+    """View to download a sample accessory CSV file"""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('store')
+    
+    from django.http import HttpResponse
+    
+    # Create sample CSV content
+    csv_content = """Accessory Name,manufacturer,Condition
+Tripod,Hi Target,Good
+Tracking Rod,Topcon,New
+External Radio,Leica,Good
+Reflector,Sokkia,Second Hand
+Levelling Staff,Hi Target,Good
+GNSS Battery,Topcon,New
+Pole,Leica,Good
+Mini Prism,Sokkia,Good"""
+    
+    response = HttpResponse(csv_content, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="sample_accessories.csv"'
     return response
 

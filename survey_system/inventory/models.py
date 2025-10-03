@@ -173,11 +173,13 @@ class Accessory(models.Model):
         ('Returned', 'Returned'),
     ]
 
-    name = models.CharField(max_length=100, choices=ACCESSORY_TYPES)
+    name = models.CharField(max_length=100, help_text="Accessory name from CSV")
+    manufacturer = models.CharField(max_length=100, null=True, blank=True, help_text="Manufacturer from CSV")
     serial_number = models.CharField(max_length=50, null=True, blank=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)
+    condition = models.CharField(max_length=50, help_text="Physical condition from CSV", default='Good', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good', null=True, blank=True)
     return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Store', null=True, blank=True)
     comment = models.TextField(null=True, blank=True)

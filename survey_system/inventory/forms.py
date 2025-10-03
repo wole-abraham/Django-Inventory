@@ -322,3 +322,76 @@ class CSVUploadForm(forms.Form):
             raise forms.ValidationError(f'Invalid CSV file format: {str(e)}')
         
         return csv_file
+
+
+class AccessoryCSVUploadForm(forms.Form):
+    """Form for uploading CSV files to bulk add accessories"""
+    csv_file = forms.FileField(
+        label="CSV File",
+        help_text="Upload a CSV file with accessory data. Any content is acceptable as long as headers are correct.",
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.csv',
+            'required': True
+        })
+    )
+    
+    def clean_csv_file(self):
+        import csv
+        import io
+        
+        csv_file = self.cleaned_data['csv_file']
+        
+        # Check file extension
+        if not csv_file.name.endswith('.csv'):
+            raise forms.ValidationError('File must be a CSV file.')
+        
+        # Check file size (limit to 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('File size must be less than 5MB.')
+        
+        # Validate CSV format
+        try:
+            # Reset file pointer
+            csv_file.seek(0)
+            file_data = csv_file.read().decode('utf-8')
+            csv_reader = csv.reader(io.StringIO(file_data))
+            
+            # Check header row
+            header = next(csv_reader, None)
+            if header is None:
+                raise forms.ValidationError('CSV file is empty.')
+            
+            # Expected headers for accessories
+            expected_headers = ['Accessory Name', 'manufacturer', 'Condition']
+            if len(header) != 3:
+                raise forms.ValidationError(f'CSV must have exactly 3 columns: {", ".join(expected_headers)}. Found {len(header)} columns.')
+            
+            # Check if headers match (case insensitive)
+            header_lower = [h.strip().lower() for h in header]
+            expected_lower = [h.lower() for h in expected_headers]
+            if header_lower != expected_lower:
+                raise forms.ValidationError(f'CSV headers must match exactly: {", ".join(expected_headers)}')
+            
+            # Check if there's at least one data row
+            try:
+                first_row = next(csv_reader)
+                if len(first_row) != 3:
+                    raise forms.ValidationError(f'All rows must have exactly 3 columns. First data row has {len(first_row)} columns.')
+                
+                # Validate first row data
+                accessory_name, manufacturer, condition = first_row
+                
+                # Just check that we have a valid first row (headers are already validated)
+                if not first_row:
+                    raise forms.ValidationError('CSV must contain at least one data row.')
+                    
+            except StopIteration:
+                raise forms.ValidationError('CSV file must contain at least one data row.')
+                
+        except UnicodeDecodeError:
+            raise forms.ValidationError('File must be a valid UTF-8 encoded CSV file.')
+        except Exception as e:
+            raise forms.ValidationError(f'Invalid CSV file format: {str(e)}')
+        
+        return csv_file
