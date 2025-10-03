@@ -39,7 +39,7 @@
                             <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
                             <td>{{ info.date_of_receiving_from_supplier }}</td>
                             <td>{{ info.supplier }}</td>
-                            <td>{{ info.serial_number }}</td>
+                            <td class="no-wrap">{{ info.serial_number }}</td>
                  
                             <td>{{ info.chief_surveyor }}</td>
                             <td>{{ info.surveyor_responsible }}</td>
@@ -51,7 +51,7 @@
                                     {{ info.status }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="no-wrap">
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnModal{{ info.id }}">
                                     <i class="fas fa-undo"></i> Return
                                 </button>
@@ -61,15 +61,119 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Mobile Card Layout for Profile Equipment -->
+            <div class="mobile-cards">
+                {% for info in data %}
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Date (Supplier):</span>
+                        <span class="mobile-card-value">{{ info.date_of_receiving_from_supplier }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Supplier:</span>
+                        <span class="mobile-card-value">{{ info.supplier }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Serial:</span>
+                        <span class="mobile-card-value">{{ info.serial_number }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Chief Surveyor:</span>
+                        <span class="mobile-card-value">{{ info.chief_surveyor }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Surveyor Responsible:</span>
+                        <span class="mobile-card-value">{{ info.surveyor_responsible }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Project:</span>
+                        <span class="mobile-card-value">{{ info.project }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Section:</span>
+                        <span class="mobile-card-value">{{ info.section }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Date (Dept):</span>
+                        <span class="mobile-card-value">{{ info.date_receiving_from_department }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Status:</span>
+                        <span class="mobile-card-value">
+                            <span class="badge {% if info.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ info.status }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Action:</span>
+                        <span class="mobile-card-value">
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnModal{{ info.id }}">
+                                <i class="fas fa-undo"></i> Return
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
 
 </div>
 
 <style>
+    /* Responsive Design Improvements */
     
+    /* Mobile-first approach */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 0.5rem;
+        }
+        
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .d-flex.justify-content-between h2 {
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+    
+    /* Enhanced Table Responsiveness */
     .table-responsive {
+        overflow-x: auto;
         overflow-y: auto;
         max-height: calc(70vh - 8rem);
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0.375rem;
+    }
+    
+    @media (max-width: 768px) {
+        .table-responsive {
+            max-height: calc(60vh - 6rem);
+            font-size: 0.875rem;
+        }
+    }
+    
+    .table {
+        margin-bottom: 0;
+        min-width: 800px; /* Ensure minimum width for readability */
+    }
+    
+    @media (max-width: 576px) {
+        .table {
+            min-width: 600px;
+            font-size: 0.8rem;
+        }
     }
     
     .table th {
@@ -77,37 +181,190 @@
         top: 0;
         background: #343a40;
         z-index: 1;
+        white-space: nowrap;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .table th {
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+        }
     }
     
     .table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    @media (max-width: 768px) {
+        .table td {
+            padding: 0.5rem 0.25rem;
+        }
+    }
+    
+    /* Allow text wrapping for better mobile display */
+    .table td:not(.no-wrap) {
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: 200px;
+    }
+    
+    .table td.no-wrap {
         white-space: nowrap;
     }
     
-    .table th {
-        white-space: nowrap;
+    @media (max-width: 576px) {
+        .table td:not(.no-wrap) {
+            max-width: 150px;
+            font-size: 0.8rem;
+        }
     }
-
+    
+    /* Form Controls Responsive */
+    .form-select, .form-control {
+        min-width: 120px;
+        font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-select, .form-control {
+            min-width: 100px;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+    
+    .form-control-sm, .form-select-sm {
+        min-width: 120px;
+    }
+    
+    .form-select {
+        min-width: 150px;
+    }
+    
+    .form-select-sm {
+        font-size: 0.875rem;
+        padding: 0.25rem 2rem 0.25rem 0.5rem;
+    }
+    
+    @media (max-width: 576px) {
+        .form-select-sm {
+            font-size: 0.8rem;
+            padding: 0.2rem 1.5rem 0.2rem 0.4rem;
+        }
+    }
+    
+    /* Badge Responsive */
     .badge {
         font-size: 0.875rem;
         padding: 0.5em 0.75em;
+        white-space: nowrap;
     }
-
+    
+    @media (max-width: 576px) {
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
+        }
+    }
+    
+    /* Button Responsive */
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
-
-    .form-control-sm, .form-select-sm {
-        min-width: 120px;
+    
+    @media (max-width: 576px) {
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.8rem;
+        }
+        
+        .btn-sm i {
+            margin-right: 0.2rem !important;
+        }
     }
-
-    .form-select {
-        min-width: 150px;
+    
+    /* Action buttons in mobile */
+    @media (max-width: 768px) {
+        .table td:last-child {
+            min-width: 100px;
+        }
     }
-
-    .form-select-sm {
-        font-size: 0.875rem;
-        padding: 0.25rem 2rem 0.25rem 0.5rem;
+    
+    /* Mobile Card Layout Alternative (for very small screens) */
+    @media (max-width: 480px) {
+        .table-responsive {
+            display: none;
+        }
+        
+        .mobile-cards {
+            display: block;
+        }
+        
+        .mobile-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .mobile-card-header {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .mobile-card-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .mobile-card-label {
+            font-weight: 500;
+            color: #6c757d;
+            min-width: 40%;
+        }
+        
+        .mobile-card-value {
+            color: #495057;
+            text-align: right;
+            flex: 1;
+        }
+    }
+    
+    /* Hide mobile cards by default */
+    .mobile-cards {
+        display: none;
+    }
+    
+    /* Loading and empty states */
+    .table-loading {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+    }
+    
+    .table-empty {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .table-empty i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
     }
 </style>
 
