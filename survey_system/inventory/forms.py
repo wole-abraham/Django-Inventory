@@ -40,6 +40,8 @@ class AccessoryForm(forms.ModelForm):
             name=self.cleaned_data['name'],
             serial_number=self.equipment.serial_number if self.equipment else None,
             equipment=self.equipment,
+            condition='Good',  # Default condition
+            status='Good',  # Default status
             return_status='In Store',
         )
         if commit:

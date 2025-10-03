@@ -50,6 +50,8 @@ def add_equipment(request):
                         name=acc_type,
                         serial_number=equipment.serial_number,  # Use the equipment's serial number
                         equipment=equipment,
+                        condition='Good',  # Default condition
+                        status='Good',  # Default status
                         return_status='In Store',
                     )
             return redirect('store')
