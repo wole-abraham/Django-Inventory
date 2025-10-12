@@ -4,9 +4,14 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from datetime import datetime
+import uuid
 
 # Create your models here.
+
+def generate_serial_number():
+    """Generate a unique serial number for accessories"""
+    return f"ACC-{uuid.uuid4().hex[:8].upper()}"
 
 # class Equipment(models.Model):
 #     EQUIPMENT_TYPES =[
@@ -64,7 +69,7 @@ class EquipmentsInSurvey(models.Model):
     ]
 
     name = models.CharField(max_length=100, help_text="Equipment Name", choices=EQUIPMENT_CHOICES)
-    date_of_receiving_from_supplier = models.DateField(blank=True, null=True)
+    date_of_receiving_from_supplier = models.DateField(default=timezone.now, help_text="Date when equipment was received from supplier") 
     supplier = models.CharField(max_length=100, help_text="Manufacturer/Model from CSV")
     owner = models.CharField(max_length=20, choices=owner_choice)
     serial_number = models.CharField(max_length=100, help_text="Equipment Serial Number")
@@ -76,14 +81,14 @@ class EquipmentsInSurvey(models.Model):
         ("Need Repair", "Need Repair")
     ]
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    surveyor_responsible = models.CharField(max_length=100, null=True, blank=True, help_text="Name of the surveyor responsible for the equipment")
+    surveyor_responsible = models.CharField(max_length=100, null=False, blank=True, help_text="Name of the surveyor responsible for the equipment",  default="gap")
     quantity = models.PositiveBigIntegerField(default=1, help_text="Number of Quantity")
-    project = models.CharField(max_length=20, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto')], blank=True, null=True, help_text="Project Name")
+    project = models.CharField(max_length=20, choices=[('Coastal Road', 'Coastal Road'), ('Sokoto', 'Sokoto'), ('gap', 'gap')], blank=True, null=True, help_text="Project Name", default="gap")
     section = models.CharField(max_length=100, null=True, blank=True)
-    date_receiving_from_department = models.DateField(blank=True, null=True, help_text="Date when the equipment was received from the department")
+    date_receiving_from_department = models.DateField(default=timezone.now, help_text="Date when the equipment was received from the department")
     status = models.CharField(choices=[('In Store', 'In Store'), ('In Field', 'In Field'), ('With Chief Surveyor', 'With Chief Surveyor'), ('Returning', 'Returning'), ('Delivering', 'Delivering')], max_length=100, default='In Store', blank=True, null=True, help_text="Current status of the equipment")
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
-    return_comment = models.TextField(null=True, blank=True, help_text="Comment when equipment is returned")
+    return_comment = models.TextField(null=True, blank=True, help_text="Comment when equipment is returned", default="gap")
     return_date = models.DateTimeField(null=True, blank=True, help_text="Date when equipment was returned")
 
     def __str__(self):
@@ -175,7 +180,7 @@ class Accessory(models.Model):
 
     name = models.CharField(max_length=100, help_text="Accessory name from CSV")
     manufacturer = models.CharField(max_length=100, null=True, blank=True, help_text="Manufacturer from CSV")
-    serial_number = models.CharField(max_length=50, null=True, blank=True, help_text="Unique serial number for the accessory")
+    serial_number = models.CharField(max_length=50, default=generate_serial_number, unique=True, help_text="Unique serial number for the accessory")
     equipment = models.ForeignKey(EquipmentsInSurvey, on_delete=models.CASCADE, related_name='accessories', null=True, blank=True)
     chief_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     surveyor_responsible = models.CharField(max_length=100, null=True, blank=True)
@@ -185,7 +190,7 @@ class Accessory(models.Model):
     comment = models.TextField(null=True, blank=True)
     date_returned = models.DateTimeField(null=True, blank=True)
     returned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='returned_accessories')
-    delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled')], null=True, blank=True)
+    delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled'), ('gap', 'gap')], null=True, blank=True,default="gap")
 
     def __str__(self):
         return f"{self.name}"
@@ -242,5 +247,13 @@ class AccessoryHistory(models.Model):
 
     def __str__(self):
         return f"{self.accessory.name} - {self.action} by {self.changed_by} at {self.changed_at}"
+
+
+@receiver(post_save, sender=Accessory)
+def generate_accessory_serial_number(sender, instance, created, **kwargs):
+    """Generate a unique serial number for accessories when they are created"""
+    if created and not instance.serial_number:
+        instance.serial_number = generate_serial_number()
+        instance.save(update_fields=['serial_number'])
 
 
