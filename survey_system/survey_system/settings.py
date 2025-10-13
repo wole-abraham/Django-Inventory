@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-wd!remc4qtgkw8xs8-r_+5l)23x5d^@%3nrwz*89m(gbr^^yqf
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['woleabrahamthedev.pythonanywhere.com', '127.0.0.1', 'django-inventory-et7j.onrender.com']
+ALLOWED_HOSTS = ['woleabrahamthedev.pythonanywhere.com', '127.0.0.1', 'django-inventory-et7j.onrender.com', "69.62.122.230"]
 
 
 # Application definition
