@@ -5,6 +5,9 @@
     <!-- Equipment Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-tools me-2"></i>Equipment for {{ request.user }}</h2>
+        <a href="{% url 'print_equipment_pdf' %}" class="btn btn-warning" target="_blank">
+            <i class="fas fa-print me-2"></i>Print PDF
+        </a>
     </div>
 
     <!-- Equipment Content -->

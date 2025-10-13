@@ -277,14 +277,14 @@
                             <span class="badge bg-info">Accessory</span>
                         </td>
                         <td>
-                            {% if accessory.equipment.id %}
+                            {% if accessory.equipment %}
                             <a href="{% url 'equipment_detail' accessory.equipment.id %}" class="item-link">
                                 {{ accessory.name }} ({{ accessory.equipment.name }})
                             </a>
                             {% else %}
-                            <a href="{% url 'accessory_detail' accessory.id %}" class="item-link">
-                                {{ accessory.name }} ({{ accessory.equipment.name }})
-                            </a>
+                            <span class="item-link">
+                                {{ accessory.name }} (Standalone)
+                            </span>
                             {% endif %}
                         </td>
                         <td class="no-wrap">{{ accessory.serial_number }}</td>

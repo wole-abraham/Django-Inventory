@@ -21,6 +21,37 @@
                         <i class="fas fa-upload me-1"></i><span class="d-none d-md-inline">Upload Accessory CSV</span><span class="d-md-none d-sm-inline">Accessory CSV</span><span class="d-sm-none">Accessory</span>
                     </a>
                 </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <a class="btn btn-warning w-100" href="{% url 'print_equipment_pdf' %}" target="_blank">
+                        <i class="fas fa-print me-1"></i><span class="d-none d-sm-inline">Print PDF</span><span class="d-sm-none">Print</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Super Reset Button - Only for user 'wole' -->
+        {% if request.user.username == 'wole' %}
+        <div class="mb-3">
+            <div class="row g-2">
+                <div class="col-12">
+                    <a class="btn btn-outline-danger w-100" href="{% url 'reset_all_to_store' %}" style="border: 2px solid #dc3545; font-weight: bold;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span class="d-none d-sm-inline">SUPER RESET: Return All Equipment & Accessories to Store</span>
+                        <span class="d-sm-none">SUPER RESET</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <!-- Print button for regular users -->
+        <div class="mb-3">
+            <div class="row g-2">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <a class="btn btn-warning w-100" href="{% url 'print_equipment_pdf' %}" target="_blank">
+                        <i class="fas fa-print me-1"></i><span class="d-none d-sm-inline">Print Equipment PDF</span><span class="d-sm-none">Print PDF</span>
+                    </a>
+                </div>
             </div>
         </div>
         {% endif %}
@@ -48,9 +79,8 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>Name</th>
+                                <th>Date Receiving from Supplier</th>
                                 {% if is_admin %}
-                                <th>Date of Receiving (Supplier)</th>
-                                {% else %}
                                 <th>Date of Receiving (Department)</th>
                                 {% endif %}
                                 <th>Supplier</th>
@@ -60,6 +90,7 @@
                                 <th>Status</th> 
                                 <th>Date Receiving</th>
                                 <th>Condition</th>
+                                <th>Accessories</th>
                                 
                                 <th>Action</th>
                             </tr>
@@ -70,9 +101,8 @@
                                 <form action="{% url 'store' %}" method="post">
                                     {% csrf_token %}
                                     <td><a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a></td>
-                                    {% if is_admin %}
                                     <td>{{ info.date_of_receiving_from_supplier }}</td>
-                                    {% else %}
+                                    {% if is_admin %}
                                     <td>{{ info.date_receiving_from_department }}</td>
                                     {% endif %}
                                     <td>{{ info.supplier }}</td>
@@ -98,12 +128,21 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                        <span class="text-muted">{{ info.date_receiving_from_department }}</span>
                                     </td> 
                                     <td>
                                         <span class="badge {% if info.condition == 'Good' %} bg-success {% else %} bg-danger {% endif %}">
                                             {{ info.condition }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="openAccessoryModal('{{ info.id }}', '{{ info.name }}', '{{ info.serial_number }}')">
+                                            <i class="fas fa-plus"></i> Select Accessories
+                                        </button>
+                                        <div id="selected-count-{{ info.id }}" class="mt-1">
+                                            <small class="text-muted">0 selected</small>
+                                        </div>
                                     </td>
                                     <td class="no-wrap">
                                         <button type="submit" class="btn btn-sm btn-outline-primary">
@@ -127,11 +166,15 @@
                                 <a href="{% url 'equipment_detail' info.id %}">{{ info.name }}</a>
                             </div>
                             <div class="mobile-card-row">
-                                <span class="mobile-card-label">{% if is_admin %}Date (Supplier):{% else %}Date (Dept):{% endif %}</span>
-                                <span class="mobile-card-value">
-                                    {% if is_admin %}{{ info.date_of_receiving_from_supplier }}{% else %}{{ info.date_receiving_from_department }}{% endif %}
-                                </span>
+                                <span class="mobile-card-label">Date (Supplier):</span>
+                                <span class="mobile-card-value">{{ info.date_of_receiving_from_supplier }}</span>
                             </div>
+                            {% if is_admin %}
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Date (Dept):</span>
+                                <span class="mobile-card-value">{{ info.date_receiving_from_department }}</span>
+                            </div>
+                            {% endif %}
                             <div class="mobile-card-row">
                                 <span class="mobile-card-label">Supplier:</span>
                                 <span class="mobile-card-value">{{ info.supplier }}</span>
@@ -179,7 +222,19 @@
                             <div class="mobile-card-row">
                                 <span class="mobile-card-label">Date Receiving:</span>
                                 <span class="mobile-card-value">
-                                    <input type="date" class="form-control form-control-sm" name="date_receiving" required>
+                                    <span class="text-muted">{{ info.date_receiving_from_department }}</span>
+                                </span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Accessories:</span>
+                                <span class="mobile-card-value">
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            onclick="openAccessoryModal('{{ info.id }}', '{{ info.name }}', '{{ info.serial_number }}')">
+                                        <i class="fas fa-plus"></i> Select Accessories
+                                    </button>
+                                    <div id="mobile-selected-count-{{ info.id }}" class="mt-1">
+                                        <small class="text-muted">0 selected</small>
+                                    </div>
                                 </span>
                             </div>
                             <div class="mobile-card-row">
@@ -214,7 +269,7 @@
                         </thead>
                         <tbody>
                             {% for accessory in accessories %}
-                                {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' %}
+                                {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' or accessory.return_status == 'Returning' %}
                                 <tr>
                                     <form action="{% url 'admin_release_accessory' %}" method="post">
                                         {% csrf_token %}
@@ -228,16 +283,17 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                            <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% elif accessory.return_status == 'Returning' %}bg-warning{% else %}bg-danger{% endif %}">
                                                 {{ accessory.return_status }}
                                             </span>
                                         </td>
                                         <td>
-                                            <select  name="condition" id="condition">
+                                            <select name="condition" id="condition">
                                                 <option value="" disabled selected hidden>{{ accessory.status }}</option>
                                                 <option value="Good">Good</option>
+                                                <option value="Needs Repair">Needs Repair</option>
                                                 <option value="Bad">Bad</option>
-                                              </select>
+                                            </select>
                                         </td>
                                         <td class="no-wrap">
                                             <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
@@ -259,7 +315,7 @@
                 <!-- Mobile Card Layout for Accessories -->
                 <div class="mobile-cards">
                     {% for accessory in accessories %}
-                        {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' %}
+                        {% if accessory.return_status == 'Returned' or accessory.return_status == 'In Store' or accessory.return_status == 'Returning' %}
                         <div class="mobile-card">
                             <form action="{% url 'admin_release_accessory' %}" method="post">
                                 {% csrf_token %}
@@ -291,7 +347,7 @@
                                 <div class="mobile-card-row">
                                     <span class="mobile-card-label">Status:</span>
                                     <span class="mobile-card-value">
-                                        <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% else %}bg-danger{% endif %}">
+                                        <span class="badge {% if accessory.return_status == 'Returned' %}bg-success{% elif accessory.return_status == 'Returning' %}bg-warning{% else %}bg-danger{% endif %}">
                                             {{ accessory.return_status }}
                                         </span>
                                     </span>
@@ -302,6 +358,7 @@
                                         <select name="condition" id="condition">
                                             <option value="" disabled selected hidden>{{ accessory.status }}</option>
                                             <option value="Good">Good</option>
+                                            <option value="Needs Repair">Needs Repair</option>
                                             <option value="Bad">Bad</option>
                                         </select>
                                     </span>
@@ -319,6 +376,99 @@
                         </div>
                         {% endif %}
                     {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessory Selection Modal -->
+    <div class="modal fade" id="accessoryModal" tabindex="-1" aria-labelledby="accessoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="accessoryModalLabel">
+                        <i class="fas fa-tools me-2"></i>Select Accessories for <span id="equipmentName"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Equipment:</strong> <span id="equipmentDetails"></span>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllModalAccessories()">
+                                <i class="fas fa-check-square"></i> Toggle All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="accessorySearch" placeholder="Search accessories...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="In Store">In Store</option>
+                                <option value="Returned">Returned</option>
+                                <option value="Returning">Returning</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="accessoryGrid">
+                        {% for accessory in available_accessories %}
+                            {% if accessory.return_status in 'In Store,Returned,Returning' %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card accessory-card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="modal_accessories" 
+                                                   value="{{ accessory.id }}"
+                                                   id="modal_acc_{{ accessory.id }}">
+                                            <label class="form-check-label w-100" for="modal_acc_{{ accessory.id }}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong>{{ accessory.name }}</strong><br>
+                                                        <small class="text-muted">SN: {{ accessory.serial_number }}</small><br>
+                                                        <span class="badge badge-sm {% if accessory.condition == 'Good' %}bg-success{% elif accessory.condition == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                            {{ accessory.condition }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge badge-sm {% if accessory.return_status == 'In Store' %}bg-primary{% elif accessory.return_status == 'Returned' %}bg-success{% else %}bg-warning{% endif %}">
+                                                            {{ accessory.return_status }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Selected:</strong> <span id="selectedCount">0</span> accessories
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="assignWithAccessories()">
+                        <i class="fas fa-paper-plane me-2"></i>Assign Equipment + Accessories
+                    </button>
                 </div>
             </div>
         </div>
@@ -635,6 +785,69 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+        
+        /* Modal and Accessory Card Styling */
+        .accessory-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        
+        .accessory-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+        
+        .accessory-card .form-check-input:checked + .form-check-label .accessory-card {
+            border-color: #28a745;
+            background-color: #f8fff9;
+        }
+        
+        .accessory-card .form-check-input {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .accessory-card .form-check-label {
+            cursor: pointer;
+            padding-right: 30px;
+        }
+        
+        .badge-sm {
+            font-size: 0.7rem;
+            padding: 0.25em 0.5em;
+        }
+        
+        /* Modal styling */
+        .modal-lg {
+            max-width: 900px;
+        }
+        
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        /* Selected count styling */
+        #selectedCount {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        /* Responsive modal */
+        @media (max-width: 768px) {
+            .modal-lg {
+                max-width: 95%;
+                margin: 10px;
+            }
+            
+            .accessory-card {
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 
     <script>
@@ -704,5 +917,121 @@
             initTabs();
         }
     });
+    
+    // Global variables for modal functionality
+    let currentEquipmentId = null;
+    let currentEquipmentName = null;
+    let currentEquipmentSerial = null;
+    
+    // Open accessory selection modal
+    function openAccessoryModal(equipmentId, equipmentName, equipmentSerial) {
+        currentEquipmentId = equipmentId;
+        currentEquipmentName = equipmentName;
+        currentEquipmentSerial = equipmentSerial;
+        
+        // Update modal content
+        document.getElementById('equipmentName').textContent = equipmentName;
+        document.getElementById('equipmentDetails').textContent = `${equipmentName} (${equipmentSerial})`;
+        
+        // Clear previous selections
+        const checkboxes = document.querySelectorAll('input[name="modal_accessories"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Update selected count
+        updateSelectedCount();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('accessoryModal'));
+        modal.show();
+    }
+    
+    // Toggle all accessories in modal
+    function toggleAllModalAccessories() {
+        const checkboxes = document.querySelectorAll('input[name="modal_accessories"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        
+        updateSelectedCount();
+    }
+    
+    // Update selected count in modal
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('input[name="modal_accessories"]:checked');
+        const count = checkboxes.length;
+        document.getElementById('selectedCount').textContent = count;
+        
+        // Update count in main table
+        if (currentEquipmentId) {
+            const countElement = document.getElementById(`selected-count-${currentEquipmentId}`);
+            const mobileCountElement = document.getElementById(`mobile-selected-count-${currentEquipmentId}`);
+            
+            if (countElement) {
+                countElement.innerHTML = `<small class="text-success">${count} selected</small>`;
+            }
+            if (mobileCountElement) {
+                mobileCountElement.innerHTML = `<small class="text-success">${count} selected</small>`;
+            }
+        }
+    }
+    
+    // Assign equipment with selected accessories
+    function assignWithAccessories() {
+        const checkboxes = document.querySelectorAll('input[name="modal_accessories"]:checked');
+        const selectedAccessories = Array.from(checkboxes).map(cb => cb.value);
+        
+        // Find the form for this equipment
+        const form = document.querySelector(`form input[name="equipment_id"][value="${currentEquipmentId}"]`).closest('form');
+        
+        // Add selected accessories to form
+        selectedAccessories.forEach(accessoryId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_accessories';
+            input.value = accessoryId;
+            form.appendChild(input);
+        });
+        
+        // Submit the form
+        form.submit();
+    }
+    
+    // Add event listeners for checkbox changes
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'modal_accessories') {
+            updateSelectedCount();
+        }
+    });
+    
+    // Search and filter functionality
+    document.addEventListener('input', function(e) {
+        if (e.target.id === 'accessorySearch' || e.target.id === 'statusFilter') {
+            filterAccessories();
+        }
+    });
+    
+    function filterAccessories() {
+        const searchTerm = document.getElementById('accessorySearch').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const accessoryCards = document.querySelectorAll('#accessoryGrid .col-md-6');
+        
+        accessoryCards.forEach(card => {
+            const accessoryName = card.querySelector('strong').textContent.toLowerCase();
+            const accessoryStatus = card.querySelector('.badge:last-child').textContent.trim();
+            
+            const matchesSearch = accessoryName.includes(searchTerm);
+            const matchesStatus = !statusFilter || accessoryStatus === statusFilter;
+            
+            if (matchesSearch && matchesStatus) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
     </script>
     {% endblock %}

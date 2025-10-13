@@ -188,17 +188,43 @@ class Accessory(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Good', null=True, blank=True)
     return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='In Store', null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
+    date_assigned = models.DateTimeField(null=True, blank=True, help_text="Date when accessory was assigned to user")
     date_returned = models.DateTimeField(null=True, blank=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_accessories')
     returned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='returned_accessories')
     delivery_status = models.CharField(max_length=10, choices=[('Delivered', 'Delivered'), ('Delivering', 'Delivering'), ('Cancelled', 'Cancelled'), ('gap', 'gap')], null=True, blank=True,default="gap")
 
     def __str__(self):
         return f"{self.name}"
 
+    def mark_as_assigned(self, user, assigned_by=None, equipment_status=None, equipment=None):
+        """Mark accessory as assigned to a user"""
+        self.chief_surveyor = user
+        self.date_assigned = timezone.now()
+        if assigned_by:
+            self.assigned_by = assigned_by
+        
+        # Link to equipment if provided
+        if equipment:
+            self.equipment = equipment
+        
+        # Set return_status based on equipment status
+        if equipment_status == 'Delivering':
+            self.return_status = 'Delivering'
+        elif equipment_status == 'With Chief Surveyor':
+            self.return_status = 'With Chief Surveyor'
+        else:
+            self.return_status = 'In Use'
+        
+        self.save()
+
     def mark_as_returned(self, user):
-        self.return_status = 'Returning'
+        """Mark accessory as returned and deassign from equipment"""
+        self.return_status = 'Returning'  # Set to 'Returning' for admin approval
         self.date_returned = timezone.now()
         self.returned_by = user
+        # Keep equipment link for tracking purposes, but mark as returning
+        # Don't deassign from equipment until admin approves
         self.save()
 
 class EquipmentHistory(models.Model):

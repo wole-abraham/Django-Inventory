@@ -2,6 +2,14 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
+    <!-- Print Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-shopping-cart me-2"></i>My Store</h2>
+        <a href="{% url 'print_equipment_pdf' %}" class="btn btn-warning" target="_blank">
+            <i class="fas fa-print me-2"></i>Print My Equipment PDF
+        </a>
+    </div>
+    
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-4" id="recordsTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -34,6 +42,7 @@
                             <th>Section</th>
                             <th>Date Receiving (Department)</th>
                             <th>Status</th>
+                            <th>Accessories</th>
                             <th>Release</th>
                             <th>Return</th>
                         </tr>
@@ -71,6 +80,15 @@
                                     <span class="badge {% if info.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
                                         {{ info.status }}
                                     </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            onclick="openMyStoreAccessoryModal('{{ info.id }}', '{{ info.name }}', '{{ info.serial_number }}')">
+                                        <i class="fas fa-toolbox"></i> View Accessories
+                                    </button>
+                                    <div id="mystore-accessory-count-{{ info.id }}" class="mt-1">
+                                        <small class="text-muted">0 accessories</small>
+                                    </div>
                                 </td>
                                 <td>
                                     <button type="submit" class="btn btn-sm btn-outline-primary">
@@ -112,7 +130,7 @@
                                 <form action="{% url 'release_accessory' %}" method="post">
                                     {% csrf_token %}
                                     <td>{{ accessory.name }}</td>
-                                    <td>{{ accessory.equipment.name }}</td>
+                                    <td>{% if accessory.equipment %}{{ accessory.equipment.name }}{% else %}<span class="text-muted">Standalone</span>{% endif %}</td>
                                     <td>{{ accessory.serial_number }}</td>
                                     <td>
                                         <input type="text" class="form-control form-control-sm" name="surveyor_responsible" value="{{ accessory.surveyor_responsible }}" required>
@@ -144,6 +162,48 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Store Accessory Modal -->
+<div class="modal fade" id="myStoreAccessoryModal" tabindex="-1" aria-labelledby="myStoreAccessoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="myStoreAccessoryModalLabel">
+                    <i class="fas fa-shopping-cart me-2"></i>Accessories for <span id="myStoreEquipmentName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <strong>Equipment:</strong> <span id="myStoreEquipmentDetails"></span>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-store me-1"></i>In My Store
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="row" id="myStoreAccessoryGrid">
+                    <!-- Accessories will be populated by JavaScript -->
+                </div>
+                
+                <div class="mt-3" id="myStoreAccessorySummary">
+                    <div class="alert alert-success">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Total Accessories:</strong> <span id="myStoreAccessoryCount">0</span> accessories assigned to this equipment
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
             </div>
         </div>
     </div>
@@ -245,6 +305,11 @@
     }
 </style>
 
+<!-- Accessory data for JavaScript -->
+<script type="application/json" id="mystore-accessory-data">
+{{ accessories_json|safe }}
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing tabs...');
@@ -311,6 +376,124 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Bootstrap not available, using fallback tabs');
         initTabs();
     }
+    
+    // Function to update accessory counts on page load
+    function updateAllMyStoreAccessoryCounts() {
+        const accessoryDataElement = document.getElementById('mystore-accessory-data');
+        if (!accessoryDataElement) {
+            console.error('My Store accessory data element not found');
+            return;
+        }
+        
+        const accessoryData = JSON.parse(accessoryDataElement.textContent);
+        console.log('Updating all My Store accessory counts with data:', accessoryData);
+        
+        // Group accessories by equipment ID
+        const accessoriesByEquipment = {};
+        accessoryData.forEach(accessory => {
+            if (accessory.equipment && accessory.equipment.id) {
+                const equipmentId = accessory.equipment.id;
+                if (!accessoriesByEquipment[equipmentId]) {
+                    accessoriesByEquipment[equipmentId] = [];
+                }
+                accessoriesByEquipment[equipmentId].push(accessory);
+            }
+        });
+        
+        // Update count for each equipment
+        Object.keys(accessoriesByEquipment).forEach(equipmentId => {
+            const count = accessoriesByEquipment[equipmentId].length;
+            const countElement = document.getElementById(`mystore-accessory-count-${equipmentId}`);
+            if (countElement) {
+                countElement.innerHTML = `<small class="text-success">${count} accessories</small>`;
+                console.log(`Updated My Store count for equipment ${equipmentId}: ${count} accessories`);
+            }
+        });
+    }
+    
+    // Update counts when page loads
+    updateAllMyStoreAccessoryCounts();
+    
+    // Make the function globally accessible
+    window.openMyStoreAccessoryModal = function(equipmentId, equipmentName, equipmentSerial) {
+        console.log('Opening My Store accessory modal for:', equipmentId, equipmentName, equipmentSerial);
+        
+        // Update modal content
+        document.getElementById('myStoreEquipmentName').textContent = equipmentName;
+        document.getElementById('myStoreEquipmentDetails').textContent = `${equipmentName} (${equipmentSerial})`;
+        
+        // Get accessories for this equipment from the JSON data
+        const accessoryDataElement = document.getElementById('mystore-accessory-data');
+        if (!accessoryDataElement) {
+            console.error('My Store accessory data element not found');
+            return;
+        }
+        
+        const accessoryData = JSON.parse(accessoryDataElement.textContent);
+        console.log('All My Store accessory data:', accessoryData);
+        
+        const filteredAccessories = accessoryData.filter(acc => acc.equipment && acc.equipment.id == equipmentId);
+        console.log('Filtered My Store accessories for equipment', equipmentId, ':', filteredAccessories);
+        
+        // Populate accessory grid
+        const grid = document.getElementById('myStoreAccessoryGrid');
+        grid.innerHTML = '';
+        
+        if (filteredAccessories.length === 0) {
+            grid.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No accessories assigned to this equipment.
+                    </div>
+                </div>
+            `;
+        } else {
+            filteredAccessories.forEach(accessory => {
+                const accessoryCard = `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card accessory-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>${accessory.name}</strong><br>
+                                        <small class="text-muted">SN: ${accessory.serial_number}</small><br>
+                                        <span class="badge badge-sm ${accessory.condition === 'Good' ? 'bg-success' : accessory.condition === 'Needs Repair' ? 'bg-warning' : 'bg-danger'}">
+                                            ${accessory.condition}
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge badge-sm ${accessory.return_status === 'With Chief Surveyor' ? 'bg-info' : 'bg-primary'}">
+                                            ${accessory.return_status}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += accessoryCard;
+            });
+        }
+        
+        // Update count
+        document.getElementById('myStoreAccessoryCount').textContent = filteredAccessories.length;
+        
+        // Update count in main table
+        const countElement = document.getElementById(`mystore-accessory-count-${equipmentId}`);
+        if (countElement) {
+            countElement.innerHTML = `<small class="text-success">${filteredAccessories.length} accessories</small>`;
+        }
+        
+        // Show modal
+        const modalElement = document.getElementById('myStoreAccessoryModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('My Store modal element not found');
+        }
+    };
 });
 </script>
 {% endblock %}

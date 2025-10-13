@@ -40,4 +40,6 @@ urlpatterns = [
     path('download-sample-csv/', views.download_sample_csv, name='download_sample_csv'),
     path('upload-accessory-csv/', views.upload_accessory_csv, name='upload_accessory_csv'),
     path('download-sample-accessory-csv/', views.download_sample_accessory_csv, name='download_sample_accessory_csv'),
+    path('print-equipment-pdf/', views.print_equipment_pdf, name='print_equipment_pdf'),
+    path('reset-all-to-store/', views.reset_all_to_store, name='reset_all_to_store'),
 ]

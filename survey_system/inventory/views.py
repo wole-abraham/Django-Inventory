@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 # from .models import Equipment, SurveyorEngineer
-from  django.http import JsonResponse
+from  django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
@@ -27,6 +27,45 @@ from .forms import CSVUploadForm
 import csv
 import io
 from datetime import datetime
+import json
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+
+
+def get_relevant_accessories(equipment):
+    """Get accessories that are relevant to the equipment type"""
+    equipment_type = equipment.name.lower()
+    relevant_accessory_names = []
+    
+    if 'gps' in equipment_type or 'gnss' in equipment_type:
+        relevant_accessory_names = [
+            'Tracking Rod', 'Tripod', 'External Radio', 'GNSS Battery', 
+            'Pole', 'GPS Extension Bar', 'External Radio Antenna', 'Data Logger'
+        ]
+    elif 'total station' in equipment_type:
+        relevant_accessory_names = [
+            'Reflector', 'Tripod', 'Total Station Prism', 'Mini Prism'
+        ]
+    elif 'levelling' in equipment_type or 'level' in equipment_type:
+        relevant_accessory_names = [
+            'Levelling Staff', 'Tripod'
+        ]
+    else:
+        # For other equipment types, show all accessories
+        relevant_accessory_names = [
+            'Tracking Rod', 'Tripod', 'External Radio', 'Car battery', 'Base pole',
+            'Tribrach', 'Reflector', 'Levelling Staff', 'GNSS Battery', 'Pole',
+            'Mini Prism', 'Sheet', 'Total Station Prism', 'Radio', 'GPS Extension Bar',
+            'Bar Port', 'Powerbank', 'External Radio Antenna', 'Data Logger'
+        ]
+    
+    return Accessory.objects.filter(
+        name__in=relevant_accessory_names,
+        return_status__in=['In Store', 'Returned', 'Returning']
+    ).order_by('name')
 
 # def filter_equipment(request):
 #     equipment_type = request.GET.get('equipment_type')
@@ -88,9 +127,29 @@ def request_equipment(request):
     # Only show accessories that are assigned to the user and not in use or returning (exclude returned)
     accessories = Accessory.objects.filter(
         Q(chief_surveyor=user, return_status='With Chief Surveyor') |
-        Q(equipment__chief_surveyor=user, return_status__in=['In Use', 'With Chief Surveyor'])
+        Q(equipment__chief_surveyor=user, return_status__in=['In Use', 'With Chief Surveyor', 'Delivering'])
     ).exclude(return_status='Returned')
-    return render(request, 'inventory/request_equipment.html', {'data':data, 'accessories': accessories})
+    
+    # Serialize accessories data for JavaScript
+    accessories_data = []
+    for accessory in accessories:
+        accessories_data.append({
+            'id': accessory.id,
+            'name': accessory.name,
+            'serial_number': accessory.serial_number,
+            'condition': accessory.condition,
+            'return_status': accessory.return_status,
+            'equipment': {
+                'id': accessory.equipment.id if accessory.equipment else None,
+                'name': accessory.equipment.name if accessory.equipment else None
+            }
+        })
+    
+    return render(request, 'inventory/request_equipment.html', {
+        'data': data, 
+        'accessories': accessories,
+        'accessories_json': json.dumps(accessories_data)
+    })
 
 # @receiver(post_save, sender=User)
 # def create_surveyor_for_user(sender, instance, created, **kwargs):
@@ -111,23 +170,53 @@ def store(request):
     if request.method == 'POST':
         chief_id = request.POST.get('id')
         equipment_id = request.POST.get('equipment_id')
+        selected_accessories = request.POST.getlist('selected_accessories')
+        
         user = User.objects.filter(id=chief_id).first()
         equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
+        
+        # Update equipment
         equipment.section = request.POST.get("section")
         equipment.chief_surveyor = user
         equipment.delivery_status = "Delivering"
         equipment.status = "Delivering"
-        equipment.date_receiving_from_department = request.POST.get("date_receiving") or timezone.now().date()  # Update the date
+        equipment.date_receiving_from_department = timezone.now().date()
         equipment.save()
         
-        messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
+        # Assign selected accessories
+        assigned_count = 0
+        for accessory_id in selected_accessories:
+            accessory = Accessory.objects.filter(id=accessory_id).first()
+            if accessory:
+                # Link accessory to the equipment and assign to user
+                accessory.mark_as_assigned(user, assigned_by=request.user, equipment_status='Delivering', equipment=equipment)
+                assigned_count += 1
+        
+        if assigned_count > 0:
+            messages.success(request, f'Equipment {equipment.name} and {assigned_count} accessories assigned to {user.username}.')
+        else:
+            messages.success(request, f'Equipment {equipment.name} has been released to {user.username}.')
+        
         return redirect('store')
+    
     users = User.objects.filter(is_superuser=False)
     data = EquipmentsInSurvey.objects.filter(status="In Store")
     all = EquipmentsInSurvey.objects.all()
-    accessories = Accessory.objects.filter(return_status__in=['In Store', 'Returned'])
-    return render(request, 'inventory/store.html', {'data':data, 'user': users, 'all': all,
-                                                    'accessories': accessories, 'is_admin': request.user.is_superuser})
+    accessories = Accessory.objects.filter(return_status__in=['In Store', 'Returned', 'Returning'])
+    
+    # Get available accessories for assignment (all accessories for general use)
+    available_accessories = Accessory.objects.filter(
+        return_status__in=['In Store', 'Returned', 'Returning']
+    ).order_by('name')
+    
+    return render(request, 'inventory/store.html', {
+        'data': data, 
+        'user': users, 
+        'all': all,
+        'accessories': accessories, 
+        'available_accessories': available_accessories,
+        'is_admin': request.user.is_superuser
+    })
 
 def store_all(request):
     data = EquipmentsInSurvey.objects.all()
@@ -143,7 +232,24 @@ def store_field(request):
 @login_required
 def return_equipment(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
-    active_accessories = equipment.accessories.filter(return_status='In Use')
+    
+    # Check if user has permission to return this equipment
+    if not request.user.is_superuser and equipment.chief_surveyor != request.user:
+        messages.error(request, 'You do not have permission to return this equipment.')
+        return redirect('profile')
+    
+    # Get accessories that are linked to this equipment and can be returned
+    if request.user.is_superuser:
+        # Admin can see all accessories for this equipment
+        active_accessories = equipment.accessories.filter(
+            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering']
+        )
+    else:
+        # Regular users can only see accessories assigned to them
+        active_accessories = equipment.accessories.filter(
+            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering'],
+            chief_surveyor=request.user
+        )
     
     if request.method == 'POST':
         # Check if any accessories are being returned
@@ -156,6 +262,13 @@ def return_equipment(request, id):
         # Only update equipment status if explicitly requested
         if 'return_equipment' in request.POST:
             equipment.status = 'Returning'
+            # Update equipment condition and comment if provided
+            equipment_condition = request.POST.get('equipment_condition')
+            equipment_comment = request.POST.get('equipment_comment')
+            if equipment_condition:
+                equipment.condition = equipment_condition
+            if equipment_comment:
+                equipment.return_comment = equipment_comment
             # Don't remove the chief_surveyor information
             equipment.save()
         
@@ -172,9 +285,11 @@ def return_equipment(request, id):
                 accessory.mark_as_returned(request.user)  # Mark as returned with timestamp and user
                 accessory.save()
         
-        if accessories_being_returned:
+        if accessories_being_returned and 'return_equipment' in request.POST:
+            messages.success(request, f'{equipment.name} and selected accessories have been returned successfully.')
+        elif accessories_being_returned:
             messages.success(request, 'Selected accessories have been returned successfully.')
-        if 'return_equipment' in request.POST:
+        elif 'return_equipment' in request.POST:
             messages.success(request, f'{equipment.name} has been marked for return.')
         return redirect('equipment_detail', id=equipment.id)
     
@@ -473,6 +588,54 @@ def edit_accessory(request, id):
     })
 
 @login_required
+def reset_all_to_store(request):
+    """Super button to reset all equipment and accessories to store - only for user 'wole'"""
+    if request.user.username != 'wole':
+        messages.error(request, 'Access denied. This function is only available to the system administrator.')
+        return redirect('store')
+    
+    if request.method == 'POST':
+        # Reset all equipment to "In Store"
+        equipment_count = EquipmentsInSurvey.objects.exclude(status='In Store').count()
+        EquipmentsInSurvey.objects.exclude(status='In Store').update(
+            status='In Store',
+            chief_surveyor=None,
+            surveyor_responsible='',
+            delivery_status=None,
+            return_comment=''
+        )
+        
+        # Reset all accessories to "In Store"
+        accessory_count = Accessory.objects.exclude(return_status='In Store').count()
+        Accessory.objects.exclude(return_status='In Store').update(
+            return_status='In Store',
+            chief_surveyor=None,
+            surveyor_responsible='',
+            equipment=None,
+            date_assigned=None,
+            date_returned=None,
+            assigned_by=None,
+            returned_by=None,
+            comment=''
+        )
+        
+        messages.success(request, f'Reset complete! {equipment_count} equipment and {accessory_count} accessories have been returned to store.')
+        return redirect('store')
+    
+    # Get statistics for the confirmation page
+    equipment_in_store = EquipmentsInSurvey.objects.filter(status='In Store').count()
+    equipment_assigned = EquipmentsInSurvey.objects.exclude(status='In Store').count()
+    accessories_in_store = Accessory.objects.filter(return_status='In Store').count()
+    accessories_assigned = Accessory.objects.exclude(return_status='In Store').count()
+    
+    return render(request, 'inventory/reset_confirm.html', {
+        'equipment_in_store': equipment_in_store,
+        'equipment_assigned': equipment_assigned,
+        'accessories_in_store': accessories_in_store,
+        'accessories_assigned': accessories_assigned,
+    })
+
+@login_required
 def store_returning(request):
     if request.method == 'POST':
         # Handle equipment return
@@ -490,6 +653,10 @@ def store_returning(request):
             accessory_id = request.POST.get('accessory_id')
             accessory = Accessory.objects.filter(id=accessory_id).first()
             accessory.return_status = 'Returned'
+            # Deassign from equipment to make it available again
+            accessory.equipment = None
+            accessory.chief_surveyor = None
+            accessory.surveyor_responsible = None
             accessory.save()
             messages.success(request, f'{accessory.name} has been marked as Available.')
             return redirect('store_returning')
@@ -545,9 +712,11 @@ def release_accessory(request):
         surveyor_responsible = request.POST.get('surveyor_responsible')
         accessory_id = request.POST.get('accessory_id')
         accessory = get_object_or_404(Accessory, id=accessory_id)
+        
+        # Update surveyor responsible and mark as assigned
         accessory.surveyor_responsible = surveyor_responsible
-        accessory.return_status = 'In Use'
-        accessory.save()
+        accessory.mark_as_assigned(request.user, assigned_by=request.user, equipment_status='With Chief Surveyor', equipment=accessory.equipment)
+        
         messages.success(request, f'Accessory {accessory.name} has been released to {surveyor_responsible}.')
         return redirect('profile')
 
@@ -555,9 +724,20 @@ def admin_release_accessory(request):
     if request.method == 'POST':
         accessory_id = request.POST.get('accessory_id')
         accessory = get_object_or_404(Accessory, id=accessory_id)
-        status  = request.POST.get('condition')
-        accessory.status = status
-        accessory.save()
+        status = request.POST.get('condition')
+        
+        # Update both status and return_status
+        if status:
+            accessory.status = status
+            # If changing to "Good", set return_status to "In Store" if it was "Returned"
+            if status == 'Good' and accessory.return_status == 'Returned':
+                accessory.return_status = 'In Store'
+            # If changing to "Bad" or "Needs Repair", keep current return_status
+            accessory.save()
+            messages.success(request, f'Accessory {accessory.name} status updated to {status}.')
+        else:
+            messages.error(request, 'No status selected.')
+        
         return redirect('store')
     
 
@@ -610,10 +790,40 @@ def remove_from_equipment(request, id):
 def delivery(request):
     if request.user.is_superuser:
         eq = EquipmentsInSurvey.objects.filter(status="Delivering")
-        return render(request, 'inventory/deliveries.html', {"data": eq})
+        # Get accessories for all delivering equipment
+        accessories = Accessory.objects.filter(
+            equipment__in=eq,
+            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering', 'Returning']
+        )
     else:
         eq = EquipmentsInSurvey.objects.filter(status="Delivering", chief_surveyor=request.user)
-        return render(request, 'inventory/deliveries.html', {"data": eq})
+        # Get accessories for user's delivering equipment
+        accessories = Accessory.objects.filter(
+            equipment__in=eq,
+            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering', 'Returning']
+        )
+    
+    # Serialize accessories data for JavaScript
+    accessories_data = []
+    for accessory in accessories:
+        accessories_data.append({
+            'id': accessory.id,
+            'name': accessory.name,
+            'serial_number': accessory.serial_number,
+            'condition': accessory.condition,
+            'return_status': accessory.return_status,
+            'equipment': {
+                'id': accessory.equipment.id if accessory.equipment else None,
+                'name': accessory.equipment.name if accessory.equipment else None
+            }
+        })
+    
+    return render(request, 'inventory/deliveries.html', {
+        "data": eq, 
+        "accessories": accessories,
+        "accessories_json": json.dumps(accessories_data),
+        "is_admin": request.user.is_superuser
+    })
 
 def cancel_delivery(request, id):
     eq = EquipmentsInSurvey.objects.filter(id=id).first()
@@ -628,6 +838,12 @@ def delivery_received(request, id):
     eq.delivery_status = "Delivered"
     eq.status = "With Chief Surveyor"
     eq.save()
+    
+    # Update accessories status to match equipment
+    accessories = Accessory.objects.filter(equipment=eq, return_status='Delivering')
+    for accessory in accessories:
+        accessory.return_status = 'With Chief Surveyor'
+        accessory.save()
     
     return redirect('profile')
 
@@ -1170,5 +1386,175 @@ Mini Prism,Sokkia,Good"""
     
     response = HttpResponse(csv_content, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="sample_accessories.csv"'
+    return response
+
+
+@login_required
+def print_equipment_pdf(request):
+    """Generate PDF report of equipment table"""
+    # Get equipment data based on user permissions
+    if request.user.is_superuser:
+        # Admin sees all equipment
+        equipment_data = EquipmentsInSurvey.objects.all().order_by('name', 'serial_number')
+        accessories_data = Accessory.objects.all().order_by('name', 'serial_number')
+    else:
+        # Regular users see only their assigned equipment and accessories
+        equipment_data = EquipmentsInSurvey.objects.filter(
+            chief_surveyor=request.user
+        ).order_by('name', 'serial_number')
+        accessories_data = Accessory.objects.filter(
+            chief_surveyor=request.user
+        ).order_by('name', 'serial_number')
+    
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    if request.user.is_superuser:
+        filename = f"complete_equipment_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    else:
+        username = request.user.username.replace(' ', '_')
+        filename = f"{username}_equipment_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    # Create PDF document
+    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    story = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1,  # Center alignment
+    )
+    
+    # Add title based on user type
+    if request.user.is_superuser:
+        title_text = "Complete Equipment Inventory Report"
+    else:
+        title_text = f"Equipment Report for {request.user.get_full_name() or request.user.username}"
+    
+    title = Paragraph(title_text, title_style)
+    story.append(title)
+    
+    # Add report info
+    report_info = f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}<br/>"
+    report_info += f"Generated by: {request.user.get_full_name() or request.user.username}<br/>"
+    if request.user.is_superuser:
+        report_info += f"Total Equipment: {equipment_data.count()}<br/>"
+        report_info += f"Total Accessories: {accessories_data.count()}"
+    else:
+        report_info += f"Assigned Equipment: {equipment_data.count()}<br/>"
+        report_info += f"Assigned Accessories: {accessories_data.count()}"
+    
+    info_style = ParagraphStyle(
+        'ReportInfo',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=20,
+    )
+    story.append(Paragraph(report_info, info_style))
+    story.append(Spacer(1, 12))
+    
+    # Equipment Table
+    if equipment_data.exists():
+        if request.user.is_superuser:
+            section_title = "All Equipment"
+        else:
+            section_title = "My Assigned Equipment"
+        story.append(Paragraph(section_title, styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        # Create equipment table data
+        equipment_table_data = [['Name', 'Supplier', 'Serial Number', 'Status', 'Condition', 'Chief Surveyor', 'Project']]
+        
+        for equipment in equipment_data:
+            row = [
+                equipment.name,
+                equipment.supplier,
+                equipment.serial_number,
+                equipment.status,
+                equipment.condition,
+                equipment.chief_surveyor.username if equipment.chief_surveyor else 'Unassigned',
+                equipment.project or 'N/A'
+            ]
+            equipment_table_data.append(row)
+        
+        # Create equipment table
+        equipment_table = Table(equipment_table_data, repeatRows=1)
+        equipment_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        story.append(equipment_table)
+        story.append(Spacer(1, 20))
+    
+    # Accessories Table
+    if accessories_data.exists():
+        if request.user.is_superuser:
+            section_title = "All Accessories"
+        else:
+            section_title = "My Assigned Accessories"
+        story.append(Paragraph(section_title, styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        # Create accessories table data
+        accessories_table_data = [['Name', 'Manufacturer', 'Serial Number', 'Condition', 'Status', 'Equipment', 'Equipment Serial']]
+        
+        for accessory in accessories_data:
+            row = [
+                accessory.name,
+                accessory.manufacturer or 'N/A',
+                accessory.serial_number,
+                accessory.condition or 'Good',
+                accessory.return_status or 'In Store',
+                accessory.equipment.name if accessory.equipment else 'Standalone',
+                accessory.equipment.serial_number if accessory.equipment else 'N/A'
+            ]
+            accessories_table_data.append(row)
+        
+        # Create accessories table with column widths
+        accessories_table = Table(accessories_table_data, repeatRows=1, colWidths=[1.2*inch, 1*inch, 1*inch, 0.8*inch, 1*inch, 1.2*inch, 1*inch])
+        accessories_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        story.append(accessories_table)
+    
+    # Add message if no data for regular users
+    if not request.user.is_superuser and not equipment_data.exists() and not accessories_data.exists():
+        story.append(Spacer(1, 20))
+        no_data_style = ParagraphStyle(
+            'NoData',
+            parent=styles['Normal'],
+            fontSize=12,
+            alignment=1,  # Center alignment
+            textColor=colors.grey,
+        )
+        no_data_msg = Paragraph("No equipment or accessories assigned to you.", no_data_style)
+        story.append(no_data_msg)
+    
+    # Build PDF
+    doc.build(story)
+    
     return response
 
