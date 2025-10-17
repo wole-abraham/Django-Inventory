@@ -121,7 +121,7 @@ class Chainman(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True, help_text="Phone Number")
     assigned_to = models.ForeignKey(Personnel, on_delete=models.SET_NULL, null=True, blank=True, related_name='chainmen', help_text="Assigned Personnel")
     date_assigned = models.DateField(auto_now_add=True, help_text="Date Assigned")
-    is_active = models.BooleanField(default=True, help_text="Active Status")
+    is_active = models.BooleanField(default=True,  help_text="Active Status")
     
     def __str__(self):
         return f"{self.name} ({self.employee_id})"

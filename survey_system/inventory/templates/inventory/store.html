@@ -109,7 +109,8 @@
                                     <td class="no-wrap">{{ info.serial_number }}</td>
                                     
                                     <td>
-                                        <select name="id" class="form-select form-select-sm">
+                                        <select name="id" class="form-select form-select-sm" required>
+                                            <option value="" disabled selected>Select Chief Surveyor</option>
                                             {% for users in user %}
                                             <option value="{{ users.id }}">{{ users.username }}</option>
                                             {% endfor %}
@@ -145,7 +146,7 @@
                                         </div>
                                     </td>
                                     <td class="no-wrap">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" onclick="return validateForm(this)">
                                             <i class="fas fa-paper-plane"></i> Release
                                         </button>
                                     </td>
@@ -202,7 +203,8 @@
                             <div class="mobile-card-row">
                                 <span class="mobile-card-label">Chief Surveyor:</span>
                                 <span class="mobile-card-value">
-                                    <select name="id" class="form-select form-select-sm">
+                                    <select name="id" class="form-select form-select-sm" required>
+                                        <option value="" disabled selected>Select Chief Surveyor</option>
                                         {% for users in user %}
                                         <option value="{{ users.id }}">{{ users.username }}</option>
                                         {% endfor %}
@@ -240,7 +242,7 @@
                             <div class="mobile-card-row">
                                 <span class="mobile-card-label">Action:</span>
                                 <span class="mobile-card-value">
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" onclick="return validateForm(this)">
                                         <i class="fas fa-paper-plane"></i> Release
                                     </button>
                                 </span>
@@ -979,13 +981,80 @@
         }
     }
     
+    // Validate form before submission
+    function validateForm(button) {
+        const form = button.closest('form');
+        const chiefSurveyorSelect = form.querySelector('select[name="id"]');
+        
+        if (!chiefSurveyorSelect.value) {
+            alert('Please select a Chief Surveyor before releasing equipment.');
+            chiefSurveyorSelect.focus();
+            return false;
+        }
+        
+        return true;
+    }
+    
     // Assign equipment with selected accessories
     function assignWithAccessories() {
         const checkboxes = document.querySelectorAll('input[name="modal_accessories"]:checked');
         const selectedAccessories = Array.from(checkboxes).map(cb => cb.value);
         
         // Find the form for this equipment
+        console.log('Looking for form with equipment_id:', currentEquipmentId);
         const form = document.querySelector(`form input[name="equipment_id"][value="${currentEquipmentId}"]`).closest('form');
+        console.log('Form found:', form);
+        
+        // Get all select fields with name="id" and find the one that's not the placeholder
+        const allSelectFields = document.querySelectorAll('select[name="id"]');
+        console.log('All select fields found:', allSelectFields.length);
+        
+        let chiefSurveyorSelect = null;
+        let selectedChiefId = null;
+        
+        // Check each select field to find one with a valid value
+        allSelectFields.forEach((select, index) => {
+            console.log(`Select field ${index}:`, select.value, select.options[select.selectedIndex]);
+            if (select.value && select.value !== '') {
+                chiefSurveyorSelect = select;
+                selectedChiefId = select.value;
+                console.log(`Found valid selection in field ${index}:`, select.value);
+            }
+        });
+        
+        // If no valid selection found, show error
+        if (!selectedChiefId) {
+            alert('Please select a Chief Surveyor before assigning equipment and accessories.');
+            // Close modal and focus on the first select field
+            const modal = bootstrap.Modal.getInstance(document.getElementById('accessoryModal'));
+            modal.hide();
+            setTimeout(() => {
+                if (allSelectFields.length > 0) {
+                    allSelectFields[0].focus();
+                }
+            }, 300);
+            return false;
+        }
+        
+        // Debug: Log the values being submitted
+        console.log('Chief Surveyor ID:', selectedChiefId);
+        console.log('Equipment ID:', currentEquipmentId);
+        console.log('Selected Accessories:', selectedAccessories);
+        
+        // Remove any existing hidden inputs with the same name to avoid duplicates
+        const existingIdInputs = form.querySelectorAll('input[name="id"]');
+        existingIdInputs.forEach(input => {
+            if (input.type === 'hidden') {
+                input.remove();
+            }
+        });
+        
+        // Add the chief surveyor ID as a hidden input to ensure it's passed
+        const chiefIdInput = document.createElement('input');
+        chiefIdInput.type = 'hidden';
+        chiefIdInput.name = 'id';
+        chiefIdInput.value = selectedChiefId;
+        form.appendChild(chiefIdInput);
         
         // Add selected accessories to form
         selectedAccessories.forEach(accessoryId => {

@@ -176,7 +176,7 @@ def store(request):
         equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
         
         # Update equipment
-        equipment.section = request.POST.get("section")
+        equipment.project = request.POST.get("project")
         equipment.chief_surveyor = user
         equipment.delivery_status = "Delivering"
         equipment.status = "Delivering"
