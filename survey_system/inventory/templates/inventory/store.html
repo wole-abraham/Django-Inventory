@@ -1001,24 +1001,41 @@
         const selectedAccessories = Array.from(checkboxes).map(cb => cb.value);
         
         // Find the form for this equipment
-        console.log('Looking for form with equipment_id:', currentEquipmentId);
         const form = document.querySelector(`form input[name="equipment_id"][value="${currentEquipmentId}"]`).closest('form');
-        console.log('Form found:', form);
         
         // Get all select fields with name="id" and find the one that's not the placeholder
         const allSelectFields = document.querySelectorAll('select[name="id"]');
-        console.log('All select fields found:', allSelectFields.length);
+        const allProjectFields = document.querySelectorAll('select[name="project"]');
         
-        let chiefSurveyorSelect = null;
         let selectedChiefId = null;
+        let selectedProject = null;
         
         // Check each select field to find one with a valid value
         allSelectFields.forEach((select, index) => {
-            console.log(`Select field ${index}:`, select.value, select.options[select.selectedIndex]);
             if (select.value && select.value !== '') {
-                chiefSurveyorSelect = select;
                 selectedChiefId = select.value;
-                console.log(`Found valid selection in field ${index}:`, select.value);
+            }
+        });
+        
+        // Get the project value from the specific form for this equipment
+        const projectSelectInForm = form.querySelector('select[name="project"]');
+        if (projectSelectInForm) {
+            selectedProject = projectSelectInForm.value;
+        }
+        
+        // Fallback: Check all project fields if form-specific one not found
+        if (!selectedProject) {
+            allProjectFields.forEach((select, index) => {
+                if (select.value && select.value !== '') {
+                    selectedProject = select.value;
+                }
+            });
+        }
+        
+        // Additional check: Look for Sokoto in all project fields
+        allProjectFields.forEach((select, index) => {
+            if (select.value === 'Sokoto') {
+                selectedProject = 'Sokoto';
             }
         });
         
@@ -1036,14 +1053,16 @@
             return false;
         }
         
-        // Debug: Log the values being submitted
-        console.log('Chief Surveyor ID:', selectedChiefId);
-        console.log('Equipment ID:', currentEquipmentId);
-        console.log('Selected Accessories:', selectedAccessories);
         
         // Remove any existing hidden inputs with the same name to avoid duplicates
         const existingIdInputs = form.querySelectorAll('input[name="id"]');
+        const existingProjectInputs = form.querySelectorAll('input[name="project"]');
         existingIdInputs.forEach(input => {
+            if (input.type === 'hidden') {
+                input.remove();
+            }
+        });
+        existingProjectInputs.forEach(input => {
             if (input.type === 'hidden') {
                 input.remove();
             }
@@ -1055,6 +1074,15 @@
         chiefIdInput.name = 'id';
         chiefIdInput.value = selectedChiefId;
         form.appendChild(chiefIdInput);
+        
+        // Add the project as a hidden input to ensure it's passed
+        if (selectedProject) {
+            const projectInput = document.createElement('input');
+            projectInput.type = 'hidden';
+            projectInput.name = 'project';
+            projectInput.value = selectedProject;
+            form.appendChild(projectInput);
+        }
         
         // Add selected accessories to form
         selectedAccessories.forEach(accessoryId => {
