@@ -513,3 +513,24 @@ def generate_accessory_serial_number(sender, instance, created, **kwargs):
         instance.save(update_fields=['serial_number'])
 
 
+class AssignedEquipment(EquipmentsInSurvey):
+    """Proxy model to expose 'equipment assigned to each surveyor' in Admin.
+
+    Shows equipment that are not in store (i.e., currently assigned/with a user).
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Assigned Equipment (by Surveyor)'
+        verbose_name_plural = 'Assigned Equipment (by Surveyor)'
+
+
+class EquipmentWithoutActivity(EquipmentsInSurvey):
+    """Proxy model to list all equipment that have no history entries."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Equipment without Activity'
+        verbose_name_plural = 'Equipment without Activity'
+
+
