@@ -135,12 +135,25 @@ class AccessoryReturnForm(forms.Form):
                 self.fields[f'accessory_{accessory.id}'].accessory_id = accessory.id
 
 class addEquipmentForm(forms.ModelForm):
+    CONDITION_CHOICES = [
+        ('Good', 'Good'),
+        ('Needs Repair', 'Needs Repair'),
+        ('Bad', 'Bad'),
+    ]
+    
+    condition = forms.ChoiceField(
+        choices=CONDITION_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        initial='Good'
+    )
+    
     accessory_types = forms.MultipleChoiceField(
         choices=Accessory.ACCESSORY_TYPES,
         required=False,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         label="Select Accessory Types to Create"
     )
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'chief_surveyor' in self.fields:
@@ -168,8 +181,8 @@ class addEquipmentForm(forms.ModelForm):
             'name': forms.Select(attrs={'class': 'form-select', 'required': True}),
             'owner': forms.Select(attrs={'class': 'form-select'}),
             'date_of_receiving_from_supplier': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-select'}),
-            'serial_number': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter manufacturer/model'}),
+            'serial_number': forms.TextInput(attrs={'class': 'form-control', 'required': True, 'placeholder': 'Enter serial number'}),
             'condition': forms.Select(attrs={'class': 'form-select'}),
         }
 

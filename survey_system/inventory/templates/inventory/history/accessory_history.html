@@ -8,9 +8,20 @@
             <h1 class="page-title">
                 <i class="fas fa-history me-2"></i>Accessory History
             </h1>
-            <a href="{% url 'equipment_detail' accessory.equipment.id %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Equipment
-            </a>
+            <div class="btn-group">
+                <a href="{% url 'accessory_history_pdf' accessory.id %}" class="btn btn-danger" target="_blank">
+                    <i class="fas fa-file-pdf me-2"></i>Export PDF
+                </a>
+                {% if accessory.equipment %}
+                <a href="{% url 'equipment_detail' accessory.equipment.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Equipment
+                </a>
+                {% else %}
+                <a href="{% url 'store' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Store
+                </a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="accessory-info mb-4">
@@ -47,45 +58,12 @@
                             <span class="badge bg-info">{{ entry.get_action_display }}</span>
                         </div>
                         <div class="timeline-body">
-                            {% if entry.previous_status != entry.new_status %}
-                                <p>
-                                    <strong>Status Changed:</strong>
-                                    <span class="badge bg-secondary">{{ entry.previous_status }}</span>
-                                    <i class="fas fa-arrow-right mx-2"></i>
-                                    <span class="badge {% if entry.new_status == 'Good' %}bg-success{% elif entry.new_status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
-                                        {{ entry.new_status }}
-                                    </span>
-                                </p>
-                            {% endif %}
+                            <div class="change-description">
+                                {{ entry.get_description }}
+                            </div>
                             
-                            {% if entry.previous_return_status != entry.new_return_status %}
-                                <p>
-                                    <strong>Return Status Changed:</strong>
-                                    <span class="badge bg-secondary">{{ entry.previous_return_status }}</span>
-                                    <i class="fas fa-arrow-right mx-2"></i>
-                                    <span class="badge {% if entry.new_return_status == 'In Use' %}bg-success{% elif entry.new_return_status == 'Returning' %}bg-warning{% else %}bg-info{% endif %}">
-                                        {{ entry.new_return_status }}
-                                    </span>
-                                </p>
-                            {% endif %}
-                            
-                            {% if entry.previous_chief_surveyor != entry.new_chief_surveyor %}
-                                <p>
-                                    <strong>Chief Surveyor Changed:</strong>
-                                    {{ entry.previous_chief_surveyor|default:"Not assigned" }}
-                                    <i class="fas fa-arrow-right mx-2"></i>
-                                    {{ entry.new_chief_surveyor|default:"Not assigned" }}
-                                </p>
-                            {% endif %}
-                            
-                            {% if entry.comment %}
-                                <p class="mt-2">
-                                    <strong>Comment:</strong> {{ entry.comment }}
-                                </p>
-                            {% endif %}
-                            
-                            <p class="text-muted mt-2">
-                                <small>Changed by: {{ entry.changed_by }}</small>
+                            <p class="text-muted mt-2 mb-0">
+                                <small><i class="fas fa-user me-1"></i>Changed by: {{ entry.changed_by|default:"System" }}</small>
                             </p>
                         </div>
                     </div>

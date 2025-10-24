@@ -118,14 +118,10 @@
                         {% for accessory in accessories %}
                             
                             <tr>
-                                <form action="{% url 'release_accessory' %}" method="post">
-                                    {% csrf_token %}
                                     <td>{{ accessory.name }}</td>
                                     <td>{{ accessory.equipment.name }}</td>
                                     <td>{{ accessory.serial_number }}</td>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" name="surveyor_responsible" value="{{ accessory.surveyor_responsible }}" required>
-                                    </td>
+                                    <td>{{ accessory.surveyor_responsible }}</td>
                                     <td>
                                         <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
                                             {{ accessory.status }}
@@ -137,15 +133,15 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
-                                        <div class="btn-group" role="group">
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-paper-plane"></i> Release
-                                            </button>
-                                            <a href="{% url 'return_accessory' accessory.id %}" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-undo"></i> Return to Store
-                                            </a>
-                                        </div>
+                                        {% if is_admin %}
+                                        <a href="{% url 'cancel_delivery' accessory.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-undo"></i> Cancel
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'receive_delivery' accessory.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-check-circle"></i> Receive
+                                        </a>
+                                        {% endif %}
                                     </td>
                                 </form>
                             </tr>

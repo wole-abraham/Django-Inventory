@@ -75,24 +75,47 @@ def get_relevant_accessories(equipment):
 
 
 
+@login_required
 def add_equipment(request):
     if request.method == "POST":
         form = addEquipmentForm(request.POST)
         if form.is_valid():
-            equipment = form.save()
+            equipment = form.save(commit=False)
+            equipment.status = 'In Store'  # Default status
+            equipment.save()
+            
+            # Log equipment creation history
+            equipment.log_history(
+                action='created',
+                changed_by=request.user,
+                new_status='In Store',
+                new_condition=equipment.condition,
+                comment=f"Equipment created by {request.user.username}"
+            )
+            
             # Create new accessories for each selected type with specified quantity
             accessory_types = form.cleaned_data.get('accessory_types', [])
             for acc_type in accessory_types:
-                quantity = form.cleaned_data.get(f'quantity_{acc_type}', 1)
-                for _ in range(quantity):
-                    Accessory.objects.create(
+                quantity = form.cleaned_data.get(f'quantity_{acc_type}', 0)
+                for i in range(quantity):
+                    accessory = Accessory.objects.create(
                         name=acc_type,
-                        serial_number=equipment.serial_number,  # Use the equipment's serial number
                         equipment=equipment,
                         condition='Good',  # Default condition
                         status='Good',  # Default status
                         return_status='In Store',
                     )
+                    # Log accessory creation
+                    accessory.log_history(
+                        action='created',
+                        changed_by=request.user,
+                        new_status='Good',
+                        new_return_status='In Store',
+                        new_equipment=str(equipment),
+                        comment=f"Accessory created with equipment by {request.user.username}"
+                    )
+            
+            messages.success(request, f'Equipment "{equipment.name}" added successfully with {len(accessory_types)} accessory types!')
             return redirect('store')
     else:
         form = addEquipmentForm()
@@ -165,7 +188,7 @@ def request_equipment(request):
 #         'all_equipment': all_equipment,
 #     })
 
-
+@login_required
 def store(request):
     if request.method == 'POST':
         chief_id = request.POST.get('id')
@@ -173,6 +196,22 @@ def store(request):
         selected_accessories = request.POST.getlist('selected_accessories')
         
         user = User.objects.filter(id=chief_id).first()
+        
+        # Check if we're assigning just accessories (no equipment selected)
+        if not equipment_id and selected_accessories:
+            assigned_count = 0
+            for accessory_id in selected_accessories:
+                accessory = Accessory.objects.filter(id=accessory_id).first()
+                if accessory:
+                    # Assign accessory without linking to equipment
+                    accessory.mark_as_assigned(user, assigned_by=request.user, equipment_status='Delivering', equipment=None)
+                    assigned_count += 1
+            
+            if assigned_count > 0:
+                messages.success(request, f'{assigned_count} accessories assigned to {user.username}.')
+            return redirect('store')
+            
+        # If equipment is selected, proceed with equipment and accessories assignment
         equipment = EquipmentsInSurvey.objects.filter(id=equipment_id).first()
         
         # Update equipment
@@ -218,13 +257,15 @@ def store(request):
         'is_admin': request.user.is_superuser
     })
 
+@login_required
 def store_all(request):
-    data = EquipmentsInSurvey.objects.all()
+    data = EquipmentsInSurvey.objects.select_related('chief_surveyor').all()
     return render(request, 'inventory/store_all.html', {'data': data})
 
+@login_required
 def store_field(request):
-    data = EquipmentsInSurvey.objects.filter(status__in=['In Field', 'With Chief Surveyor'])
-    accessories = Accessory.objects.all()
+    data = EquipmentsInSurvey.objects.select_related('chief_surveyor').filter(status__in=['In Field', 'With Chief Surveyor'])
+    accessories = Accessory.objects.select_related('chief_surveyor', 'equipment').all()
     return render(request, 'inventory/store_field.html', {'data': data, 'accessories': accessories})
 
 
@@ -429,9 +470,10 @@ def create_user(request):
 #     ]
 #     return JsonResponse(data, safe=False)
 
+@login_required
 def equipment(request):
     user = request.user
-    data = EquipmentsInSurvey.objects.filter(chief_surveyor=user)
+    data = EquipmentsInSurvey.objects.select_related('chief_surveyor').filter(chief_surveyor=user)
     
     return render(request, 'equipments/equipments.html', {'form': Survey, 'data': data})
 
@@ -722,26 +764,35 @@ def release_accessory(request):
 
 def admin_release_accessory(request):
     if request.method == 'POST':
+        user_id = request.POST.get("id")
         accessory_id = request.POST.get('accessory_id')
+        user = User.objects.filter(id=user_id).first()
         accessory = get_object_or_404(Accessory, id=accessory_id)
         status = request.POST.get('condition')
-        
-        # Update both status and return_status
-        if status:
-            accessory.status = status
-            # If changing to "Good", set return_status to "In Store" if it was "Returned"
-            if status == 'Good' and accessory.return_status == 'Returned':
-                accessory.return_status = 'In Store'
-            # If changing to "Bad" or "Needs Repair", keep current return_status
-            accessory.save()
-            messages.success(request, f'Accessory {accessory.name} status updated to {status}.')
+
+        if user:
+            accessory.mark_as_assigned(user, assigned_by=request.user, equipment_status='Delivering', equipment=None)
+            messages.success(request, f'Accessory {accessory.name} has been assigned to {user.username}.')
+            return redirect('store')
         else:
-            messages.error(request, 'No status selected.')
-        
-        return redirect('store')
+            # Update both status and return_status
+            if status:
+                accessory.status = status
+                accessory.condition = status
+                # If changing to "Good", set return_status to "In Store" if it was "Returned"
+                if status == 'Good' and accessory.return_status == 'Returned':
+                    accessory.return_status = 'In Store'
+                # If changing to "Bad" or "Needs Repair", keep current return_status
+                accessory.save()
+                messages.success(request, f'Accessory {accessory.name} status updated to {status}.')
+            else:
+                messages.error(request, 'No status selected.')
+            
+            return redirect('store')
     
 
 
+@login_required
 @login_required
 def equipment_history(request, id):
     equipment = get_object_or_404(EquipmentsInSurvey, id=id)
@@ -788,19 +839,19 @@ def remove_from_equipment(request, id):
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
 def delivery(request):
+    """View for showing and managing deliveries. Users can only see their own deliveries."""
+    
     if request.user.is_superuser:
         eq = EquipmentsInSurvey.objects.filter(status="Delivering")
-        # Get accessories for all delivering equipment
+        # Get all delivering accessories, regardless of equipment association
         accessories = Accessory.objects.filter(
-            equipment__in=eq,
-            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering', 'Returning']
+            Q(return_status='Delivering')  # All accessories being delivered
         )
     else:
         eq = EquipmentsInSurvey.objects.filter(status="Delivering", chief_surveyor=request.user)
-        # Get accessories for user's delivering equipment
+        # Get only accessories assigned to this user
         accessories = Accessory.objects.filter(
-            equipment__in=eq,
-            return_status__in=['In Use', 'With Chief Surveyor', 'Delivering', 'Returning']
+            Q(return_status='Delivering', chief_surveyor=request.user)  # User's delivering accessories
         )
     
     # Serialize accessories data for JavaScript
@@ -826,26 +877,68 @@ def delivery(request):
     })
 
 def cancel_delivery(request, id):
-    eq = EquipmentsInSurvey.objects.filter(id=id).first()
-    eq.delivery_status = "Cancelled"
-    eq.status = "In Store"
-    eq.chief_surveyor = None  # Remove assignment
-    eq.save()
+    # Check if this is an equipment or accessory ID
+    equipment = EquipmentsInSurvey.objects.filter(id=id).first()
+    accessory = Accessory.objects.filter(id=id).first()
+    
+    if equipment:
+        equipment.delivery_status = "Cancelled"
+        equipment.status = "In Store"
+        equipment.chief_surveyor = None  # Remove assignment
+        equipment.save()
+        
+        # Also cancel delivery of associated accessories
+        accessories = Accessory.objects.filter(equipment=equipment, return_status='Delivering')
+        for acc in accessories:
+            acc.return_status = 'In Store'
+            acc.chief_surveyor = None
+            acc.save()
+        messages.success(request, f'Equipment {equipment.name} delivery has been cancelled.')
+    elif accessory:
+        accessory.return_status = 'In Store'
+        accessory.chief_surveyor = None
+        accessory.equipment = None  # Remove equipment association if any
+        accessory.save()
+        messages.success(request, f'Accessory {accessory.name} delivery has been cancelled.')
     
     return redirect('store')
 def delivery_received(request, id):
-    eq = EquipmentsInSurvey.objects.filter(id=id).first()
-    eq.delivery_status = "Delivered"
-    eq.status = "With Chief Surveyor"
-    eq.save()
+    """Handle receiving equipment or accessories from delivery."""
+    # First try to find as equipment
+    equipment = EquipmentsInSurvey.objects.filter(id=id).first()
+    if equipment:
+        # Check permissions
+        if not (equipment.chief_surveyor == request.user or request.user.is_superuser):
+            messages.error(request, 'You do not have permission to receive this equipment.')
+            return redirect('delivery')
+            
+        equipment.delivery_status = "Delivered"
+        equipment.status = "With Chief Surveyor"
+        equipment.save()
+        
+        # Update accessories status to match equipment
+        accessories = Accessory.objects.filter(equipment=equipment, return_status='Delivering')
+        for acc in accessories:
+            acc.return_status = 'With Chief Surveyor'
+            acc.save()
+        messages.success(request, f'Equipment {equipment.name} has been received successfully.')
+        return redirect('delivery')
     
-    # Update accessories status to match equipment
-    accessories = Accessory.objects.filter(equipment=eq, return_status='Delivering')
-    for accessory in accessories:
+    # If not equipment, try as accessory
+    accessory = Accessory.objects.filter(id=id).first()
+    if accessory:
+        # Check permissions
+        if not (accessory.chief_surveyor == request.user or request.user.is_superuser):
+            messages.error(request, 'You do not have permission to receive this accessory.')
+            return redirect('delivery')
+            
         accessory.return_status = 'With Chief Surveyor'
         accessory.save()
+        messages.success(request, f'Accessory {accessory.name} has been received successfully.')
+        return redirect('delivery')
     
-    return redirect('profile')
+    messages.error(request, 'Item not found.')
+    return redirect('delivery')
 
 @login_required
 def add_accessory(request):
@@ -1552,6 +1645,408 @@ def print_equipment_pdf(request):
         )
         no_data_msg = Paragraph("No equipment or accessories assigned to you.", no_data_style)
         story.append(no_data_msg)
+    
+    # Build PDF
+    doc.build(story)
+    
+    return response
+
+
+@login_required
+def equipment_history_pdf(request, id):
+    """Export equipment history to PDF"""
+    equipment = get_object_or_404(EquipmentsInSurvey, id=id)
+    history = equipment.history.all().order_by('-changed_at')
+    
+    # Create the HttpResponse object with PDF headers
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="equipment_history_{equipment.serial_number}_{timezone.now().strftime("%Y%m%d")}.pdf"'
+    
+    # Create the PDF object
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    story = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=30,
+        alignment=1,  # Center alignment
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=12,
+        textColor=colors.HexColor('#34495e'),
+        spaceAfter=12,
+    )
+    
+    # Add title
+    title = Paragraph(f"Equipment History Report", title_style)
+    story.append(title)
+    story.append(Spacer(1, 12))
+    
+    # Equipment Details
+    equipment_info = [
+        ['Equipment Name:', equipment.name],
+        ['Serial Number:', equipment.serial_number],
+        ['Supplier:', equipment.supplier],
+        ['Current Status:', equipment.status or 'N/A'],
+        ['Current Condition:', equipment.condition or 'Good'],
+        ['Current Chief Surveyor:', equipment.chief_surveyor.username if equipment.chief_surveyor else 'N/A'],
+        ['Project:', equipment.project or 'N/A'],
+        ['Section:', equipment.section or 'N/A'],
+    ]
+    
+    equipment_table = Table(equipment_info, colWidths=[2.5*inch, 4*inch])
+    equipment_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    story.append(equipment_table)
+    story.append(Spacer(1, 20))
+    
+    # History section
+    subtitle = Paragraph("History Log", subtitle_style)
+    story.append(subtitle)
+    story.append(Spacer(1, 12))
+    
+    if history.exists():
+        history_data = [['Date/Time', 'Action', 'Changed By', 'Details']]
+        
+        for entry in history:
+            # Format date
+            date_str = entry.changed_at.strftime("%Y-%m-%d %H:%M")
+            
+            # Get action display
+            action_str = entry.get_action_display()
+            
+            # Get changed by
+            changed_by_str = entry.changed_by.username if entry.changed_by else 'System'
+            
+            # Get description
+            description = entry.get_description()
+            
+            row = [
+                date_str,
+                action_str,
+                changed_by_str,
+                Paragraph(description, styles['Normal'])
+            ]
+            history_data.append(row)
+        
+        history_table = Table(history_data, repeatRows=1, colWidths=[1.3*inch, 1.5*inch, 1.2*inch, 3.5*inch])
+        history_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ]))
+        
+        story.append(history_table)
+    else:
+        no_history_style = ParagraphStyle(
+            'NoHistory',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.grey,
+            alignment=1,
+        )
+        no_history = Paragraph("No history records found for this equipment.", no_history_style)
+        story.append(no_history)
+    
+    # Build PDF
+    doc.build(story)
+    
+    return response
+
+
+@login_required
+def accessory_history_pdf(request, id):
+    """Export accessory history to PDF"""
+    accessory = get_object_or_404(Accessory, id=id)
+    history = accessory.history.all().order_by('-changed_at')
+    
+    # Create the HttpResponse object with PDF headers
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="accessory_history_{accessory.serial_number}_{timezone.now().strftime("%Y%m%d")}.pdf"'
+    
+    # Create the PDF object
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    story = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=30,
+        alignment=1,
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=12,
+        textColor=colors.HexColor('#34495e'),
+        spaceAfter=12,
+    )
+    
+    # Add title
+    title = Paragraph(f"Accessory History Report", title_style)
+    story.append(title)
+    story.append(Spacer(1, 12))
+    
+    # Accessory Details
+    accessory_info = [
+        ['Accessory Name:', accessory.name],
+        ['Serial Number:', accessory.serial_number or 'N/A'],
+        ['Manufacturer:', accessory.manufacturer or 'N/A'],
+        ['Current Status:', accessory.status or 'Good'],
+        ['Return Status:', accessory.return_status or 'In Store'],
+        ['Current Chief Surveyor:', accessory.chief_surveyor.username if accessory.chief_surveyor else 'N/A'],
+        ['Linked Equipment:', str(accessory.equipment) if accessory.equipment else 'Standalone'],
+    ]
+    
+    accessory_table = Table(accessory_info, colWidths=[2.5*inch, 4*inch])
+    accessory_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    story.append(accessory_table)
+    story.append(Spacer(1, 20))
+    
+    # History section
+    subtitle = Paragraph("History Log", subtitle_style)
+    story.append(subtitle)
+    story.append(Spacer(1, 12))
+    
+    if history.exists():
+        history_data = [['Date/Time', 'Action', 'Changed By', 'Details']]
+        
+        for entry in history:
+            date_str = entry.changed_at.strftime("%Y-%m-%d %H:%M")
+            action_str = entry.get_action_display()
+            changed_by_str = entry.changed_by.username if entry.changed_by else 'System'
+            description = entry.get_description()
+            
+            row = [
+                date_str,
+                action_str,
+                changed_by_str,
+                Paragraph(description, styles['Normal'])
+            ]
+            history_data.append(row)
+        
+        history_table = Table(history_data, repeatRows=1, colWidths=[1.3*inch, 1.5*inch, 1.2*inch, 3.5*inch])
+        history_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ]))
+        
+        story.append(history_table)
+    else:
+        no_history_style = ParagraphStyle(
+            'NoHistory',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.grey,
+            alignment=1,
+        )
+        no_history = Paragraph("No history records found for this accessory.", no_history_style)
+        story.append(no_history)
+    
+    # Build PDF
+    doc.build(story)
+    
+    return response
+
+
+@login_required
+def all_history_pdf(request):
+    """Export all history to PDF (Admin only)"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to export all history.')
+        return redirect('login')
+    
+    equipment_history = EquipmentHistory.objects.all().order_by('-changed_at')[:100]  # Limit to last 100
+    accessory_history = AccessoryHistory.objects.all().order_by('-changed_at')[:100]  # Limit to last 100
+    
+    # Create the HttpResponse object with PDF headers
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="all_history_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
+    
+    # Create the PDF object
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    story = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=30,
+        alignment=1,
+    )
+    
+    section_style = ParagraphStyle(
+        'SectionTitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#34495e'),
+        spaceAfter=12,
+        spaceBefore=20,
+    )
+    
+    # Add title
+    title = Paragraph(f"Complete History Report", title_style)
+    story.append(title)
+    
+    subtitle = Paragraph(f"Generated on {timezone.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
+    story.append(subtitle)
+    story.append(Spacer(1, 20))
+    
+    # Equipment History Section
+    if equipment_history.exists():
+        section_title = Paragraph("Equipment History (Last 100 entries)", section_style)
+        story.append(section_title)
+        story.append(Spacer(1, 12))
+        
+        eq_history_data = [['Date/Time', 'Equipment', 'Action', 'Changed By', 'Details']]
+        
+        for entry in equipment_history:
+            date_str = entry.changed_at.strftime("%Y-%m-%d %H:%M")
+            equipment_str = f"{entry.equipment.name}\n({entry.equipment.serial_number})"
+            action_str = entry.get_action_display()
+            changed_by_str = entry.changed_by.username if entry.changed_by else 'System'
+            description = entry.get_description()[:100] + '...' if len(entry.get_description()) > 100 else entry.get_description()
+            
+            row = [
+                date_str,
+                Paragraph(equipment_str, styles['Normal']),
+                action_str,
+                changed_by_str,
+                Paragraph(description, styles['Normal'])
+            ]
+            eq_history_data.append(row)
+        
+        eq_history_table = Table(eq_history_data, repeatRows=1, colWidths=[1.1*inch, 1.3*inch, 1.3*inch, 1*inch, 2.8*inch])
+        eq_history_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 1), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+        ]))
+        
+        story.append(eq_history_table)
+        story.append(Spacer(1, 20))
+    
+    # Accessory History Section
+    if accessory_history.exists():
+        section_title = Paragraph("Accessory History (Last 100 entries)", section_style)
+        story.append(section_title)
+        story.append(Spacer(1, 12))
+        
+        acc_history_data = [['Date/Time', 'Accessory', 'Action', 'Changed By', 'Details']]
+        
+        for entry in accessory_history:
+            date_str = entry.changed_at.strftime("%Y-%m-%d %H:%M")
+            accessory_str = f"{entry.accessory.name}\n({entry.accessory.serial_number or 'N/A'})"
+            action_str = entry.get_action_display()
+            changed_by_str = entry.changed_by.username if entry.changed_by else 'System'
+            description = entry.get_description()[:100] + '...' if len(entry.get_description()) > 100 else entry.get_description()
+            
+            row = [
+                date_str,
+                Paragraph(accessory_str, styles['Normal']),
+                action_str,
+                changed_by_str,
+                Paragraph(description, styles['Normal'])
+            ]
+            acc_history_data.append(row)
+        
+        acc_history_table = Table(acc_history_data, repeatRows=1, colWidths=[1.1*inch, 1.3*inch, 1.3*inch, 1*inch, 2.8*inch])
+        acc_history_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 1), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+        ]))
+        
+        story.append(acc_history_table)
+    
+    if not equipment_history.exists() and not accessory_history.exists():
+        no_history_style = ParagraphStyle(
+            'NoHistory',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.grey,
+            alignment=1,
+        )
+        no_history = Paragraph("No history records found.", no_history_style)
+        story.append(no_history)
     
     # Build PDF
     doc.build(story)

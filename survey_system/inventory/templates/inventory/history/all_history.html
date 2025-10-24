@@ -9,16 +9,21 @@
             <h1 class="page-title">
                 <i class="fas fa-history me-2"></i>All History
             </h1>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary" id="filterEquipment">
-                    <i class="fas fa-tools me-2"></i>Equipment Only
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="filterAccessory">
-                    <i class="fas fa-puzzle-piece me-2"></i>Accessories Only
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="showAll">
-                    <i class="fas fa-list me-2"></i>Show All
-                </button>
+            <div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-outline-secondary" id="filterEquipment">
+                        <i class="fas fa-tools me-2"></i>Equipment Only
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="filterAccessory">
+                        <i class="fas fa-puzzle-piece me-2"></i>Accessories Only
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="showAll">
+                        <i class="fas fa-list me-2"></i>Show All
+                    </button>
+                </div>
+                <a href="{% url 'all_history_pdf' %}" class="btn btn-danger" target="_blank">
+                    <i class="fas fa-file-pdf me-2"></i>Export PDF
+                </a>
             </div>
         </div>
 

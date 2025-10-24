@@ -16,11 +16,15 @@ from .models import EquipmentsInSurvey, Accessory, Personnel, Chainman
 #     search_fields = ('user__username', 'first_name', 'last_name')  # Enable search by user, first and last name
 @admin.register(EquipmentsInSurvey)
 class EquipmentInSurveyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'serial_number',)  # Show user details
+    list_display = ('name', 'serial_number', 'status', 'chief_surveyor', 'project')
+    list_filter = ('status', 'project', 'condition')
+    search_fields = ('name', 'serial_number', 'supplier')
     
 @admin.register(Accessory)
-class EquipmentInSurveyAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in Accessory._meta.fields]
+class AccessoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'serial_number', 'equipment', 'status', 'return_status', 'chief_surveyor')
+    list_filter = ('status', 'return_status', 'condition')
+    search_fields = ('name', 'serial_number')
 
 @admin.register(Personnel)
 class PersonnelAdmin(admin.ModelAdmin):

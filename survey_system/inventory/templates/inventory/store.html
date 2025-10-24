@@ -184,6 +184,7 @@
                                 <span class="mobile-card-label">Serial:</span>
                                 <span class="mobile-card-value">{{ info.serial_number }}</span>
                             </div>
+                            
                             <div class="mobile-card-row">
                                 <span class="mobile-card-label">Status:</span>
                                 <span class="mobile-card-value">
@@ -263,9 +264,10 @@
                                 <th>Manufacturer</th>
                                 <th>Equipment</th>
                                 <th>Serial Number</th>
+                                <th>Chief Surveyor</th>
                                 <th>Condition</th>
                                 <th>Status</th>
-                                <th>Change Status</th>
+                                <th>Change Condition</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -279,6 +281,23 @@
                                         <td>{{ accessory.manufacturer|default:"-" }}</td>
                                         <td>{% if accessory.equipment %}{{ accessory.equipment }}{% else %}<span class="text-muted">Standalone</span>{% endif %}</td>
                                         <td class="no-wrap">{{ accessory.serial_number|default:"-" }}</td>
+                                        <td>
+                                            {% if accessory.condition == "bad"  or accessory.condition == "Needs Repair"  %}
+                                        <select name="id" class="form-select form-select-sm" disabled>
+                                            <option value="" disabled selected>Select Chief Surveyor</option>
+                                            {% for users in user %}
+                                            <option value="{{ users.id }}">{{ users.username }}</option>
+                                            {% endfor %}
+                                            {% else %}
+                                            <select name="id" class="form-select form-select-sm">
+                                            <option value="" disabled selected>Select Chief Surveyor</option>
+                                            {% for users in user %}
+                                            <option value="{{ users.id }}">{{ users.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% endif %}
+                                        <input type="hidden" value="{{ info.id }}" name="equipment_id">
+                                    </td>
                                         <td>
                                             <span class="badge {% if accessory.condition == 'Good' %}bg-success{% elif accessory.condition == 'Bad' %}bg-danger{% elif accessory.condition == 'New' %}bg-primary{% else %}bg-secondary{% endif %}">
                                               {{ accessory.condition|default:"Good" }}
@@ -301,9 +320,13 @@
                                             <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
                                             
                                             
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-paper-plane"></i> Save
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-star"></i> Save
                                             </button>
+
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-paper-plane"></i> Release
+                                        </button>
 
                                         </td>
                                     </form>
@@ -355,7 +378,7 @@
                                     </span>
                                 </div>
                                 <div class="mobile-card-row">
-                                    <span class="mobile-card-label">Change Status:</span>
+                                    <span class="mobile-card-label">:</span>
                                     <span class="mobile-card-value">
                                         <select name="condition" id="condition">
                                             <option value="" disabled selected hidden>{{ accessory.status }}</option>

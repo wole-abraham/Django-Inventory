@@ -55,6 +55,32 @@ class EquipmentsInSurveyViewSet(viewsets.ModelViewSet):
         history = equipment.history.all().order_by('-changed_at')
         serializer = EquipmentHistorySerializer(history, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def history_summary(self, request, pk=None):
+        """Get history summary with counts for a specific equipment"""
+        equipment = self.get_object()
+        summary = equipment.get_history_summary()
+        
+        # Serialize the last action if it exists
+        last_action_data = None
+        if summary['last_action']:
+            last_action_data = EquipmentHistorySerializer(summary['last_action']).data
+        
+        created_date_data = None
+        if summary['created_date']:
+            created_date_data = EquipmentHistorySerializer(summary['created_date']).data
+        
+        return Response({
+            'equipment_id': equipment.id,
+            'equipment_name': equipment.name,
+            'serial_number': equipment.serial_number,
+            'total_history_entries': summary['total_entries'],
+            'returns_to_store': summary['returns_to_store'],
+            'total_releases': summary['releases'],
+            'last_action': last_action_data,
+            'created': created_date_data,
+        })
 
 
 class AccessoryViewSet(viewsets.ModelViewSet):
@@ -96,6 +122,33 @@ class AccessoryViewSet(viewsets.ModelViewSet):
         history = accessory.history.all().order_by('-changed_at')
         serializer = AccessoryHistorySerializer(history, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def history_summary(self, request, pk=None):
+        """Get history summary with counts for a specific accessory"""
+        accessory = self.get_object()
+        summary = accessory.get_history_summary()
+        
+        # Serialize the last action if it exists
+        last_action_data = None
+        if summary['last_action']:
+            last_action_data = AccessoryHistorySerializer(summary['last_action']).data
+        
+        created_date_data = None
+        if summary['created_date']:
+            created_date_data = AccessoryHistorySerializer(summary['created_date']).data
+        
+        return Response({
+            'accessory_id': accessory.id,
+            'accessory_name': accessory.name,
+            'serial_number': accessory.serial_number,
+            'equipment': str(accessory.equipment) if accessory.equipment else 'Standalone',
+            'total_history_entries': summary['total_entries'],
+            'returns_to_store': summary['returns_to_store'],
+            'total_releases': summary['releases'],
+            'last_action': last_action_data,
+            'created': created_date_data,
+        })
 
 
 class PersonnelViewSet(viewsets.ModelViewSet):

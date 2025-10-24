@@ -197,7 +197,11 @@
                     <h5>Equipment Details</h5>
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <strong>Serial Number:</strong> {{ equipment.serial_number }}
+                            <strong>Serial Number:</strong> 
+                            <a href="{% url 'equipment_history' equipment.id %}" class="text-primary text-decoration-none">
+                                {{ equipment.serial_number }}
+                                <i class="fas fa-history ms-1"></i>
+                            </a>
                         </li>
                         <li class="list-group-item">
                             <strong>Status:</strong> 
@@ -210,6 +214,14 @@
                         </li>
                         <li class="list-group-item">
                             <strong>Section:</strong> {{ equipment.section }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Returns to Store:</strong> 
+                            <span class="badge bg-info">{{ equipment.get_return_count }} times</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Total Releases:</strong> 
+                            <span class="badge bg-warning">{{ equipment.get_release_count }} times</span>
                         </li>
                     </ul>
                 </div>

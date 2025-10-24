@@ -178,19 +178,44 @@
                     <h5>Accessory Details</h5>
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <strong>Serial Number:</strong> {{ accessory.serial }}
+                            <strong>Serial Number:</strong> 
+                            <a href="{% url 'accessory_history' accessory.id %}" class="text-primary text-decoration-none">
+                                {{ accessory.serial_number|default:"Not assigned" }}
+                                <i class="fas fa-history ms-1"></i>
+                            </a>
                         </li>
                         <li class="list-group-item">
                             <strong>Status:</strong> 
-                            <span class="badge {% if equipment.status == 'In Store' %}bg-success{% elif equipment.status == 'In Field' %}bg-primary{% else %}bg-warning{% endif %}">
+                            <span class="badge {% if accessory.status == 'Good' %}bg-success{% elif accessory.status == 'Needs Repair' %}bg-warning{% else %}bg-danger{% endif %}">
                             {{ accessory.status }}
                         </span>
                         </li>
                         <li class="list-group-item">
-                            <strong>Chief Surveyor</strong>
-                            {{ accessory.chief_surveyor }}
+                            <strong>Return Status:</strong> 
+                            <span class="badge {% if accessory.return_status == 'In Use' %}bg-success{% elif accessory.return_status == 'Returning' %}bg-warning{% else %}bg-info{% endif %}">
+                            {{ accessory.return_status }}
+                        </span>
                         </li>
-                        
+                        <li class="list-group-item">
+                            <strong>Chief Surveyor:</strong>
+                            {{ accessory.chief_surveyor|default:"Not assigned" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Equipment:</strong>
+                            {% if accessory.equipment %}
+                                <a href="{% url 'equipment_detail' accessory.equipment.id %}">{{ accessory.equipment.name }}</a>
+                            {% else %}
+                                <span class="text-muted">Standalone</span>
+                            {% endif %}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Returns to Store:</strong> 
+                            <span class="badge bg-info">{{ accessory.get_return_count }} times</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Total Releases:</strong> 
+                            <span class="badge bg-warning">{{ accessory.get_release_count }} times</span>
+                        </li>
                     </ul>
                 </div>
             </div>

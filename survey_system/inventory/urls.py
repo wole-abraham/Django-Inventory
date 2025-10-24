@@ -20,9 +20,17 @@ urlpatterns = [
     path('admin-release-accessory', views.admin_release_accessory, name="admin_release_accessory"),
     path('add-equipment/', views.add_equipment, name='add_equipment'),
     path('add-accessory/', views.add_accessory, name='add_accessory'),
-    # path('equipment/<int:id>/history/', views.equipment_history, name='equipment_history'),
-    # path('accessory/<int:id>/history/', views.accessory_history, name='accessory_history'),
-    # path('history/', views.all_history, name='all_history'),
+    
+    # History URLs
+    path('equipment/<int:id>/history/', views.equipment_history, name='equipment_history'),
+    path('accessory/<int:id>/history/', views.accessory_history, name='accessory_history'),
+    path('history/', views.all_history, name='all_history'),
+    
+    # History PDF Export URLs
+    path('equipment/<int:id>/history/pdf/', views.equipment_history_pdf, name='equipment_history_pdf'),
+    path('accessory/<int:id>/history/pdf/', views.accessory_history_pdf, name='accessory_history_pdf'),
+    path('history/pdf/', views.all_history_pdf, name='all_history_pdf'),
+    
     path('remove_from_equipment/<int:id>', views.remove_from_equipment, name="remove_from_equipment"),
     path('delivery/', views.delivery, name='delivery'),
     path('cancel-delivery/<int:id>', views.cancel_delivery, name='cancel_delivery'),
