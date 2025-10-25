@@ -144,3 +144,8 @@ celerybeat-schedule
 # Configuration files with sensitive data
 config.json
 secrets.json
+
+# Ignore Django migration folders (intentionally untracked because DB is hosted elsewhere)
+**/migrations/
+**/migrations/*
+**/migrations/**
