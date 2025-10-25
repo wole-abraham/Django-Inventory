@@ -298,6 +298,15 @@
                                         {% endif %}
                                         <input type="hidden" value="{{ info.id }}" name="equipment_id">
                                     </td>
+
+                                      <td>
+                                            <select name="condition" id="condition">
+                                                <option value="" disabled selected hidden>{{ accessory.status }}</option>
+                                                <option value="Good">Good</option>
+                                                <option value="Needs Repair">Needs Repair</option>
+                                                <option value="Bad">Bad</option>
+                                            </select>
+                                        </td>
                                         <td>
                                             <span class="badge {% if accessory.condition == 'Good' %}bg-success{% elif accessory.condition == 'Bad' %}bg-danger{% elif accessory.condition == 'New' %}bg-primary{% else %}bg-secondary{% endif %}">
                                               {{ accessory.condition|default:"Good" }}
@@ -308,14 +317,7 @@
                                                 {{ accessory.return_status }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <select name="condition" id="condition">
-                                                <option value="" disabled selected hidden>{{ accessory.status }}</option>
-                                                <option value="Good">Good</option>
-                                                <option value="Needs Repair">Needs Repair</option>
-                                                <option value="Bad">Bad</option>
-                                            </select>
-                                        </td>
+                                      
                                         <td class="no-wrap">
                                             <input type="hidden" name="accessory_id" value="{{ accessory.id }}">
                                             

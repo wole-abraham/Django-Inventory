@@ -241,7 +241,8 @@
                         <td class="no-wrap">{{ item.serial_number }}</td>
                         <td>{{ item.chief_surveyor }}</td>
                         <td>
-                            <span class="badge bg-warning">{{ item.status }}</span>
+                            
+                            <span class="badge bg-danger">{{ item.status }} to Head Office store</span>
                         </td>
                         <td>
                             {% if item.return_comment %}
@@ -290,7 +291,7 @@
                         <td class="no-wrap">{{ accessory.serial_number }}</td>
                         <td>{{ accessory.returned_by }}</td>
                         <td>
-                            <span class="badge bg-warning">{{ accessory.return_status }}</span>
+                            <span class="badge bg-warning">{{ accessory.return_status }} to Head Office store</span>
                         </td>
                         <td>
                             {% if accessory.comment %}
