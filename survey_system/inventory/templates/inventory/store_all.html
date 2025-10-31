@@ -44,11 +44,19 @@
                                     {{ info.status }}
                                 </span>
                             </td>
+                            {% if info.status != "In Store" %}
                             <td class="no-wrap">
-                                <a href="{% url 'return_equipment' info.id %}" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-undo"></i> Return
-                                </a>
-                            </td>
+                                    <a href="{% url 'all_cancel_delivery' info.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-undo"></i> return to store
+                                    </a>
+                                </td>
+                            {% else %}
+                                    <td class="no-wrap">
+                                        <i class="fas fa-check"></i> In Store
+                                    
+                                </td>
+
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

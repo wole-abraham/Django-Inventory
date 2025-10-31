@@ -902,6 +902,35 @@ def cancel_delivery(request, id):
         messages.success(request, f'Accessory {accessory.name} delivery has been cancelled.')
     
     return redirect('store')
+
+
+def all_cancel_delivery(request, id):
+    # Check if this is an equipment or accessory ID
+    equipment = EquipmentsInSurvey.objects.filter(id=id).first()
+    accessory = Accessory.objects.filter(id=id).first()
+    
+    if equipment:
+        equipment.delivery_status = "Cancelled"
+        equipment.status = "In Store"
+        equipment.chief_surveyor = None  # Remove assignment
+        equipment.save()
+        
+        # Also cancel delivery of associated accessories
+        accessories = Accessory.objects.filter(equipment=equipment, return_status='Delivering')
+        for acc in accessories:
+            acc.return_status = 'In Store'
+            acc.chief_surveyor = None
+            acc.save()
+        messages.success(request, f'Equipment {equipment.name} delivery has been cancelled.')
+    elif accessory:
+        accessory.return_status = 'In Store'
+        accessory.chief_surveyor = None
+        accessory.equipment = None  # Remove equipment association if any
+        accessory.save()
+        messages.success(request, f'Accessory {accessory.name} delivery has been cancelled.')
+    
+    return redirect('store_all')
+
 def delivery_received(request, id):
     """Handle receiving equipment or accessories from delivery."""
     # First try to find as equipment
