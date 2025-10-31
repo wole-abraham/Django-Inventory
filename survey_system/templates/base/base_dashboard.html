@@ -161,8 +161,8 @@
     <div class="container">
         <!-- Navbar Brand -->
         <a class="navbar-brand" href="{% if is_admin %}{% url 'store' %}{% else %}#{% endif %}">
-            <i class="fas fa-warehouse"></i>
-            {% if is_admin %}Head Office{% else %}Store{% endif %}
+            <i class="fas fa-home"></i>
+            {% if is_admin %}Head Office{% else %}{{request.user.username}} Store{% endif %}
         </a>
 
         <!-- Navbar Toggle -->
